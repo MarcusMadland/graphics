@@ -19,8 +19,8 @@ project "mrender"
 	cppdialect "C++17"
 	staticruntime "on"
 
-	targetdir ("../binaries/" .. "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}" .. "/%{prj.name}")
-	objdir ("../intermediate/" .. "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}" .. "/%{prj.name}")
+	targetdir ("binaries/" .. "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}" .. "/%{prj.name}")
+	objdir ("intermediate/" .. "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}" .. "/%{prj.name}")
 
 	files
 	{
@@ -30,7 +30,10 @@ project "mrender"
 
 	includedirs
 	{
-		"include"
+		"include",
+		path.join(BGFX_DIR, "include"),
+		path.join(BIMG_DIR, "include"),
+		path.join(BX_DIR,   "include"),
 	}
 
 	links { "bgfx", "bimg", "bx" }
