@@ -18,7 +18,7 @@ void Backend::init(const int width, const int height, void* nativeWindow, void* 
         return;
     }
       
-    printf("Init renderer");
+    printf("Init renderer\n");
 
     bgfx::renderFrame(); // single threaded mode
 
@@ -32,18 +32,31 @@ void Backend::init(const int width, const int height, void* nativeWindow, void* 
     bgfx_init.type = bgfx::RendererType::Count; // auto choose renderer
     bgfx_init.resolution.width = width;
     bgfx_init.resolution.height = height;
-    bgfx_init.resolution.reset = BGFX_RESET_VSYNC;
+    //bgfx_init.resolution.reset = BGFX_RESET_VSYNC;
     bgfx_init.platformData = pd;
-    bgfx::init(bgfx_init);
+    if (!bgfx::init(bgfx_init))
+    {
+        printf("Failed to init bgfx");
+        return;
+    }
 
     // Clear screen
-    bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x6495EDFF, 1.0f, 0);
+    bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x6060FFFF, 1.0f, 0);
     bgfx::setViewRect(0, 0, 0, width, height);
 }
 
 void Backend::shutdown()
 {
     bgfx::shutdown();
+}
+
+void Backend::resize(const int width, const int height)
+{
+    // Clear screen
+    bgfx::reset(width, height/*, BGFX_RESET_VSYNC*/);
+    bgfx::setViewRect(0, 0, 0, bgfx::BackbufferRatio::Equal);
+    
+   
 }
 
 void Backend::render()
