@@ -1,7 +1,7 @@
 -- External third Party directories
 local BGFX_DIR = "third-party/bgfx"
 local BIMG_DIR = "third-party/bimg"
-local BX_DIR = "third-party/bx"
+local BX_DIR   = "third-party/bx"
 
 function setBxCompat()
 	filter "action:vs*"
