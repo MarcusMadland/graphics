@@ -1,40 +1,25 @@
 #pragma once
 
-namespace mrender {
+#include "mrender/core/factory.hpp"
+#include "mrender/handler/render_context.hpp"
+#include "mrender/techniques/technique.hpp"
 
-struct RenderSettings 
+#include <memory>
+#include <vector>
+
+namespace Capsaicin {
+    
+class Renderer : public Factory<Renderer>
 {
-	int mResolutionWidth = 1280;
-	int mResolutionHeight = 720;
-	void* mNativeWindow = nullptr;
-	void* mNativeDisplay = nullptr;
-	bool mVSync = false;
-};
+    Renderer(Renderer const&) = delete;
+    Renderer& operator=(Renderer const&) = delete;
 
-struct TechniqueSettings
-{
-
-};
-
-class RenderContext
-{
 public:
-	void initialize(const RenderSettings& settings);
-	void cleanup();
+    Renderer(Key) noexcept {}
 
-	void reset(int pass, const int width, const int height);
-
-	RenderSettings& getSettings() { return mSettings; }
-
+    virtual std::vector<std::unique_ptr<RenderTechnique>> setupRenderTechniques(mrender::RenderContext& context) noexcept = 0;
 private:
-	RenderSettings mSettings;
 };
 
-class Renderer
-{
-public:
-	virtual void initialize(RenderContext& context) = 0;
-	virtual void render() = 0;
-};
 
 }	// namespace mrender

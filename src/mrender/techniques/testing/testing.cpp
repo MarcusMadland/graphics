@@ -1,19 +1,27 @@
-#include "mrender/renderers/techniques/testing.hpp"
+#include "mrender/techniques/testing/testing.hpp"
 
 #include <bgfx/bgfx.h>
-#include <bgfx/platform.h>
-#include <bx/math.h>
 
-namespace mrender {
+namespace Capsaicin {
 
-void TestingTechnique::initialize(RenderContext& context)
+Testing::Testing()
+    : RenderTechnique("Testing")
 {
-    // @todo should this be here?
-    bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x6060FFFF, 1.0f, 0);
-    bgfx::setViewRect(0, 0, 0, context.getSettings().mResolutionWidth, context.getSettings().mResolutionHeight);
 }
 
-void TestingTechnique::render()
+Testing::~Testing()
+{
+}
+
+bool Testing::init(mrender::RenderContext& context) noexcept
+{
+    bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x6060FFFF, 1.0f, 0);
+    bgfx::setViewRect(0, 0, 0, context.getSettings().mResolutionWidth, context.getSettings().mResolutionHeight);
+
+    return true;
+}
+
+void Testing::render(mrender::RenderContext& capsaicin) noexcept
 {
     bgfx::touch(0);
     bgfx::dbgTextClear();
