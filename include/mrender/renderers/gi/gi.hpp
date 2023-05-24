@@ -1,22 +1,22 @@
 #pragma once
 
 #include "mrender/renderers/renderer.hpp"
-#include "mrender/techniques/technique.hpp"
+#include "mrender/systems/system.hpp"
 
-namespace Capsaicin
+namespace mrender {
+
+class MyRenderer : public Renderer::Registrar<MyRenderer>
 {
-    /** The GI1.0 renderer. */
-    class GI10Renderer : public Renderer::Registrar<GI10Renderer>
-    {
-    public:
-        static constexpr std::string_view Name = "GI-1.0";
+public:
+    static constexpr std::string_view Name = "MyRenderer";
 
-        GI10Renderer() noexcept {}
+    MyRenderer() {}
 
-        std::vector<std::unique_ptr<RenderTechnique>> setupRenderTechniques(
-            mrender::RenderContext& context) noexcept override;
+    std::vector<std::unique_ptr<RenderSystem>> setupRenderSystems(
+        mrender::RenderContext& context) override;
 
-    private:
-    };
-} // namespace Capsaicin
+private:
+};
+
+}   // namespace mrender
 

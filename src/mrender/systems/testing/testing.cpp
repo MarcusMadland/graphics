@@ -1,11 +1,10 @@
-#include "mrender/techniques/testing/testing.hpp"
+#include "mrender/systems/testing/testing.hpp"
 
 #include <bgfx/bgfx.h>
 
-namespace Capsaicin {
+namespace mrender {
 
 Testing::Testing()
-    : RenderTechnique("Testing")
 {
 }
 
@@ -13,7 +12,7 @@ Testing::~Testing()
 {
 }
 
-bool Testing::init(mrender::RenderContext& context) noexcept
+bool Testing::init(mrender::RenderContext& context) 
 {
     bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x6060FFFF, 1.0f, 0);
     bgfx::setViewRect(0, 0, 0, context.getSettings().mResolutionWidth, context.getSettings().mResolutionHeight);
@@ -21,7 +20,7 @@ bool Testing::init(mrender::RenderContext& context) noexcept
     return true;
 }
 
-void Testing::render(mrender::RenderContext& capsaicin) noexcept
+void Testing::render(mrender::RenderContext& mrender) 
 {
     bgfx::touch(0);
     bgfx::dbgTextClear();

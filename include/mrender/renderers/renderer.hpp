@@ -2,24 +2,19 @@
 
 #include "mrender/core/factory.hpp"
 #include "mrender/handler/render_context.hpp"
-#include "mrender/techniques/technique.hpp"
+#include "mrender/systems/system.hpp"
 
 #include <memory>
 #include <vector>
 
-namespace Capsaicin {
+namespace mrender {
     
 class Renderer : public Factory<Renderer>
 {
-    Renderer(Renderer const&) = delete;
-    Renderer& operator=(Renderer const&) = delete;
-
 public:
-    Renderer(Key) noexcept {}
+    Renderer(Key) {}
 
-    virtual std::vector<std::unique_ptr<RenderTechnique>> setupRenderTechniques(mrender::RenderContext& context) noexcept = 0;
-private:
+    virtual std::vector<std::unique_ptr<RenderSystem>> setupRenderSystems(mrender::RenderContext& context) = 0;
 };
-
 
 }	// namespace mrender
