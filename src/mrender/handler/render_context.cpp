@@ -11,6 +11,8 @@ namespace mrender {
 
 void RenderContext::initialize(const RenderSettings& settings)
 {
+    mSettings = settings;
+
     if (settings.mNativeWindow == nullptr)
     {
         return; // @todo why does this happen
@@ -44,6 +46,16 @@ void RenderContext::reset(int pass, const int width, const int height)
 {
     bgfx::reset(width, height);
     bgfx::setViewRect(0, 0, 0, bgfx::BackbufferRatio::Equal);
+}
+
+const RenderStats* RenderContext::getStats()
+{
+    const bgfx::Stats* stats = bgfx::getStats();
+
+    renderStats.mNumDrawCalls = stats->numDraw;
+    renderStats.mRuntimeMemory = stats->rtMemoryUsed;
+
+    return &renderStats;
 }
 
 }	// namespace mrender
