@@ -35,7 +35,7 @@ static bgfx::VertexLayout g_VertexLayout;
 // Note: If text or lines are blurry when integrating ImGui into your engine,
 // in your Render function, try translating your projection matrix by
 // (0.5f,0.5f) or (0.375f,0.375f)
-void ImGui_Implbgfx_RenderDrawData(ImDrawData* draw_data)
+void ImGui_ImplMRender_RenderDrawData(ImDrawData* drawData)
 {
     // Avoid rendering when minimized, scale coordinates for retina displays
     // (screen coordinates != framebuffer coordinates)
@@ -46,7 +46,7 @@ void ImGui_Implbgfx_RenderDrawData(ImDrawData* draw_data)
         return;
     }
 
-    draw_data->ScaleClipRects(io.DisplayFramebufferScale);
+    drawData->ScaleClipRects(io.DisplayFramebufferScale);
 
     // Setup render state: alpha-blending enabled, no face culling,
     // no depth testing, scissor enabled
@@ -66,8 +66,8 @@ void ImGui_Implbgfx_RenderDrawData(ImDrawData* draw_data)
     bgfx::setViewRect(g_View, 0, 0, (uint16_t)fb_width, (uint16_t)fb_height);
 
     // Render command lists
-    for (int n = 0; n < draw_data->CmdListsCount; n++) {
-        const ImDrawList* cmd_list = draw_data->CmdLists[n];
+    for (int n = 0; n < drawData->CmdListsCount; n++) {
+        const ImDrawList* cmd_list = drawData->CmdLists[n];
 
         bgfx::TransientVertexBuffer tvb;
         bgfx::TransientIndexBuffer tib;
@@ -119,7 +119,7 @@ void ImGui_Implbgfx_RenderDrawData(ImDrawData* draw_data)
     }
 }
 
-bool ImGui_Implbgfx_CreateFontsTexture()
+bool ImGui_ImplMRender_CreateFontsTexture()
 {
     // Build texture atlas
     ImGuiIO& io = ImGui::GetIO();
@@ -139,13 +139,13 @@ bool ImGui_Implbgfx_CreateFontsTexture()
 }
 
 #include "mrender/fs_ocornut_imgui.bin.h"
-#include "mrender/vs_ocornut_imgui.bin.h"
+#include "mrender/vs_ocornut_imgui.bin.h"   
 
 static const bgfx::EmbeddedShader s_embeddedShaders[] = {
     BGFX_EMBEDDED_SHADER(vs_ocornut_imgui),
     BGFX_EMBEDDED_SHADER(fs_ocornut_imgui), BGFX_EMBEDDED_SHADER_END()};
 
-bool ImGui_Implbgfx_CreateDeviceObjects()
+bool ImGui_ImplMRender_CreateDeviceObjects()
 {
     bgfx::RendererType::Enum type = bgfx::getRendererType();
     g_ShaderHandle = bgfx::createProgram(
@@ -162,12 +162,12 @@ bool ImGui_Implbgfx_CreateDeviceObjects()
     g_AttribLocationTex =
         bgfx::createUniform("g_AttribLocationTex", bgfx::UniformType::Sampler);
 
-    ImGui_Implbgfx_CreateFontsTexture();
+    ImGui_ImplMRender_CreateFontsTexture();
 
     return true;
 }
 
-void ImGui_Implbgfx_InvalidateDeviceObjects()
+void ImGui_ImplMRender_InvalidateDeviceObjects()
 {
     bgfx::destroy(g_AttribLocationTex);
     bgfx::destroy(g_ShaderHandle);
@@ -179,19 +179,19 @@ void ImGui_Implbgfx_InvalidateDeviceObjects()
     }
 }
 
-void ImGui_Implbgfx_Init(int view)
+void ImGui_ImplMRender_Init(int view)
 {
     g_View = (uint8_t)(view & 0xff);
 }
 
-void ImGui_Implbgfx_Shutdown()
+void ImGui_ImplMRender_Shutdown()
 {
-    ImGui_Implbgfx_InvalidateDeviceObjects();
+    ImGui_ImplMRender_InvalidateDeviceObjects();
 }
 
-void ImGui_Implbgfx_NewFrame()
+void ImGui_ImplMRender_NewFrame()
 {
     if (!isValid(g_FontTexture)) {
-        ImGui_Implbgfx_CreateDeviceObjects();
+        ImGui_ImplMRender_CreateDeviceObjects();
     }
 }
