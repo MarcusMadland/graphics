@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mrender/systems/system.hpp"
+#include "mrender/mrender.hpp"
 
 namespace mrender {
 
@@ -10,7 +10,7 @@ public:
     MySystem2();
     ~MySystem2();
 
-    bool init(const mrender::RenderContext& context) override;
+    bool init(mrender::RenderContext& context) override;
     void render(mrender::RenderContext& context) override;
 };
 

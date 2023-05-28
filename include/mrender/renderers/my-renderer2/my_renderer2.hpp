@@ -1,7 +1,6 @@
 #pragma once
 
-#include "mrender/renderers/renderer.hpp"
-#include "mrender/systems/system.hpp"
+#include "mrender/mrender.hpp"
 
 namespace mrender {
 

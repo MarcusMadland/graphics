@@ -3,7 +3,7 @@
 
 namespace mrender {
 
-void Shader::loadProgram(char const* fileName, char const* filePath)
+void ShaderImplementation::loadProgram(char const* fileName, char const* filePath)
 {
 	const std::string vertexPath = std::string(filePath) + "/" + std::string(fileName) + "-vert.bin";
 	const std::string fragmentPath = std::string(filePath) + "/" + std::string(fileName) + "-frag.bin";
@@ -25,12 +25,12 @@ void Shader::loadProgram(char const* fileName, char const* filePath)
     bgfx::destroy(fsh);
 }
 
-void Shader::reloadProgram()
+void ShaderImplementation::reloadProgram()
 {
     loadProgram(mFileName, mFilePath);
 }
 
-bgfx::ShaderHandle  Shader::createShader(const std::string& shader, const char* name)
+bgfx::ShaderHandle ShaderImplementation::createShader(const std::string& shader, const char* name)
 {
     const bgfx::Memory* mem = bgfx::copy(shader.data(), shader.size());
     const bgfx::ShaderHandle handle = bgfx::createShader(mem);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mrender/systems/system.hpp"
+#include "mrender/mrender.hpp"
 
 #include <bgfx/bgfx.h>
 
@@ -20,7 +20,7 @@ public:
     MySystem();
     ~MySystem();
 
-    bool init(const mrender::RenderContext& context) override;
+    bool init(mrender::RenderContext& context) override;
     void render(mrender::RenderContext& context) override;
 
 private:

@@ -13,7 +13,7 @@ MySystem2::~MySystem2()
 {
 }
 
-bool MySystem2::init(const mrender::RenderContext& context)
+bool MySystem2::init(mrender::RenderContext& context)
 {
     bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x202020FF, 1.0f, 0);
     bgfx::setViewRect(0, 0, 0, context.getSettings().mResolutionWidth, context.getSettings().mResolutionHeight);

@@ -38,7 +38,7 @@ MySystem::~MySystem()
 {
 }
 
-bool MySystem::init(const mrender::RenderContext& context)
+bool MySystem::init(mrender::RenderContext& context)
 {
     bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x6495EDFF, 1.0f, 0);
     bgfx::setViewRect(0, 0, 0, context.getSettings().mResolutionWidth, context.getSettings().mResolutionHeight);
@@ -69,7 +69,6 @@ bool MySystem::init(const mrender::RenderContext& context)
         pos_col_vert_layout);
     ibh = bgfx::createIndexBuffer(
         bgfx::makeRef(cubeTriList, sizeof(cubeTriList)));
-
 
     bgfx::ShaderHandle vsh = create_shader(vshader, "vshader");
     bgfx::ShaderHandle fsh = create_shader(fshader, "fshader");

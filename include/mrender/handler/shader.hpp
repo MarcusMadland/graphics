@@ -1,17 +1,17 @@
 #pragma once
 
-#include <bgfx/bgfx.h>
+#include "mrender/mrender.hpp"
+
 #include <string_view>
+#include <bgfx/bgfx.h>
 
 namespace mrender {
 
-class Shader
+class ShaderImplementation : public Shader
 {
 public:
-	void loadProgram(char const* fileName, char const* filePath);
-	void reloadProgram();
-
-	[[nodiscard]] const std::string_view& getName() const { return mFileName; }
+	virtual void loadProgram(char const* fileName, char const* filePath) override;
+	virtual void reloadProgram() override;
 
 private:
 	bgfx::ShaderHandle createShader(const std::string& shader, const char* name);

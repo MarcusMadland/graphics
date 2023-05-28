@@ -1,5 +1,8 @@
 #pragma once
 
+#include "mrender/mrender.hpp"
+#include "mrender/handler/shader.hpp"
+
 #include <string_view>
 #include <vector>
 #include <memory>
@@ -8,48 +11,29 @@
 
 namespace mrender {
 
-class RenderSystem;
-class Renderer;
-//class Shader;
-
-struct RenderSettings
-{
-	std::string_view mRendererName = "none";
-	int mResolutionWidth = 1280;
-	int mResolutionHeight = 720;
-	void* mNativeWindow = nullptr;
-	void* mNativeDisplay = nullptr;
-	bool mVSync = false;
-};
-
-struct RenderStats
-{
-	uint32_t mNumDrawCalls = 0;
-};
-
-class RenderContext
+class RenderContextImplementation : public RenderContext
 {
 public:
-	void initialize(const RenderSettings& settings);
-	void cleanup();
+	virtual void initialize(const RenderSettings& settings) override;
+	virtual void cleanup() override;
 
-	void render(const RenderSettings& settings);
-	void frame();
+	virtual void render() override;
+	virtual void frame() override;
 
-	void reset(const int pass, const int width, const int height);
-	void reset(const int pass);
+	virtual void reset(const int pass, const int width, const int height) override;
+	virtual void reset(const int pass) override;
 
-	void submitDebugTextOnScreen(uint16_t x, uint16_t y, std::string_view text, ...);
+	virtual void submitDebugTextOnScreen(uint16_t x, uint16_t y, std::string_view text, ...) override;
 
-	//void addShader(std::unique_ptr<Shader> shader);
-	//void reloadShaders();
+	virtual void loadShader(char const* fileName, char const* filePath) override;
+	virtual void reloadShaders() override;
 
-	[[nodiscard]] const RenderSettings getSettings() const { return mSettings; }
-	[[nodiscard]] const RenderStats getStats() const { return mStats; }
+	virtual void setSettings(const RenderSettings& settings);
+	virtual [[nodiscard]] const RenderSettings getSettings() const override { return mSettings; }
 
-	[[nodiscard]] const std::unique_ptr<Renderer>& getRenderer() const { return mRenderer; };
-	[[nodiscard]] const std::vector<std::unique_ptr<RenderSystem>>& getRenderSystems() const { return mRenderSystems; }
-	//[[nodiscard]] const std::vector<std::unique_ptr<Shader>>& getShader() const { return mShaders; }
+	virtual [[nodiscard]] const std::unique_ptr<Renderer>& getRenderer() const override { return mRenderer; };
+	virtual [[nodiscard]] const std::vector<std::unique_ptr<RenderSystem>>& getRenderSystems() const override { return mRenderSystems; }
+	virtual [[nodiscard]] const std::unordered_map<std::string_view, std::unique_ptr<Shader>>& getShaders() const override { return mShaders; }
 
 private:
 	bool setupRenderSystems();
@@ -57,11 +41,10 @@ private:
 
 private:
 	RenderSettings mSettings;
-	RenderStats mStats;
 
 	std::unique_ptr<Renderer> mRenderer;
 	std::vector<std::unique_ptr<RenderSystem>> mRenderSystems;
-	//std::vector<std::unique_ptr<Shader>> mShaders;
+	std::unordered_map<std::string_view, std::unique_ptr<Shader>> mShaders;
 
 	uint32_t mResetFlags;
 };

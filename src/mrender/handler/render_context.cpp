@@ -1,7 +1,6 @@
 #include "mrender/handler/render_context.hpp"
 #include "mrender/handler/shader.hpp"
 #include "mrender/core/file_ops.hpp"
-#include "mrender/renderers/renderer.hpp"
 
 #include "mrender/renderers/my-renderer/my_renderer.hpp"
 #include "mrender/renderers/my-renderer2/my_renderer2.hpp"
@@ -15,7 +14,7 @@
 
 namespace mrender {
 
-void RenderContext::initialize(const RenderSettings& settings)
+void RenderContextImplementation::initialize(const RenderSettings& settings)
 {
     mSettings = settings;
 
@@ -45,25 +44,25 @@ void RenderContext::initialize(const RenderSettings& settings)
     setupRenderSystems();
 }
 
-void RenderContext::cleanup()
+void RenderContextImplementation::cleanup()
 {
     bgfx::shutdown();
 }
 
-void RenderContext::reset(const int pass, const int width, const int height)
+void RenderContextImplementation::reset(const int pass, const int width, const int height)
 {
     mSettings.mResolutionWidth = width;
     mSettings.mResolutionHeight = height;
     reset(pass);
 }
 
-void RenderContext::reset(const int pass)
+void RenderContextImplementation::reset(const int pass)
 {
     bgfx::reset(mSettings.mResolutionWidth, mSettings.mResolutionHeight, mResetFlags);
     bgfx::setViewRect(pass, 0, 0, bgfx::BackbufferRatio::Equal);
 }
 
-void RenderContext::submitDebugTextOnScreen(uint16_t x, uint16_t y, std::string_view text, ...)
+void RenderContextImplementation::submitDebugTextOnScreen(uint16_t x, uint16_t y, std::string_view text, ...)
 {
     constexpr int maxBufferSize = 256;
     char buffer[maxBufferSize];
@@ -78,25 +77,24 @@ void RenderContext::submitDebugTextOnScreen(uint16_t x, uint16_t y, std::string_
     const bgfx::Stats* stats = bgfx::getStats();
     bgfx::dbgTextPrintf(stats->textWidth - x, y, 0x0f, buffer);
 }
-/*
-void RenderContext::addShader(std::unique_ptr<Shader> shader)
+
+void RenderContextImplementation::loadShader(char const* fileName, char const* filePath)
 {
-    mShaders.push_back(std::move(shader));
+    std::unique_ptr<ShaderImplementation> shader = std::make_unique<ShaderImplementation>();
+    shader->loadProgram(fileName, filePath);
+    mShaders[fileName] = std::move(shader);
 }
 
-void RenderContext::reloadShaders()
+void RenderContextImplementation::reloadShaders()
 {
     for (auto& shader : mShaders)
     {
-        shader->reloadProgram();
+        shader.second->reloadProgram();
     }
-}*/
+}
 
-void RenderContext::render(const RenderSettings& settings)
+void RenderContextImplementation::setSettings(const RenderSettings& settings)
 {
-    bgfx::touch(0);
-    bgfx::dbgTextClear();
-
     const bool rebuildRenderer = (mSettings.mRendererName != settings.mRendererName || mRenderer == nullptr);
     const bool resetViewAndFlags = (mSettings.mVSync != settings.mVSync || mSettings.mResolutionWidth != settings.mResolutionWidth || mSettings.mResolutionHeight != settings.mResolutionHeight);
 
@@ -116,19 +114,21 @@ void RenderContext::render(const RenderSettings& settings)
         setupResetFlags();
         reset(0);
     }
+}
+
+void RenderContextImplementation::render()
+{
+    bgfx::touch(0);
+    bgfx::dbgTextClear();
 
     // Render all subsystems of the renderer
     for (auto& renderSystem : mRenderSystems)
     {
         renderSystem->render(*this);
     }
-
-    // Update internal stats from backend and other sources
-    const bgfx::Stats* stats = bgfx::getStats();
-    mStats.mNumDrawCalls = stats->numDraw;
 }
 
-void RenderContext::frame()
+void RenderContextImplementation::frame()
 {
     bgfx::setDebug(BGFX_DEBUG_TEXT);
 
@@ -136,7 +136,7 @@ void RenderContext::frame()
     bgfx::frame();
 }
 
-bool RenderContext::setupRenderSystems()
+bool RenderContextImplementation::setupRenderSystems()
 {
     // Create the renderer from name in settings
     mRenderer = Renderer::make(mSettings.mRendererName);
@@ -158,7 +158,7 @@ bool RenderContext::setupRenderSystems()
     return true;
 }
 
-void RenderContext::setupResetFlags()
+void RenderContextImplementation::setupResetFlags()
 {
     mResetFlags = mSettings.mVSync ? BGFX_RESET_VSYNC : BGFX_RESET_NONE;
 }
