@@ -5,6 +5,8 @@ namespace mrender {
 
 void ShaderImplementation::loadProgram(char const* fileName, char const* filePath)
 {
+    mFileName = fileName;
+    mFilePath = filePath;
 	const std::string vertexPath = std::string(filePath) + "/" + std::string(fileName) + "-vert.bin";
 	const std::string fragmentPath = std::string(filePath) + "/" + std::string(fileName) + "-frag.bin";
 
@@ -27,6 +29,7 @@ void ShaderImplementation::loadProgram(char const* fileName, char const* filePat
 
 void ShaderImplementation::reloadProgram()
 {
+    bgfx::destroy(mHandle);
     loadProgram(mFileName, mFilePath);
 }
 

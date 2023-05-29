@@ -70,9 +70,7 @@ bool MySystem::init(mrender::RenderContext& context)
     ibh = bgfx::createIndexBuffer(
         bgfx::makeRef(cubeTriList, sizeof(cubeTriList)));
 
-    bgfx::ShaderHandle vsh = create_shader(vshader, "vshader");
-    bgfx::ShaderHandle fsh = create_shader(fshader, "fshader");
-    program = bgfx::createProgram(vsh, fsh, true);
+    context.loadShader("simple", "C:/Users/marcu/Dev/my-application/mrender/shaders/simple");
     
     return true;
 }
@@ -105,6 +103,7 @@ void MySystem::render(mrender::RenderContext& context)
     bgfx::setVertexBuffer(0, vbh);
     bgfx::setIndexBuffer(ibh);
 
+    context.submit("simple");
     bgfx::submit(0, program);
 }
 

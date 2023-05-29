@@ -24,6 +24,7 @@ public:
 	virtual void reset(const int pass) override;
 
 	virtual void submitDebugTextOnScreen(uint16_t x, uint16_t y, std::string_view text, ...) override;
+	virtual void submit(const std::string_view& shaderName) override;
 
 	virtual void loadShader(char const* fileName, char const* filePath) override;
 	virtual void reloadShaders() override;

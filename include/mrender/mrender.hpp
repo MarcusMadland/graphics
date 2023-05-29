@@ -42,6 +42,7 @@ public:
 	virtual void reset(const int pass) = 0;
 
 	virtual void submitDebugTextOnScreen(uint16_t x, uint16_t y, std::string_view text, ...) = 0;
+	virtual void submit(const std::string_view& shaderName) = 0;
 
 	virtual void loadShader(char const* fileName, char const* filePath) = 0;
 	virtual void reloadShaders() = 0;

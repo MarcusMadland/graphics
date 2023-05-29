@@ -1,5 +1,4 @@
 #include "mrender/handler/render_context.hpp"
-#include "mrender/handler/shader.hpp"
 #include "mrender/core/file_ops.hpp"
 
 #include "mrender/renderers/my-renderer/my_renderer.hpp"
@@ -76,6 +75,16 @@ void RenderContextImplementation::submitDebugTextOnScreen(uint16_t x, uint16_t y
 
     const bgfx::Stats* stats = bgfx::getStats();
     bgfx::dbgTextPrintf(stats->textWidth - x, y, 0x0f, buffer);
+}
+
+void RenderContextImplementation::submit(const std::string_view& shaderName)
+{
+    std::unique_ptr<Shader>& shader = mShaders[shaderName];
+    ShaderImplementation* shaderImpl = dynamic_cast<ShaderImplementation*>(shader.get());
+    if (shaderImpl)
+    {
+        bgfx::submit(0, shaderImpl->mHandle);
+    }
 }
 
 void RenderContextImplementation::loadShader(char const* fileName, char const* filePath)

@@ -9,6 +9,8 @@ namespace mrender {
 
 class ShaderImplementation : public Shader
 {
+	friend class RenderContextImplementation;
+
 public:
 	virtual void loadProgram(char const* fileName, char const* filePath) override;
 	virtual void reloadProgram() override;
@@ -18,7 +20,6 @@ private:
 
 private:
 	bgfx::ProgramHandle mHandle = BGFX_INVALID_HANDLE;
-
 	const char* mFileName = nullptr;
 	const char* mFilePath = nullptr;
 };
