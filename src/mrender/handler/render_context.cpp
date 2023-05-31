@@ -10,6 +10,7 @@
 #include <string>
 #include <iostream>
 #include <cassert>
+#include <cstdlib>
 
 namespace mrender {
 
@@ -100,6 +101,11 @@ void RenderContextImplementation::reloadShaders()
     {
         shader.second->reloadProgram();
     }
+}
+
+void RenderContextImplementation::compileShaders()
+{
+    
 }
 
 void RenderContextImplementation::setSettings(const RenderSettings& settings)

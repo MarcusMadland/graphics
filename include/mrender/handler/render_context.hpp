@@ -28,6 +28,7 @@ public:
 
 	virtual void loadShader(char const* fileName, char const* filePath) override;
 	virtual void reloadShaders() override;
+	virtual void compileShaders() override;
 
 	virtual void setSettings(const RenderSettings& settings);
 	virtual [[nodiscard]] const RenderSettings getSettings() const override { return mSettings; }

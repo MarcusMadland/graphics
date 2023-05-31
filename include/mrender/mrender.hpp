@@ -46,6 +46,7 @@ public:
 
 	virtual void loadShader(char const* fileName, char const* filePath) = 0;
 	virtual void reloadShaders() = 0;
+	virtual void compileShaders() = 0;
 
 	virtual void setSettings(const RenderSettings& settings) = 0;
 	virtual [[nodiscard]] const RenderSettings getSettings() const = 0;
