@@ -25,6 +25,7 @@
 
 // Data
 static uint8_t g_View = 255;
+static const char* g_ViewName = "ImGui";
 static bgfx::TextureHandle g_FontTexture = BGFX_INVALID_HANDLE;
 static bgfx::ProgramHandle g_ShaderHandle = BGFX_INVALID_HANDLE;
 static bgfx::UniformHandle g_AttribLocationTex = BGFX_INVALID_HANDLE;
@@ -182,6 +183,7 @@ void ImGui_ImplMRender_InvalidateDeviceObjects()
 void ImGui_ImplMRender_Init(int view)
 {
     g_View = (uint8_t)(view & 0xff);
+    bgfx::setViewName(g_View, g_ViewName);
 }
 
 void ImGui_ImplMRender_Shutdown()

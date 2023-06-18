@@ -8,11 +8,11 @@
 
 namespace mrender {
 
-std::vector<std::unique_ptr<RenderSystem>> MyRenderer2::setupRenderSystems(RenderContext& context)
+std::vector<std::shared_ptr<RenderSystem>> MyRenderer2::setupRenderSystems(RenderContext& context)
 {
-    std::vector<std::unique_ptr<RenderSystem>> render_techniques;
-    render_techniques.emplace_back(std::make_unique<MySystem>());
-    render_techniques.emplace_back(std::make_unique<MySystem2>());
+    std::vector<std::shared_ptr<RenderSystem>> render_techniques;
+    render_techniques.emplace_back(std::make_shared<MySystem>());
+    render_techniques.emplace_back(std::make_shared<MySystem2>());
     // more ..
     return render_techniques;
 }

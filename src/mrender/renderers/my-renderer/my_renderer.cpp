@@ -7,10 +7,10 @@
 
 namespace mrender {
 
-std::vector<std::unique_ptr<RenderSystem>> MyRenderer::setupRenderSystems(RenderContext& context)
+std::vector<std::shared_ptr<RenderSystem>> MyRenderer::setupRenderSystems(RenderContext& context)
 {
-    std::vector<std::unique_ptr<RenderSystem>> render_techniques;
-    render_techniques.emplace_back(std::make_unique<MySystem>());
+    std::vector<std::shared_ptr<RenderSystem>> render_techniques;
+    render_techniques.emplace_back(std::make_shared<MySystem>());
     // more ..
     return render_techniques;
 }

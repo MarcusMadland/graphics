@@ -7,6 +7,12 @@
 
 namespace mrender {
 
+struct UniformData
+{
+	bgfx::UniformHandle mHandle = BGFX_INVALID_HANDLE;
+	uint8_t unit = UINT8_MAX;
+};
+
 class ShaderImplementation : public Shader
 {
 	friend class RenderContextImplementation;
@@ -16,12 +22,11 @@ public:
 	virtual void reloadProgram() override;
 
 private:
-	void compileShader(uint64_t _flags, const char* _filePath, const char* _outFilePath, const char* _type, const char* _platform, const char* _profile, const char* _bin2c, const char* _includeDir, const char* _varyingdef, char* _outputText, uint16_t& _outputSize);
-
 	bgfx::ShaderHandle createShader(const std::string& shader, const char* name);
 
 private:
 	bgfx::ProgramHandle mHandle = BGFX_INVALID_HANDLE;
+	std::unordered_map<std::string, UniformData> mUniformHandles;
 	const char* mFileName = nullptr;
 	const char* mFilePath = nullptr;
 };

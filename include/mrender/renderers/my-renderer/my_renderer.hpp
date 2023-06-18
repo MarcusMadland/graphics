@@ -11,7 +11,7 @@ public:
 
     MyRenderer() {}
 
-    std::vector<std::unique_ptr<RenderSystem>> setupRenderSystems(
+    std::vector<std::shared_ptr<RenderSystem>> setupRenderSystems(
         mrender::RenderContext& context) override;
 
 private:

@@ -15,7 +15,7 @@ class Factory
 
 public:
     template<typename... Args2>
-    static std::unique_ptr<Product> make(std::string_view const &name, Args2 &&...args) noexcept
+    static std::shared_ptr<Product> make(std::string_view const &name, Args2 &&...args) noexcept
     {
         auto &list = GetList();
         if (auto i = list.find(name); i != list.cend()) return i->second(std::forward<Args2>(args)...);
@@ -50,8 +50,8 @@ public:
 
         static bool registerType() noexcept
         {
-            Factory::GetList()[registeredName<T>] = [](Args... args) noexcept -> std::unique_ptr<Product> {
-                return std::make_unique<T>(std::forward<Args>(args)...);
+            Factory::GetList()[registeredName<T>] = [](Args... args) noexcept -> std::shared_ptr<Product> {
+                return std::make_shared<T>(std::forward<Args>(args)...);
             };
             return true;
         }
@@ -75,8 +75,8 @@ public:
         static bool registerType() noexcept
         {
             auto name                = T::Name;
-            Factory::GetList()[name] = [](Args... args) noexcept -> std::unique_ptr<Product> {
-                return std::make_unique<T>(std::forward<Args>(args)...);
+            Factory::GetList()[name] = [](Args... args) noexcept -> std::shared_ptr<Product> {
+                return std::make_shared<T>(std::forward<Args>(args)...);
             };
             return true;
         }
@@ -101,7 +101,7 @@ private:
         friend class RegistrarName;
     };
 
-    using FunctionType = std::unique_ptr<Product> (*)(Args...) noexcept;
+    using FunctionType = std::shared_ptr<Product> (*)(Args...) noexcept;
     Factory() noexcept = default;
 
     static auto &GetList() noexcept

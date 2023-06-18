@@ -6,29 +6,6 @@
 
 namespace mrender {
 
-static PosColorVertex cubeVertices[] =
-{
-    {-1.0f, 1.0f, 1.0f, 0xff000000},   {1.0f, 1.0f, 1.0f, 0xff0000ff},
-    {-1.0f, -1.0f, 1.0f, 0xff00ff00},  {1.0f, -1.0f, 1.0f, 0xff00ffff},
-    {-1.0f, 1.0f, -1.0f, 0xffff0000},  {1.0f, 1.0f, -1.0f, 0xffff00ff},
-    {-1.0f, -1.0f, -1.0f, 0xffffff00}, {1.0f, -1.0f, -1.0f, 0xffffffff},
-};
-
-static const uint16_t cubeTriList[] =
-{
-    0, 1, 2, 1, 3, 2, 4, 6, 5, 5, 6, 7, 0, 2, 4, 4, 2, 6,
-    1, 5, 3, 5, 7, 3, 0, 4, 1, 4, 5, 1, 2, 3, 6, 6, 3, 7,
-};
-
-static bgfx::ShaderHandle create_shader(
-    const std::string& shader, const char* name)
-{
-    const bgfx::Memory* mem = bgfx::copy(shader.data(), shader.size());
-    const bgfx::ShaderHandle handle = bgfx::createShader(mem);
-    bgfx::setName(handle, name);
-    return handle;
-}
-
 MySystem::MySystem()
     : RenderSystem("My System")
 {
@@ -39,72 +16,74 @@ MySystem::~MySystem()
 }
 
 bool MySystem::init(mrender::RenderContext& context)
-{
-    bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x6495EDFF, 1.0f, 0);
-    bgfx::setViewRect(0, 0, 0, context.getSettings().mResolutionWidth, context.getSettings().mResolutionHeight);
-    
-    std::string vshader;
-    if (!mrender::read_file( "C:/Users/marcu/Dev/my-application/mrender/shaders/simple/simple-vert.bin", vshader)) {
-        printf("Could not find shader vertex shader (ensure shaders have been "
-            "compiled).\n"
-            "Run compile-shaders-<platform>.sh/bat\n");
-        return 1;
-    }
+{ 
+    // Scene Camera
+    CameraSettings cameraSettings;
+    cameraSettings.width = context.getSettings().mResolutionWidth;
+    cameraSettings.height = context.getSettings().mResolutionHeight;
+    cameraSettings.postion[2] = -5.0f;
+    mCamera = context.createCamera(cameraSettings);
 
-    std::string fshader;
-    if (!mrender::read_file("C:/Users/marcu/Dev/my-application/mrender/shaders/simple/simple-frag.bin", fshader)) {
-        printf("Could not find shader fragment shader (ensure shaders have "
-            "been compiled).\n"
-            "Run compile-shaders-<platform>.sh/bat\n");
-        return 1;
-    }
+    // Shader
+    context.loadShader("screen", "C:/Users/marcu/Dev/my-application/mrender/shaders/screen");
 
-    bgfx::VertexLayout pos_col_vert_layout;
-    pos_col_vert_layout.begin()
-        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
-        .end();
-    vbh = bgfx::createVertexBuffer(
-        bgfx::makeRef(cubeVertices, sizeof(cubeVertices)),
-        pos_col_vert_layout);
-    ibh = bgfx::createIndexBuffer(
-        bgfx::makeRef(cubeTriList, sizeof(cubeTriList)));
+    // Screen quad
+    BufferLayout layout =
+    { {
+        { AttribType::Float, 3, Attrib::Position },
+        { AttribType::Float, 2, Attrib::TexCoord0 },
+    } };
+    mScreenQuad = context.createGeometry(layout, quadVertices.data(), quadVertices.size() * sizeof(VertexData), quadIndices);
 
-    context.loadShader("simple", "C:/Users/marcu/Dev/my-application/mrender/shaders/simple");
-    
     return true;
 }
 
-void MySystem::render(mrender::RenderContext& context)
+void MySystem::render(RenderContext& context)
 {
-    float cam_rotation[16];
-    bx::mtxRotateXYZ(cam_rotation, cam_pitch, cam_yaw, 0.0f);
+    // Shadow Pass
+    context.writeToBuffer("Shadow");
+    context.clear();
+  
+    bgfx::setState(0 );
 
-    float cam_translation[16];
-    bx::mtxTranslate(cam_translation, 0.0f, 0.0f, -5.0f);
+    context.submit(context.getRenderables(), mCamera);
 
-    float cam_transform[16];
-    bx::mtxMul(cam_transform, cam_translation, cam_rotation);
+    // Scene Pass
+    context.writeToBuffer("Scene");
+    context.clear();
 
-    float view[16];
-    bx::mtxInverse(view, cam_transform);
+    bgfx::setState(0
+        | BGFX_STATE_WRITE_RGB
+        | BGFX_STATE_WRITE_A
+        | BGFX_STATE_WRITE_Z
+        | BGFX_STATE_DEPTH_TEST_LESS
+        | BGFX_STATE_MSAA
+    );
 
-    float proj[16];
-    bx::mtxProj(
-        proj, 60.0f, float(context.getSettings().mResolutionWidth) / float(context.getSettings().mResolutionHeight), 0.1f,
-        100.0f, bgfx::getCaps()->homogeneousDepth);
+    context.submit(context.getRenderables(), context.getCamera());
 
-    bgfx::setViewTransform(0, view, proj);
+    // Post Proces Pass
+    context.writeToBuffer("PostProcess", true);
+    context.clear();
 
-    float model[16];
-    bx::mtxIdentity(model);
-    bgfx::setTransform(model);
+    bgfx::setState(0
+        | BGFX_STATE_WRITE_RGB
+        | BGFX_STATE_WRITE_A
+    );
 
-    bgfx::setVertexBuffer(0, vbh);
-    bgfx::setIndexBuffer(ibh);
+    context.setParameter("screen", "s_Shadow", context.getBuffers().at("Shadow")->getDepthBuffer());
+    context.setParameter("screen", "s_Scene", context.getBuffers().at("Scene")->getColorBuffer());
 
-    context.submit("simple");
-    bgfx::submit(0, program);
+    context.submit(mScreenQuad, "screen", nullptr);
+}
+
+std::vector<std::pair<std::string, std::shared_ptr<FrameBuffer>>> MySystem::getBuffers(RenderContext& context)
+{
+    std::vector<std::pair<std::string, std::shared_ptr<FrameBuffer>>> buffers;
+    buffers.push_back({ "Shadow", context.createFrameBuffer(TextureFormat::BGRA8, true) });
+    buffers.push_back({ "Scene", context.createFrameBuffer(TextureFormat::BGRA8, true) });
+    buffers.push_back({ "PostProcess", context.createFrameBuffer(TextureFormat::BGRA8) });
+    return buffers;
 }
 
 }   // namespace mrender
