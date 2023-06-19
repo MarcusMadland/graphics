@@ -65,13 +65,22 @@ void RenderContextImplementation::writeToBuffer(const std::string_view& buffer, 
     
     if (!writeToBackBuffer)
     {
+        if (frameBufferImpl->width + frameBufferImpl->height != 0)
+        {
+            bgfx::setViewRect(mCurrentRenderPass, 0, 0, frameBufferImpl->width, frameBufferImpl->height);
+        }
+        else
+        {
+            bgfx::setViewRect(mCurrentRenderPass, 0,0, bgfx::BackbufferRatio::Equal);
+        }
+
         bgfx::setViewFrameBuffer(mCurrentRenderPass, frameBufferImpl->mHandle);
     }
     else
     {
         bgfx::setViewFrameBuffer(mCurrentRenderPass, BGFX_INVALID_HANDLE);
     }
-    bgfx::setViewRect(mCurrentRenderPass, 0, 0, bgfx::BackbufferRatio::Equal);
+
 }
 
 void RenderContextImplementation::clear()
@@ -79,26 +88,13 @@ void RenderContextImplementation::clear()
     bgfx::setViewClear(mCurrentRenderPass, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, mClearColor, 1.0f, 0);
 }
 
-void RenderContextImplementation::reset(const int width, const int height)
-{
-    mSettings.mResolutionWidth = width;
-    mSettings.mResolutionHeight = height;
-    reset();
-}
-
-void RenderContextImplementation::reset()
-{
-    bgfx::reset(mSettings.mResolutionWidth, mSettings.mResolutionHeight, mResetFlags);
-    bgfx::setViewRect(mCurrentRenderPass, 0, 0, bgfx::BackbufferRatio::Equal);
-}
-
 void RenderContextImplementation::setParameter(const std::string_view& shader, const std::string_view& uniform, const std::shared_ptr<Texture>& texture)
 {
     std::shared_ptr<ShaderImplementation> shaderImpl = std::static_pointer_cast<ShaderImplementation>(mShaders.at(shader.data()));
-    if (shaderImpl.get() == nullptr || shaderImpl == nullptr) std::cout << "invalid shader" << std::endl;
+    if (shaderImpl.get() == nullptr || shaderImpl == nullptr) std::cout << "Invalid shader" << std::endl;
     
     std::shared_ptr<TextureImplementation> textureImpl = std::static_pointer_cast<TextureImplementation>(texture);
-    if (textureImpl.get() == nullptr || textureImpl == nullptr) std::cout << "invalid texture" << std::endl;
+    if (textureImpl.get() == nullptr || textureImpl == nullptr) std::cout << "Invalid texture" << std::endl;
 
     // Retrieve the shader uniforms
     if (shaderImpl->mUniformHandles.count(uniform.data()) != 0)
@@ -106,10 +102,10 @@ void RenderContextImplementation::setParameter(const std::string_view& shader, c
         bgfx::UniformHandle uniformHandle = shaderImpl->mUniformHandles[uniform.data()].mHandle;
         const uint8_t unit = shaderImpl->mUniformHandles[uniform.data()].unit;
 
-        if (bgfx::isValid(uniformHandle))
+        if (bgfx::isValid(uniformHandle) && bgfx::isValid(textureImpl->mHandle))
         {
            // printf("binding unit %s %u \n", uniform.data(), shaderImpl->mUniformHandles[uniform.data()].unit);
-            bgfx::setTexture(unit, uniformHandle, textureImpl->mHandle);
+           bgfx::setTexture(unit, uniformHandle, textureImpl->mHandle);
         }
         else
         {
@@ -131,7 +127,8 @@ void RenderContextImplementation::submitDebugTextOnScreen(uint16_t x, uint16_t y
     va_list args;
     va_start(args, text);
 
-    std::vsprintf(buffer, text.data(), args);
+    //std::vsprintf(buffer, text.data(), args);
+    vsprintf_s(buffer, text.data(), args);
 
     va_end(args);
 
@@ -147,7 +144,8 @@ void RenderContextImplementation::submitDebugTextOnScreen(uint16_t x, uint16_t y
     va_list args;
     va_start(args, text);
 
-    std::vsprintf(buffer, text.data(), args);
+    //std::vsprintf(buffer, text.data(), args);
+    vsprintf_s(buffer, text.data(), args);
 
     va_end(args);
 
@@ -163,7 +161,8 @@ void RenderContextImplementation::submitDebugTextOnScreen(uint16_t x, uint16_t y
     va_list args;
     va_start(args, text);
 
-    std::vsprintf(buffer, text.data(), args);
+    //std::vsprintf(buffer, text.data(), args);
+    vsprintf_s(buffer, text.data(), args);
 
     va_end(args);
 
@@ -241,7 +240,7 @@ void RenderContextImplementation::setSettings(const RenderSettings& settings)
     {
         std::cout << "Reset viewport and flags..." << std::endl;
         setupResetFlags();
-        reset();
+       // bgfx::Clear(flags) @todo
     }
 }
 
@@ -313,9 +312,6 @@ uint8_t RenderContextImplementation::colorToAnsi(const Color& color)
 
 bool RenderContextImplementation::setupRenderSystems()
 {
-    // Clear buffers
-    mBuffers.clear();
-
     // Clear renderPasses
     mRenderPassCount = 0;
 
@@ -329,6 +325,9 @@ bool RenderContextImplementation::setupRenderSystems()
     // Clear and set up all sub systems of created renderer
     mRenderSystems.clear();
     mRenderSystems = std::move(mRenderer->setupRenderSystems(*this));
+
+    // Clear buffers
+    mBuffers.clear();
 
     // Initialize all render sub systems
     for (auto& renderSystem : mRenderSystems)

@@ -199,8 +199,6 @@ public:
 	virtual void writeToBuffer(const std::string_view& buffer, bool writeToBackBuffer = false) = 0;
 
 	virtual void clear() = 0;
-	virtual void reset(const int width, const int height) = 0;
-	virtual void reset() = 0;
 
 	virtual void setParameter(const std::string_view& shader, const std::string_view& uniform, const std::shared_ptr<Texture>& texture) = 0;
 
@@ -251,6 +249,9 @@ class FrameBuffer
 {
 public:
 	FrameBuffer(RenderContext& context, TextureFormat format, bool createDepth = false, uint16_t width = 0, uint16_t height = 0) {};
+
+	virtual void reset() = 0;
+	virtual void reset(uint16_t width, uint16_t height) = 0;
 
 	virtual [[nodiscard]] std::shared_ptr<Texture> getColorBuffer() const = 0;
 	virtual [[nodiscard]] std::shared_ptr<Texture> getDepthBuffer() const = 0;

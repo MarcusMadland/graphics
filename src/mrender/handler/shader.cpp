@@ -53,7 +53,6 @@ void ShaderImplementation::loadProgram(char const* fileName, char const* filePat
         bgfx::UniformInfo info;
         bgfx::getUniformInfo(uniforms[i], info);
         std::string name = info.name;
-        printf("%s \n", name.data());
         
         if (info.type == bgfx::UniformType::Sampler)
         {
@@ -61,19 +60,14 @@ void ShaderImplementation::loadProgram(char const* fileName, char const* filePat
             data.mHandle = uniforms[i];
             data.unit = unit;
             mUniformHandles[name] = data;
-            printf("Uniform name: %s with unit: %u \n", name.data(), data.unit);
+            //printf("Uniform name: %s with unit: %u \n", name.data(), data.unit);
             unit++;
         }
         else
         {
-            printf("Uniform name: %s with no unit \n", name.data());
+            //printf("Uniform name: %s with no unit \n", name.data());
             mUniformHandles[name] = UniformData(uniforms[i], UINT8_MAX); // magic number: should never be read since its not a texture @todo
         }
-    }
-
-    printf("%s | List: \n", mFileName);
-    for (auto it = mUniformHandles.begin(); it != mUniformHandles.end(); ++it) {
-        printf("-%s\n", it->first.data());
     }
 }
 
@@ -88,7 +82,7 @@ void ShaderImplementation::reloadProgram()
 
 bgfx::ShaderHandle ShaderImplementation::createShader(const std::string& shader, const char* name)
 {
-    const bgfx::Memory* mem = bgfx::copy(shader.data(), shader.size());
+    const bgfx::Memory* mem = bgfx::copy(shader.data(), static_cast<uint32_t>(shader.size()));
     const bgfx::ShaderHandle handle = bgfx::createShader(mem);
     bgfx::setName(handle, name);
     return handle;

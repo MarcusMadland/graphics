@@ -21,7 +21,10 @@ TextureImplementation::TextureImplementation(TextureFormat format, uint64_t text
 
 TextureImplementation::~TextureImplementation()
 {
-	bgfx::destroy(mHandle);
+	if (bgfx::isValid(mHandle))
+	{
+		bgfx::destroy(mHandle);
+	}
 }
 
 bgfx::TextureFormat::Enum TextureImplementation::toBgfx(const TextureFormat& format)

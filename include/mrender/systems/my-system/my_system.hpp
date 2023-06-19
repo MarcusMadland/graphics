@@ -39,7 +39,8 @@ public:
     std::vector<std::pair<std::string, std::shared_ptr<FrameBuffer>>> getBuffers(RenderContext& context) override;
 
 private:
-    std::shared_ptr<Camera> mCamera;
+
+    std::shared_ptr<Camera> mShadowCamera;
     std::shared_ptr<RenderPass> mPassShadow;
     std::shared_ptr<RenderPass> mPassScene;
     std::shared_ptr<RenderPass> mPassPostProcess;

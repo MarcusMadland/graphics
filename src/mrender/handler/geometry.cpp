@@ -18,7 +18,7 @@ GeometryImplementation::GeometryImplementation(const BufferLayout& layout, void*
         bgfx::makeRef(mVertexData, vertexSize),
 		bgfxLayout);
     mIndexBufferHandle = bgfx::createIndexBuffer(
-        bgfx::makeRef(mIndexData.data(), mIndexData.size() * sizeof(uint16_t)));
+        bgfx::makeRef(mIndexData.data(), static_cast<uint32_t>(mIndexData.size() * sizeof(uint16_t))));
 }
 
 bgfx::Attrib::Enum GeometryImplementation::attribToBgfx(const Attrib& attrib)

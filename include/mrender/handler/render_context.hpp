@@ -13,7 +13,7 @@ namespace mrender {
 
 class RenderContextImplementation : public RenderContext
 {
-	friend class RenderPassImplementation;
+	friend class FrameBufferImplementation;
 
 public:
 	virtual void initialize(const RenderSettings& settings) override;
@@ -26,8 +26,6 @@ public:
 	virtual void writeToBuffer(const std::string_view& buffer, bool writeToBackBuffer = false) override;
 
 	virtual void clear() override;
-	virtual void reset(const int width, const int height) override;
-	virtual void reset() override;
 
 	virtual void setParameter(const std::string_view& shader, const std::string_view& uniform, const std::shared_ptr<Texture>& texture) override;
 
