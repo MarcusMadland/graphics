@@ -1,4 +1,4 @@
-#include "mrender/handler/camera.hpp"
+#include "mrender/gfx/camera.hpp"
 
 #include <bx/math.h>
 #include <bgfx/bgfx.h>
@@ -6,7 +6,7 @@
 namespace mrender {
 
 CameraImplementation::CameraImplementation(const CameraSettings& settings)
-	: Camera(settings)
+    : mSettings(settings)
 {
 	recalculate();
 }

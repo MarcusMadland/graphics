@@ -1,12 +1,13 @@
 #include "mrender/mrender.hpp"
 
-#include "mrender/handler/shader.hpp"
-#include "mrender/handler/render_context.hpp"
-#include "mrender/handler/camera.hpp"
-#include "mrender/handler/geometry.hpp"
-#include "mrender/handler/texture.hpp"
-#include "mrender/handler/framebuffer.hpp"
-#include "mrender/handler/render_state.hpp"
+#include "mrender/gfx/shader.hpp"
+#include "mrender/gfx/render_context.hpp"
+#include "mrender/gfx/camera.hpp"
+#include "mrender/gfx/geometry.hpp"
+#include "mrender/gfx/texture.hpp"
+#include "mrender/gfx/framebuffer.hpp"
+#include "mrender/gfx/renderable.hpp"
+#include "mrender/gfx/render_state.hpp"
 
 #include <bx/math.h>
 
@@ -15,20 +16,6 @@ namespace mrender {
 RenderSystem::RenderSystem(const std::string_view& name)
 	: mName(name)
 {}
-
-Camera::Camera(const CameraSettings& settings)
-	: mSettings(settings)
-{}
-
-Geometry::Geometry(const BufferLayout& layout, void* vertexData, uint32_t vertexSize, std::vector<uint16_t> indices)
-	: mIndexData(indices), mVertexData(static_cast<uint8_t*>(vertexData))
-{}
-
-Renderable::Renderable(std::shared_ptr<Geometry> geometry, const std::string_view& shader)
-	: mGeometry(std::move(geometry)), mShader(shader)
-{
-	bx::mtxIdentity(mTransform);
-}
 
 std::shared_ptr<Shader> RenderContext::createShader()
 {
@@ -68,7 +55,7 @@ std::shared_ptr<Geometry> RenderContext::createGeometry(const BufferLayout& layo
 
 std::shared_ptr<Renderable> RenderContext::createRenderable(std::shared_ptr<Geometry> geometry, const std::string_view& shader)
 {
-	return std::make_shared<Renderable>(std::move(geometry), shader);
+	return std::make_shared<RenderableImplementation>(std::move(geometry), shader);
 }
 
 std::shared_ptr<RenderContext> createRenderContext()

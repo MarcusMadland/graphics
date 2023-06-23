@@ -1,5 +1,5 @@
-#include "mrender/handler/render_state.hpp"
-#include "mrender/handler/render_context.hpp"
+#include "mrender/gfx/render_state.hpp"
+#include "mrender/gfx/render_context.hpp"
 
 namespace mrender {
 

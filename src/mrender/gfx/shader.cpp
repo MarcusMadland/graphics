@@ -1,5 +1,5 @@
-#include "mrender/handler/shader.hpp"
-#include "mrender/core/file_ops.hpp"
+#include "mrender/gfx/shader.hpp"
+#include "mrender/utils/file_ops.hpp"
 
 namespace mrender {
 

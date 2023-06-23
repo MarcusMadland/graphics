@@ -1,9 +1,9 @@
-#include "mrender/handler/geometry.hpp"
+#include "mrender/gfx/geometry.hpp"
 
 namespace mrender {
 
 GeometryImplementation::GeometryImplementation(const BufferLayout& layout, void* vertexData, uint32_t vertexSize, std::vector<uint16_t> indices)
-	: Geometry(layout, vertexData, vertexSize, indices)
+	: mIndexData(indices), mVertexData(static_cast<uint8_t*>(vertexData))
 {
 	bgfx::VertexLayout bgfxLayout;
 	bgfxLayout.begin();

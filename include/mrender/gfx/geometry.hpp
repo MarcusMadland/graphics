@@ -13,6 +13,9 @@ class GeometryImplementation : public Geometry
 public:
 	GeometryImplementation(const BufferLayout& layout, void* vertexData, uint32_t vertexSize, std::vector<uint16_t> indices);
 
+	[[nodiscard]] virtual const uint8_t* getVertexData() const override { return mVertexData; };
+	[[nodiscard]] virtual const std::vector<uint16_t> getIndexData() const override { return mIndexData; }
+
 private:
 	bgfx::Attrib::Enum attribToBgfx(const Attrib& attrib);
 	bgfx::AttribType::Enum attribTypeToBgfx(const AttribType& attribType);
@@ -20,6 +23,8 @@ private:
 private:
 	bgfx::VertexBufferHandle mVertexBufferHandle;
 	bgfx::IndexBufferHandle mIndexBufferHandle;
+	std::vector<uint16_t> mIndexData;
+	uint8_t* mVertexData = nullptr;
 };
 
 }	// namespace mrender

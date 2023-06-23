@@ -1,8 +1,8 @@
 #include "mrender/systems/post-processing/post_processing.hpp"
 
 #include <bgfx/bgfx.h> // @todo Make a wrapper around bgfx tags for tags we want to support
-#include "mrender/handler/shader.hpp" // @todo Add support for setting shader uniforms
-#include "mrender/handler/texture.hpp" // ...
+#include "mrender/gfx/shader.hpp" // @todo Add support for setting shader uniforms
+#include "mrender/gfx/texture.hpp" // ...
 
 namespace mrender {
 

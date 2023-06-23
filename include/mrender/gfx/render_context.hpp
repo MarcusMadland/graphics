@@ -1,8 +1,8 @@
 #pragma once
 
 #include "mrender/mrender.hpp"
-#include "mrender/handler/shader.hpp"
-#include "mrender/handler/render_state.hpp"
+#include "mrender/gfx/shader.hpp"
+#include "mrender/gfx/render_state.hpp"
 
 #include <string_view>
 #include <vector>

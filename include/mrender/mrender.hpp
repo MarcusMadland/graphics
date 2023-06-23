@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/factory.hpp"
+#include "utils/factory.hpp"
 
 #include <string_view>
 #include <memory>
@@ -183,15 +183,15 @@ struct BufferLayout
 	std::vector<BufferElement> mElements;
 };
 
-class Renderer;
-class RenderState;
-class RenderSystem;
-class Renderable;
-class Geometry;
-class Camera;
-class Shader;
 class Framebuffer;
+class RenderState;
 class Texture;
+class Shader;
+class RenderSystem;
+class Renderer;
+class Camera;
+class Geometry;
+class Renderable;
 
 class RenderContext
 {
@@ -203,8 +203,8 @@ public:
 	virtual void frame() = 0; // @todo Rename to swap buffers
 
 	virtual void setClearColor(uint32_t rgba) = 0;
-	// null will write to back buffer
-	virtual void writeToBuffers(std::shared_ptr<Framebuffer> framebuffer) = 0;
+	
+	virtual void writeToBuffers(std::shared_ptr<Framebuffer> framebuffer) = 0;// null will write to back buffer
 	virtual void setRenderState(std::shared_ptr<RenderState> renderState) = 0;
 
 	virtual void clear(uint16_t flags, uint16_t width = 0, uint16_t height = 0) = 0;
@@ -249,16 +249,18 @@ public:
 };
 
 class Framebuffer
-{};
+{
+public:
+};
 
-class RenderState // @todo Make every class like this
-{};
+class RenderState 
+{
+public:
+};
 
 class Texture
 {
 public:
-	Texture(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0) {};
-
 	virtual [[nodiscard]] TextureFormat getFormat() const = 0;
 };
 
@@ -269,7 +271,7 @@ public:
 	virtual void reloadProgram() = 0;
 };
 
-class RenderSystem
+class RenderSystem // @todo Simplify class
 {
 public:
 	RenderSystem(const std::string_view& name);
@@ -285,7 +287,7 @@ protected:
 	std::string_view mName;
 };
 
-class Renderer : public Factory<Renderer>
+class Renderer : public Factory<Renderer> // @todo Simplify class
 {
 public:
 	Renderer(Key) {}
@@ -296,45 +298,27 @@ public:
 class Camera
 {
 public:
-	Camera(const CameraSettings& settings);
-
 	virtual void recalculate() = 0;
 
 	virtual void setSettings(const CameraSettings& settings) = 0;
-	virtual [[nodiscard]] const CameraSettings getSettings() const { return mSettings; }
-
-protected:
-	CameraSettings mSettings;
+	virtual [[nodiscard]] const CameraSettings getSettings() const = 0;
 };
 
 class Geometry
 {
 public:
-	Geometry(const BufferLayout& layout, void* vertexData, uint32_t vertexSize, std::vector<uint16_t> indices);
-
-	[[nodiscard]] const uint8_t* getVertexData() const { return mVertexData; }
-	[[nodiscard]] const std::vector<uint16_t> getIndexData() const { return mIndexData; }
-
-protected:
-	uint8_t* mVertexData = nullptr;
-	std::vector<uint16_t> mIndexData;
+	[[nodiscard]] virtual const uint8_t* getVertexData() const = 0;
+	[[nodiscard]] virtual const std::vector<uint16_t> getIndexData() const = 0;
 };
 
 class Renderable
 {
 public:
-	Renderable(std::shared_ptr<Geometry> geometry, const std::string_view& shader);
+	virtual void setTransform(float matrix[16]) = 0; 
+	[[nodiscard]] virtual float* getTransform() = 0;
 
-	void setTransform(float matrix[16]) { for (int i = 0; i < 16; i++)  mTransform[i] = matrix[i]; }
-	[[nodiscard]] float* getTransform() { return mTransform; }
-
-	[[nodiscard]] std::shared_ptr<Geometry> getGeometry() { return mGeometry; } //mGeometry
-	[[nodiscard]] const std::string_view getShader() const { return mShader; }
-
-protected:
-	float mTransform[16];
-	std::shared_ptr<Geometry> mGeometry = nullptr;
-	std::string_view mShader;
+	[[nodiscard]] virtual std::shared_ptr<Geometry> getGeometry() = 0;
+	[[nodiscard]] virtual const std::string_view getShader() const = 0;
 };
 
 std::shared_ptr<RenderContext> createRenderContext();

@@ -1,5 +1,5 @@
-#include "mrender/handler/framebuffer.hpp"
-#include "mrender/handler/texture.hpp"
+#include "mrender/gfx/framebuffer.hpp"
+#include "mrender/gfx/texture.hpp"
 
 namespace mrender {
 
