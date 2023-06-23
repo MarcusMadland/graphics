@@ -24,9 +24,29 @@ void CameraImplementation::recalculate()
 
     bx::mtxInverse(mView, cam_transform);
 
-    bx::mtxProj(
-        mProj, mSettings.fov, mSettings.width / mSettings.height, mSettings.clipNear,
-        mSettings.clipFar, bgfx::getCaps()->homogeneousDepth);
+    switch (mSettings.projectionType)
+    {
+    case mrender::ProjectionType::Perspective:
+    {
+        bx::mtxProj(
+            mProj, mSettings.fov, mSettings.width / mSettings.height, mSettings.clipNear,
+            mSettings.clipFar, bgfx::getCaps()->homogeneousDepth);
+        break;
+    }
+    case mrender::ProjectionType::Orthographic:
+    {
+        const float x = mSettings.width / 2.0f;
+        const float y = mSettings.height / 2.0f;
+        bx::mtxOrtho(mProj, -x, x, -y, y, mSettings.clipNear,
+            mSettings.clipFar, 0.0f, bgfx::getCaps()->homogeneousDepth);
+        break;
+    }
+    default:
+    {
+        break;
+    }
+    }
+    
 }
 
 void CameraImplementation::setSettings(const CameraSettings& settings)

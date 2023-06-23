@@ -4,6 +4,7 @@
 #include "mrender/handler/render_context.hpp"
 #include "mrender/handler/camera.hpp"
 #include "mrender/handler/geometry.hpp"
+#include "mrender/handler/texture.hpp"
 #include "mrender/handler/framebuffer.hpp"
 
 #include <bx/math.h>
@@ -33,6 +34,22 @@ std::shared_ptr<Shader> RenderContext::createShader()
 	return std::make_shared<ShaderImplementation>();
 }
 
+std::shared_ptr<Framebuffer> RenderContext::createFramebuffer(std::vector<std::string> buffers)
+{
+	std::vector<std::shared_ptr<Texture>> textures;
+	for (auto& buffer : buffers)
+	{
+		textures.push_back(getBuffers().at(buffer));
+	}
+
+	return std::make_shared<FramebufferImplementation>(textures);
+}
+
+std::shared_ptr<Texture> RenderContext::createTexture(TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height)
+{
+	return std::make_shared<TextureImplementation>(format, textureFlags, width, height);
+}
+
 std::shared_ptr<Camera> RenderContext::createCamera(const CameraSettings& settings)
 {
 	return std::make_shared<CameraImplementation>(settings);
@@ -46,11 +63,6 @@ std::shared_ptr<Geometry> RenderContext::createGeometry(const BufferLayout& layo
 std::shared_ptr<Renderable> RenderContext::createRenderable(std::shared_ptr<Geometry> geometry, const std::string_view& shader)
 {
 	return std::make_shared<Renderable>(std::move(geometry), shader);
-}
-
-std::shared_ptr<FrameBuffer> RenderContext::createFrameBuffer(const TextureFormat& format, bool createDepth, uint32_t width, uint32_t height)
-{
-	return std::make_shared<FrameBufferImplementation>(*this,  format, createDepth, width, height);
 }
 
 std::shared_ptr<RenderContext> createRenderContext()

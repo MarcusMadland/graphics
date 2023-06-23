@@ -11,6 +11,7 @@ function setBxCompat()
 	filter { "system:macosx" }
 		includedirs { path.join(BX_DIR, "include/compat/osx") }
 		buildoptions { "-x objective-c++" }
+	
 end
 
 project "mrender"
@@ -22,14 +23,12 @@ project "mrender"
 	targetdir ("binaries/" .. "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}" .. "/%{prj.name}")
 	objdir ("intermediate/" .. "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}" .. "/%{prj.name}")
 
-	files
-	{
+	files {
 		"include/**.hpp",
 		"src/**.cpp",
 	}
 
-	includedirs
-	{
+	includedirs {
 		"include",
 		path.join(BGFX_DIR, "include"),
 		path.join(BGFX_DIR, "tools"),
@@ -50,6 +49,13 @@ project "mrender"
 		links { "dl", "GL", "pthread", "X11" }
 	filter "system:macosx"
 		links { "QuartzCore.framework", "Metal.framework", "Cocoa.framework", "IOKit.framework", "CoreVideo.framework" }
+	
+	filter "configurations:Release"
+		defines "BX_CONFIG_DEBUG=0"
+	filter "configurations:Debug"
+		defines "BX_CONFIG_DEBUG=1"
+	filter "action:vs*"
+		defines "_CRT_SECURE_NO_WARNINGS"
 	setBxCompat()
 
 project "bgfx"
@@ -98,6 +104,12 @@ project "bgfx"
 		{
 			path.join(BGFX_DIR, "src/*.mm"),
 		}
+	filter "configurations:Release"
+		defines "BX_CONFIG_DEBUG=0"
+	filter "configurations:Debug"
+		defines "BX_CONFIG_DEBUG=1"
+	filter "action:vs*"
+		defines "_CRT_SECURE_NO_WARNINGS"
 	setBxCompat()
 
 project "bimg"
@@ -121,6 +133,12 @@ project "bimg"
 		path.join(BIMG_DIR, "3rdparty/astc-codec"),
 		path.join(BIMG_DIR, "3rdparty/astc-codec/include"),
 	}
+	filter "configurations:Release"
+		defines "BX_CONFIG_DEBUG=0"
+	filter "configurations:Debug"
+		defines "BX_CONFIG_DEBUG=1"
+	filter "action:vs*"
+		defines "_CRT_SECURE_NO_WARNINGS"
 	setBxCompat()
 
 project "bx"

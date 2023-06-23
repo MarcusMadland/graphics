@@ -16,6 +16,8 @@ struct UniformData
 class ShaderImplementation : public Shader
 {
 	friend class RenderContextImplementation;
+	friend class ShadowMapping; // @todo remove
+	friend class PostProcessing; // @todo remove
 
 public:
 	virtual void loadProgram(char const* fileName, char const* filePath) override;

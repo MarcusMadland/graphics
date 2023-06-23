@@ -1,7 +1,6 @@
 #pragma once
 
 #include "mrender/mrender.hpp"
-#include "framebuffer.hpp"
 
 #include <bgfx/bgfx.h>
 
@@ -10,7 +9,10 @@ namespace mrender {
 class TextureImplementation : public Texture
 {
 	friend class RenderContextImplementation;
-	friend class FrameBufferImplementation;
+	friend class FramebufferImplementation;
+	friend class PostProcessing;
+	friend class ShadowMapping;
+	friend class GBuffer;
 
 public:
 	TextureImplementation(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0);

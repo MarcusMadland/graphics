@@ -16,7 +16,8 @@ void ShaderImplementation::loadProgram(char const* fileName, char const* filePat
         std::cout << "Invalid path when loading shader" << std::endl;
         return;
     }
-    bgfx::ShaderHandle vsh = createShader(vshader, "vshader");
+    bgfx::ShaderHandle vsh = BGFX_INVALID_HANDLE;
+    vsh = createShader(vshader, "vshader");
     if (!bgfx::isValid(vsh))
     {
         std::cout << "Failed to create shader" << std::endl;
@@ -29,7 +30,8 @@ void ShaderImplementation::loadProgram(char const* fileName, char const* filePat
         std::cout << "Invalid path when loading shader" << std::endl;
         return;
     }
-    bgfx::ShaderHandle fsh = createShader(fshader, "fshader");
+    bgfx::ShaderHandle fsh = BGFX_INVALID_HANDLE;
+    fsh = createShader(fshader, "fshader");
     if (!bgfx::isValid(fsh))
     {
         std::cout << "Failed to create shader" << std::endl;

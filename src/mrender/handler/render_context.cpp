@@ -1,7 +1,6 @@
 #include "mrender/handler/render_context.hpp"
 #include "mrender/handler/camera.hpp"
 #include "mrender/handler/geometry.hpp"
-#include "mrender/handler/framebuffer.hpp"
 #include "mrender/handler/texture.hpp"
 #include "mrender/core/file_ops.hpp"
 
@@ -31,18 +30,19 @@ void RenderContextImplementation::initialize(const RenderSettings& settings)
     setupResetFlags();
      
     // Setup render backend
-    bgfx::PlatformData pd{};
-    pd.nwh = mSettings.mNativeWindow;
-    pd.ndt = mSettings.mNativeDisplay;
-
     bgfx::Init bgfx_init;
-    bgfx_init.type = bgfx::RendererType::Count; // auto? read about it @todo
+    bgfx_init.type = bgfx::RendererType::Count; // Auto? read about it @todo Think it uses the defines in build script
+    bgfx_init.vendorId = BGFX_PCI_ID_NONE; // Auto
     bgfx_init.resolution.width = mSettings.mResolutionWidth;
     bgfx_init.resolution.height = mSettings.mResolutionHeight;
     bgfx_init.resolution.reset = mResetFlags;
-    bgfx_init.platformData = pd;
+    bgfx_init.platformData.nwh = mSettings.mNativeWindow;
+    bgfx_init.platformData.ndt = mSettings.mNativeDisplay;
+    printf("Backend init result: %s\n", bgfx::init(bgfx_init) ? "Success" : "Failed");
 
-    assert(bgfx::init(bgfx_init));
+    // @todo Add so only show in debug mode
+    bgfx::setDebug(BGFX_DEBUG_TEXT);
+    // bgfx::setDebug(BGFX_DEBUG_STATS);
 
     // Setup renderer and render sub systems
     setupRenderSystems();
@@ -60,27 +60,6 @@ void RenderContextImplementation::setClearColor(uint32_t rgba)
 
 void RenderContextImplementation::writeToBuffer(const std::string_view& buffer, bool writeToBackBuffer)
 {
-    std::shared_ptr<FrameBufferImplementation> frameBufferImpl = std::static_pointer_cast<FrameBufferImplementation>(mBuffers[buffer.data()]);
-    mCurrentRenderPass = frameBufferImpl->mId;
-    
-    if (!writeToBackBuffer)
-    {
-        if (frameBufferImpl->width + frameBufferImpl->height != 0)
-        {
-            bgfx::setViewRect(mCurrentRenderPass, 0, 0, frameBufferImpl->width, frameBufferImpl->height);
-        }
-        else
-        {
-            bgfx::setViewRect(mCurrentRenderPass, 0,0, bgfx::BackbufferRatio::Equal);
-        }
-
-        bgfx::setViewFrameBuffer(mCurrentRenderPass, frameBufferImpl->mHandle);
-    }
-    else
-    {
-        bgfx::setViewFrameBuffer(mCurrentRenderPass, BGFX_INVALID_HANDLE);
-    }
-
 }
 
 void RenderContextImplementation::clear()
@@ -240,7 +219,9 @@ void RenderContextImplementation::setSettings(const RenderSettings& settings)
     {
         std::cout << "Reset viewport and flags..." << std::endl;
         setupResetFlags();
-       // bgfx::Clear(flags) @todo
+
+        // Reset backbuffer size
+        bgfx::reset(mSettings.mResolutionWidth, mSettings.mResolutionHeight, mResetFlags);
     }
 }
 
@@ -254,7 +235,7 @@ void RenderContextImplementation::setRenderables(std::vector<std::shared_ptr<Ren
     mRenderables = std::move(renderables);
 }
 
-void RenderContextImplementation::addBuffer(const std::string_view& name, std::shared_ptr<FrameBuffer> buffer)
+void RenderContextImplementation::addBuffer(const std::string_view& name, std::shared_ptr<Texture> buffer)
 {
     mBuffers[name.data()] = std::move(buffer);
 }
@@ -268,7 +249,7 @@ void RenderContextImplementation::render(const std::shared_ptr<Camera>& camera)
 {
     mCamera = camera;
 
-    bgfx::touch(mRenderPassCount - 1);
+    bgfx::touch(0); // @todo
     bgfx::dbgTextClear();
 
     // Render all subsystems of the renderer
@@ -280,8 +261,6 @@ void RenderContextImplementation::render(const std::shared_ptr<Camera>& camera)
 
 void RenderContextImplementation::frame()
 {
-    bgfx::setDebug(BGFX_DEBUG_TEXT);
-
     // Backend frame call
     bgfx::frame();
 }
@@ -332,12 +311,12 @@ bool RenderContextImplementation::setupRenderSystems()
     // Initialize all render sub systems
     for (auto& renderSystem : mRenderSystems)
     {
-        renderSystem->init(*this);
         for (auto& buffer : renderSystem->getBuffers(*this))
         {
-            bgfx::setViewName(std::static_pointer_cast<FrameBufferImplementation>(buffer.second)->mId, buffer.first.data());
             mBuffers[buffer.first] = std::move(buffer.second);
         }
+
+        renderSystem->init(*this);
     }
 
     return true;

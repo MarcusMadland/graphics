@@ -16,13 +16,14 @@ TextureImplementation::TextureImplementation(TextureFormat format, uint64_t text
 	{
 		mHandle = bgfx::createTexture2D(bgfx::BackbufferRatio::Equal, false, 1, toBgfx(format), textureFlags);
 	}
-	
+	printf("Want to create texture\n");
 }
 
 TextureImplementation::~TextureImplementation()
 {
 	if (bgfx::isValid(mHandle))
 	{
+		printf("Want to destroy texture\n");
 		bgfx::destroy(mHandle);
 	}
 }

@@ -143,6 +143,12 @@ enum class Color
 	Green,
 };
 
+enum class ProjectionType
+{
+	Perspective,
+	Orthographic,
+};
+
 struct RenderSettings
 {
 	std::string_view mRendererName = "none";
@@ -155,6 +161,7 @@ struct RenderSettings
 
 struct CameraSettings
 {
+	ProjectionType projectionType = ProjectionType::Perspective;
 	float fov = 45.0f;
 	float width = 0.0f;
 	float height = 0.0f;
@@ -183,7 +190,7 @@ class Geometry;
 class Camera;
 class Shader;
 class RenderPass;
-class FrameBuffer;
+class Framebuffer;
 class Texture;
 
 class RenderContext
@@ -217,25 +224,29 @@ public:
 	virtual void addRenderable(std::shared_ptr<Renderable> renderable) = 0;
 	virtual void setRenderables(std::vector<std::shared_ptr<Renderable>> renderables) = 0;
 
-	virtual void addBuffer(const std::string_view& name, std::shared_ptr<FrameBuffer> buffer) = 0;
+	virtual void addBuffer(const std::string_view& name, std::shared_ptr<Texture> buffer) = 0;
 
 	virtual void setPassCount(uint32_t passCount) = 0;
 
 	std::shared_ptr<Shader> createShader();
+	std::shared_ptr<Framebuffer> createFramebuffer(std::vector<std::string> buffers);
+	std::shared_ptr<Texture> createTexture(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0);
 	std::shared_ptr<Camera> createCamera(const CameraSettings& settings);
 	std::shared_ptr<Geometry> createGeometry(const BufferLayout& layout, void* vertexData, uint32_t vertexSize, std::vector<uint16_t> indices);
 	std::shared_ptr<Renderable> createRenderable(std::shared_ptr<Geometry> geometry, const std::string_view& shader);
-	std::shared_ptr<FrameBuffer> createFrameBuffer(const TextureFormat& format, bool createDepth = false, uint32_t width = 0, uint32_t height = 0);
-
+	
 	virtual [[nodiscard]] const RenderSettings getSettings() const = 0;
 	virtual [[nodiscard]] const std::shared_ptr<Renderer>& getRenderer() const = 0;
+	virtual [[nodiscard]] const std::unordered_map<std::string, std::shared_ptr<Texture>>& getBuffers() const = 0;
 	virtual [[nodiscard]] const std::vector<std::shared_ptr<RenderSystem>>& getRenderSystems() const = 0;
 	virtual [[nodiscard]] const std::unordered_map<std::string, std::shared_ptr<Shader>>& getShaders() const = 0;
 	virtual [[nodiscard]] const std::vector<std::shared_ptr<Renderable>>& getRenderables() const = 0;
 	virtual [[nodiscard]] const std::shared_ptr<Camera>& getCamera() const = 0;
-	virtual [[nodiscard]] const std::unordered_map<std::string, std::shared_ptr<FrameBuffer>>& getBuffers() const = 0;
 	virtual [[nodiscard]] const uint32_t getPassCount() const = 0;
 };
+
+class Framebuffer
+{};
 
 class Texture
 {
@@ -243,18 +254,6 @@ public:
 	Texture(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0) {};
 
 	virtual [[nodiscard]] TextureFormat getFormat() const = 0;
-};
-
-class FrameBuffer
-{
-public:
-	FrameBuffer(RenderContext& context, TextureFormat format, bool createDepth = false, uint16_t width = 0, uint16_t height = 0) {};
-
-	virtual void reset() = 0;
-	virtual void reset(uint16_t width, uint16_t height) = 0;
-
-	virtual [[nodiscard]] std::shared_ptr<Texture> getColorBuffer() const = 0;
-	virtual [[nodiscard]] std::shared_ptr<Texture> getDepthBuffer() const = 0;
 };
 
 class Shader
@@ -273,7 +272,8 @@ public:
 
 	virtual bool init(RenderContext& context) = 0;
 	virtual void render(RenderContext& context) = 0;
-	virtual std::vector<std::pair<std::string, std::shared_ptr<FrameBuffer>>> getBuffers(RenderContext& context) = 0;
+
+	virtual std::unordered_map<std::string, std::shared_ptr<Texture>> getBuffers(RenderContext& context) = 0;
 
 protected:
 	std::string_view mName;
