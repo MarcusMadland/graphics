@@ -33,24 +33,21 @@ bool PostProcessing::init(RenderContext& context)
     } };
     mScreenQuad = context.createGeometry(layout, mQuadVertices.data(), static_cast<uint32_t>(mQuadVertices.size() * sizeof(VertexData)), mQuadIndices);
 
-    // Render State
-    auto shader = std::static_pointer_cast<ShaderImplementation>(context.getShaders().at("screen"));
-    mState[0] = RenderState();
-    mState[0].m_state = (0
+    // Render state
+    mState = context.createRenderState(0
         | BGFX_STATE_WRITE_RGB
         | BGFX_STATE_WRITE_A);
-    mState[0].m_viewId = RENDER_POSTPROCESS_PASS_ID;
 
     return true;
 }
 
 void PostProcessing::render(RenderContext& context)
 {
-    bgfx::setViewRect(mState[0].m_viewId, 0, 0, bgfx::BackbufferRatio::Equal);
-    bgfx::setViewClear(mState[0].m_viewId
-        , BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH
-        , 0xff00ffff, 1.0f, 0
-    );
+    // Set current renderpass id
+    context.setRenderState(mState);
+
+    // Clear
+    context.clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
 
     // Set shader uniforms
     auto shader = std::static_pointer_cast<ShaderImplementation>(context.getShaders().at("screen"));
@@ -66,13 +63,6 @@ void PostProcessing::render(RenderContext& context)
     {
         bgfx::setTexture(shader->mUniformHandles.at("s_Color").unit, shader->mUniformHandles.at("s_Color").mHandle, gBufferColor->mHandle);
     }
-   
-    // Set current renderpass id
-    RenderContextImplementation& contextCasted = static_cast<RenderContextImplementation&>(context);
-    contextCasted.mCurrentRenderPass = mState[0].m_viewId;
-
-    // Set state
-    bgfx::setState(mState[0].m_state);
 
     // Submit quad
     context.submit(mScreenQuad, "screen", nullptr);

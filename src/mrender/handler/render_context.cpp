@@ -2,7 +2,9 @@
 #include "mrender/handler/camera.hpp"
 #include "mrender/handler/geometry.hpp"
 #include "mrender/handler/texture.hpp"
+#include "mrender/handler/framebuffer.hpp"
 #include "mrender/core/file_ops.hpp"
+#include "mrender/handler/render_state.hpp"
 
 #include "mrender/renderers/my-renderer/my_renderer.hpp"
 #include "mrender/renderers/my-renderer2/my_renderer2.hpp"
@@ -58,13 +60,28 @@ void RenderContextImplementation::setClearColor(uint32_t rgba)
     mClearColor = rgba;
 }
 
-void RenderContextImplementation::writeToBuffer(const std::string_view& buffer, bool writeToBackBuffer)
+void RenderContextImplementation::writeToBuffers(std::shared_ptr<Framebuffer> framebuffer)
 {
+    bgfx::setViewFrameBuffer(mRenderState->mId, std::static_pointer_cast<FramebufferImplementation>(framebuffer)->mHandle);
 }
 
-void RenderContextImplementation::clear()
+void RenderContextImplementation::setRenderState(std::shared_ptr<RenderState> renderState)
 {
-    bgfx::setViewClear(mCurrentRenderPass, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, mClearColor, 1.0f, 0);
+    mRenderState = std::static_pointer_cast<RenderStateImplementation>(renderState);
+}
+
+void RenderContextImplementation::clear(uint16_t flags, uint16_t width, uint16_t height)
+{
+    if (width + height > 0)
+    {
+        bgfx::setViewRect(mRenderState->mId, 0, 0, width, height);
+    }
+    else
+    {
+        bgfx::setViewRect(mRenderState->mId, 0, 0, bgfx::BackbufferRatio::Equal);
+    }
+
+    bgfx::setViewClear(mRenderState->mId, flags, mClearColor, 1.0f, 0);
 }
 
 void RenderContextImplementation::setParameter(const std::string_view& shader, const std::string_view& uniform, const std::shared_ptr<Texture>& texture)
@@ -151,10 +168,12 @@ void RenderContextImplementation::submitDebugTextOnScreen(uint16_t x, uint16_t y
 
 void RenderContextImplementation::submit(const std::shared_ptr<Geometry>& geometry, const std::string_view& shaderName, const std::shared_ptr<Camera>& camera)
 {
+    bgfx::setState(mRenderState->mFlags);
+
     if (camera)
     {
         CameraImplementation* cameraImpl = reinterpret_cast<CameraImplementation*>(camera.get());
-        bgfx::setViewTransform(mCurrentRenderPass, cameraImpl->getViewMatrix(), cameraImpl->getProjMatrix());
+        bgfx::setViewTransform(mRenderState->mId, cameraImpl->getViewMatrix(), cameraImpl->getProjMatrix());
     }
 
     GeometryImplementation* geometryImpl = reinterpret_cast<GeometryImplementation*>(geometry.get());
@@ -167,7 +186,7 @@ void RenderContextImplementation::submit(const std::shared_ptr<Geometry>& geomet
     ShaderImplementation* shaderImpl = reinterpret_cast<ShaderImplementation*>(mShaders[shaderName.data()].get());
     if (shaderImpl)
     {
-        bgfx::submit(mCurrentRenderPass, shaderImpl->mHandle);
+        bgfx::submit(mRenderState->mId, shaderImpl->mHandle);
     }
 }
 
@@ -240,9 +259,9 @@ void RenderContextImplementation::addBuffer(const std::string_view& name, std::s
     mBuffers[name.data()] = std::move(buffer);
 }
 
-void RenderContextImplementation::setPassCount(uint32_t passCount)
+void RenderContextImplementation::setRenderStateCount(uint32_t stateCount)
 {
-    mRenderPassCount = passCount;
+    mRenderStateCount = stateCount;
 }
 
 void RenderContextImplementation::render(const std::shared_ptr<Camera>& camera)
@@ -292,7 +311,7 @@ uint8_t RenderContextImplementation::colorToAnsi(const Color& color)
 bool RenderContextImplementation::setupRenderSystems()
 {
     // Clear renderPasses
-    mRenderPassCount = 0;
+    setRenderStateCount(0);
 
     // Create the renderer from name in settings
     mRenderer = Renderer::make(mSettings.mRendererName);

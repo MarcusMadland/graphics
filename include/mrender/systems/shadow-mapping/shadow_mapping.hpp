@@ -6,12 +6,6 @@
 
 namespace mrender {
 
-struct RenderState
-{
-	uint64_t            m_state;
-	bgfx::ViewId        m_viewId;
-};
-
 class ShadowMapping : public RenderSystem
 {
 public:
@@ -26,7 +20,7 @@ public:
 private:
     std::shared_ptr<Camera> mCamera;
 	std::shared_ptr<Framebuffer> mFramebuffer;
-	RenderState mState[1];
+    std::shared_ptr<RenderState> mState;
 };
 
 }   // namespace mrender

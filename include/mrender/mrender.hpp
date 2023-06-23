@@ -184,12 +184,12 @@ struct BufferLayout
 };
 
 class Renderer;
+class RenderState;
 class RenderSystem;
 class Renderable;
 class Geometry;
 class Camera;
 class Shader;
-class RenderPass;
 class Framebuffer;
 class Texture;
 
@@ -203,9 +203,11 @@ public:
 	virtual void frame() = 0;
 
 	virtual void setClearColor(uint32_t rgba) = 0;
-	virtual void writeToBuffer(const std::string_view& buffer, bool writeToBackBuffer = false) = 0;
+	// null will write to back buffer
+	virtual void writeToBuffers(std::shared_ptr<Framebuffer> framebuffer) = 0;
+	virtual void setRenderState(std::shared_ptr<RenderState> renderState) = 0;
 
-	virtual void clear() = 0;
+	virtual void clear(uint16_t flags, uint16_t width = 0, uint16_t height = 0) = 0;
 
 	virtual void setParameter(const std::string_view& shader, const std::string_view& uniform, const std::shared_ptr<Texture>& texture) = 0;
 
@@ -226,9 +228,10 @@ public:
 
 	virtual void addBuffer(const std::string_view& name, std::shared_ptr<Texture> buffer) = 0;
 
-	virtual void setPassCount(uint32_t passCount) = 0;
+	virtual void setRenderStateCount(uint32_t passCount) = 0;
 
 	std::shared_ptr<Shader> createShader();
+	std::shared_ptr<RenderState> createRenderState(uint64_t flags);
 	std::shared_ptr<Framebuffer> createFramebuffer(std::vector<std::string> buffers);
 	std::shared_ptr<Texture> createTexture(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0);
 	std::shared_ptr<Camera> createCamera(const CameraSettings& settings);
@@ -242,10 +245,13 @@ public:
 	virtual [[nodiscard]] const std::unordered_map<std::string, std::shared_ptr<Shader>>& getShaders() const = 0;
 	virtual [[nodiscard]] const std::vector<std::shared_ptr<Renderable>>& getRenderables() const = 0;
 	virtual [[nodiscard]] const std::shared_ptr<Camera>& getCamera() const = 0;
-	virtual [[nodiscard]] const uint32_t getPassCount() const = 0;
+	virtual [[nodiscard]] const uint32_t getRenderStateCount() const = 0;
 };
 
 class Framebuffer
+{};
+
+class RenderState
 {};
 
 class Texture

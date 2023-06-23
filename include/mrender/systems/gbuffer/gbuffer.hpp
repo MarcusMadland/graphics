@@ -20,8 +20,8 @@ public:
     std::unordered_map<std::string, std::shared_ptr<Texture>> getBuffers(RenderContext& context) override;
 
 private:
-	RenderState mState[1];
     std::shared_ptr<Framebuffer> mFramebuffer;
+    std::shared_ptr<RenderState> mState;
 };
 
 }   // namespace mrender

@@ -2,6 +2,7 @@
 
 #include "mrender/mrender.hpp"
 #include "mrender/handler/shader.hpp"
+#include "mrender/handler/render_state.hpp"
 
 #include <string_view>
 #include <vector>
@@ -13,6 +14,7 @@ namespace mrender {
 
 class RenderContextImplementation : public RenderContext
 {
+	friend class RenderStateImplementation;
 	friend class FrameBufferImplementation;
 	friend class PostProcessing;
 	friend class ShadowMapping;
@@ -26,9 +28,10 @@ public:
 	virtual void frame() override;
 
 	virtual void setClearColor(uint32_t rgba) override;
-	virtual void writeToBuffer(const std::string_view& buffer, bool writeToBackBuffer = false) override;
+	virtual void writeToBuffers(std::shared_ptr<Framebuffer> framebuffer) override;
+	virtual void setRenderState(std::shared_ptr<RenderState> renderState) override;
 
-	virtual void clear() override;
+	virtual void clear(uint16_t flags, uint16_t width = 0, uint16_t height = 0) override;
 
 	virtual void setParameter(const std::string_view& shader, const std::string_view& uniform, const std::shared_ptr<Texture>& texture) override;
 
@@ -56,10 +59,10 @@ public:
 	virtual [[nodiscard]] const std::unordered_map<std::string, std::shared_ptr<Shader>>& getShaders() const override { return mShaders; }
 	virtual [[nodiscard]] const std::vector<std::shared_ptr<Renderable>>& getRenderables() const override { return mRenderables; }
 	virtual [[nodiscard]] const std::shared_ptr<Camera>& getCamera() const override { return mCamera; }
-	virtual [[nodiscard]] const uint32_t getPassCount() const override { return mRenderPassCount; };
+	virtual [[nodiscard]] const uint32_t getRenderStateCount() const override { return mRenderStateCount; };
 
 private:
-	virtual void setPassCount(uint32_t passCount) override;
+	virtual void setRenderStateCount(uint32_t stateCount) override;
 	uint8_t colorToAnsi(const Color& color);
 	bool setupRenderSystems();
 	void setupResetFlags();
@@ -73,11 +76,11 @@ private:
 	std::vector<std::shared_ptr<Renderable>> mRenderables;
 	std::shared_ptr<Camera> mCamera;
 	std::unordered_map<std::string, std::shared_ptr<Texture>> mBuffers;
+	std::shared_ptr<RenderStateImplementation> mRenderState;
 
 	uint32_t mResetFlags;
 	uint32_t mClearColor = 0xFF00FFFF;
-	uint32_t mCurrentRenderPass = 0;
-	uint32_t mRenderPassCount = 0;
+	uint32_t mRenderStateCount = 0;
 };
 
 }	// namespace mrender

@@ -31,36 +31,27 @@ bool GBuffer::init(mrender::RenderContext& context)
 { 
 	// Framebuffer
 	mFramebuffer = context.createFramebuffer({ "GBufferColor", "GBufferDepth" });
+	if (mFramebuffer == nullptr) { printf("Failed to create framebuffer"); }
 
 	// Render State
-	mState[0] = RenderState();
-	mState[0].m_state = (0
+	mState = context.createRenderState(0
 		| BGFX_STATE_WRITE_RGB
 		| BGFX_STATE_WRITE_A
 		| BGFX_STATE_WRITE_Z
 		| BGFX_STATE_DEPTH_TEST_LESS
 		| BGFX_STATE_MSAA);
-	mState[0].m_viewId = RENDER_GEOMETRY_PASS_ID;
-    
+	
     return true;
 }
 
 void GBuffer::render(RenderContext& context)
 {
-	// Clear render pass
-    bgfx::setViewRect(mState[0].m_viewId, 0, 0, bgfx::BackbufferRatio::Equal);
-    bgfx::setViewFrameBuffer(mState[0].m_viewId, std::static_pointer_cast<FramebufferImplementation>(mFramebuffer)->mHandle);
-    bgfx::setViewClear(mState[0].m_viewId
-        , BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH
-        , 0xff00ffff, 1.0f, 0
-    );
-    
 	// Set current render pass id
-	RenderContextImplementation& contextCasted = static_cast<RenderContextImplementation&>(context);
-	contextCasted.mCurrentRenderPass = mState[0].m_viewId;
+	context.setRenderState(mState);
 
-	// Set state
-	bgfx::setState(mState[0].m_state);
+	// Clear render pass
+	context.writeToBuffers(mFramebuffer);
+	context.clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
 
 	// Submit scene
 	context.submit(context.getRenderables(), context.getCamera());

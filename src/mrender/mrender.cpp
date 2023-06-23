@@ -6,6 +6,7 @@
 #include "mrender/handler/geometry.hpp"
 #include "mrender/handler/texture.hpp"
 #include "mrender/handler/framebuffer.hpp"
+#include "mrender/handler/render_state.hpp"
 
 #include <bx/math.h>
 
@@ -32,6 +33,11 @@ Renderable::Renderable(std::shared_ptr<Geometry> geometry, const std::string_vie
 std::shared_ptr<Shader> RenderContext::createShader()
 {
 	return std::make_shared<ShaderImplementation>();
+}
+
+std::shared_ptr<RenderState> RenderContext::createRenderState(uint64_t flags)
+{
+	return std::make_shared<RenderStateImplementation>(*this, flags);
 }
 
 std::shared_ptr<Framebuffer> RenderContext::createFramebuffer(std::vector<std::string> buffers)
