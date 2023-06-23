@@ -2,8 +2,6 @@
 
 #include "mrender/mrender.hpp"
 
-#include <bgfx/bgfx.h>
-
 namespace mrender {
 
 class ShadowMapping : public RenderSystem
@@ -18,9 +16,9 @@ public:
     std::unordered_map<std::string, std::shared_ptr<Texture>> getBuffers(RenderContext& context) override;
 
 private:
-    std::shared_ptr<Camera> mCamera;
-	std::shared_ptr<Framebuffer> mFramebuffer;
     std::shared_ptr<RenderState> mState;
+    std::shared_ptr<Framebuffer> mFramebuffer;
+    std::shared_ptr<Camera> mCamera;
 };
 
 }   // namespace mrender

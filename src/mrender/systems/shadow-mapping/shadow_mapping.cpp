@@ -1,20 +1,10 @@
 #include "mrender/systems/shadow-mapping/shadow_mapping.hpp"
-#include "mrender/core/file_ops.hpp"
 
-
-#include "mrender/handler/shader.hpp" // @temp
-#include "mrender/handler/render_context.hpp"
-#include "mrender/handler/texture.hpp"
-#include "mrender/handler/framebuffer.hpp"
-
-#include <bgfx/bgfx.h>
-#include <bx/math.h>
-
-#define RENDER_SHADOW_PASS_ID 0
+#include <bgfx/bgfx.h> // @todo Make a wrapper around bgfx tags for tags we want to support
 
 namespace mrender {
 
-// @todo make options
+// @todo Make a render option system
 static constexpr bool useShadowSampler = true;
 static constexpr uint32_t shadowSize = 512;
 
@@ -32,24 +22,23 @@ bool ShadowMapping::init(mrender::RenderContext& context)
 	// Shader
 	context.loadShader("shadow", "C:/Users/marcu/Dev/mengine/mrender/shaders/shadow");
 
-	// Camera
-    CameraSettings cameraSettings;
-	cameraSettings.projectionType = ProjectionType::Orthographic;
-    cameraSettings.width = 30.0f;
-    cameraSettings.height = 30.0f;
-    cameraSettings.postion[2] = -5.0f;
-    mCamera = context.createCamera(cameraSettings);
-
-	// Framebuffer
-	mFramebuffer = context.createFramebuffer({ "ShadowMap" });
-	if (mFramebuffer == nullptr) { printf("Failed to create framebuffer"); }
-
 	// Render State
 	mState = context.createRenderState(0
 		| BGFX_STATE_WRITE_Z
 		| BGFX_STATE_DEPTH_TEST_LESS
 		| BGFX_STATE_CULL_CCW
 		| BGFX_STATE_MSAA);
+
+	// Framebuffer
+	mFramebuffer = context.createFramebuffer({ "ShadowMap" });
+
+	// Camera
+	CameraSettings cameraSettings;
+	cameraSettings.projectionType = ProjectionType::Orthographic;
+	cameraSettings.width = 30.0f;
+	cameraSettings.height = 30.0f;
+	cameraSettings.postion[2] = -5.0f;
+	mCamera = context.createCamera(cameraSettings);
     
     return true;
 }

@@ -2,19 +2,7 @@
 
 #include "mrender/mrender.hpp"
 
-#include "mrender/systems/shadow-mapping/shadow_mapping.hpp" // @todo temp
-
 namespace mrender {
-
-
-struct VertexData
-{
-    float x;
-    float y;
-    float z;
-    float texX;
-    float texY;
-};
 
 class PostProcessing : public RenderSystem
 {
@@ -28,7 +16,17 @@ public:
     std::unordered_map<std::string, std::shared_ptr<Texture>> getBuffers(RenderContext& context) override;
 
 private:
+    std::shared_ptr<RenderState> mState;
     std::shared_ptr<Geometry> mScreenQuad;
+
+    struct VertexData
+    {
+        float x;
+        float y;
+        float z;
+        float texX;
+        float texY;
+    };
     std::vector<VertexData> mQuadVertices =
     {
         { -1.0f,  1.0f, 0.0f,  0.0f,0.0f },
@@ -40,7 +38,6 @@ private:
     {
         0, 1, 2, 1, 3, 2,
     };
-    std::shared_ptr<RenderState> mState;
 };
 
 }   // namespace mrender
