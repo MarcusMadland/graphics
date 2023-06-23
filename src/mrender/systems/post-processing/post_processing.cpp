@@ -45,17 +45,8 @@ void PostProcessing::render(RenderContext& context)
     context.clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
 
     // Set shader uniforms
-    auto shader = std::static_pointer_cast<ShaderImplementation>(context.getShaders().at("screen"));
-    auto shadowMap = std::static_pointer_cast<TextureImplementation>(context.getBuffers().at("ShadowMap"));
-    auto gBufferColor = std::static_pointer_cast<TextureImplementation>(context.getBuffers().at("GBufferColor"));
-    if (shader->mUniformHandles.count("s_Shadow") > 0 && bgfx::isValid(shader->mUniformHandles.at("s_Shadow").mHandle) && bgfx::isValid(shadowMap->mHandle))
-    {
-        bgfx::setTexture(shader->mUniformHandles.at("s_Shadow").unit, shader->mUniformHandles.at("s_Shadow").mHandle, shadowMap->mHandle);
-    }
-    if (shader->mUniformHandles.count("s_Color") > 0 && bgfx::isValid(shader->mUniformHandles.at("s_Color").mHandle) && bgfx::isValid(gBufferColor->mHandle))
-    {
-        bgfx::setTexture(shader->mUniformHandles.at("s_Color").unit, shader->mUniformHandles.at("s_Color").mHandle, gBufferColor->mHandle);
-    }
+    context.setParameter("screen", "s_Shadow", context.getBuffers().at("ShadowMap"));
+    context.setParameter("screen", "s_Color", context.getBuffers().at("GBufferColor"));
 
     // Submit quad
     context.submit(mScreenQuad, "screen", nullptr);

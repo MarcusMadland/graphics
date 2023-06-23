@@ -161,21 +161,21 @@ struct RenderSettings
 
 struct CameraSettings
 {
-	ProjectionType projectionType = ProjectionType::Perspective;
-	float fov = 45.0f;
-	float width = 0.0f;
-	float height = 0.0f;
-	float clipNear = 0.001f;
-	float clipFar = 100.0f;
-	float postion[3] = { 0.0f, 0.0f, 0.0f }; // x, y, z
-	float rotation[3] = { 0.0f, 0.0f, 0.0f }; // pitch, yaw, roll
+	ProjectionType mProjectionType = ProjectionType::Perspective;
+	float mFov = 45.0f;
+	float mWidth = 0.0f;
+	float mHeight = 0.0f;
+	float mClipNear = 0.001f;
+	float mClipFar = 100.0f;
+	float mPosition[3] = { 0.0f, 0.0f, 0.0f }; 
+	float mLookAt[3] = { 0.0f, 0.0f, 0.0f }; 
 };
 
 struct BufferElement
 {
-	AttribType attribType;
-	uint8_t num;
-	Attrib attrib;
+	AttribType mAttribType;
+	uint8_t mNum;
+	Attrib mAttrib;
 };
 
 struct BufferLayout
@@ -200,7 +200,7 @@ public:
 	virtual void cleanup() = 0;
 
 	virtual void render(const std::shared_ptr<Camera>& camera) = 0;
-	virtual void frame() = 0;
+	virtual void frame() = 0; // @todo Rename to swap buffers
 
 	virtual void setClearColor(uint32_t rgba) = 0;
 	// null will write to back buffer
@@ -209,7 +209,7 @@ public:
 
 	virtual void clear(uint16_t flags, uint16_t width = 0, uint16_t height = 0) = 0;
 
-	virtual void setParameter(const std::string_view& shader, const std::string_view& uniform, const std::shared_ptr<Texture>& texture) = 0;
+	virtual void setParameter(const std::string& shader, const std::string& uniform, const std::shared_ptr<Texture>& texture) = 0;
 
 	virtual void submitDebugTextOnScreen(uint16_t x, uint16_t y, std::string_view text, ...) = 0;
 	virtual void submitDebugTextOnScreen(uint16_t x, uint16_t y, Color color, std::string_view text, ...) = 0;
@@ -251,7 +251,7 @@ public:
 class Framebuffer
 {};
 
-class RenderState
+class RenderState // @todo Make every class like this
 {};
 
 class Texture

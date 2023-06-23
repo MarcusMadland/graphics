@@ -34,10 +34,10 @@ bool ShadowMapping::init(mrender::RenderContext& context)
 
 	// Camera
 	CameraSettings cameraSettings;
-	cameraSettings.projectionType = ProjectionType::Orthographic;
-	cameraSettings.width = 30.0f;
-	cameraSettings.height = 30.0f;
-	cameraSettings.postion[2] = -5.0f;
+	cameraSettings.mProjectionType = ProjectionType::Orthographic;
+	cameraSettings.mWidth = 30.0f;
+	cameraSettings.mHeight = 30.0f;
+	cameraSettings.mPosition[2] = -5.0f;
 	mCamera = context.createCamera(cameraSettings);
     
     return true;

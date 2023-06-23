@@ -84,35 +84,14 @@ void RenderContextImplementation::clear(uint16_t flags, uint16_t width, uint16_t
     bgfx::setViewClear(mRenderState->mId, flags, mClearColor, 1.0f, 0);
 }
 
-void RenderContextImplementation::setParameter(const std::string_view& shader, const std::string_view& uniform, const std::shared_ptr<Texture>& texture)
+void RenderContextImplementation::setParameter(const std::string& shader, const std::string& uniform, const std::shared_ptr<Texture>& texture)
 {
-    std::shared_ptr<ShaderImplementation> shaderImpl = std::static_pointer_cast<ShaderImplementation>(mShaders.at(shader.data()));
-    if (shaderImpl.get() == nullptr || shaderImpl == nullptr) std::cout << "Invalid shader" << std::endl;
-    
-    std::shared_ptr<TextureImplementation> textureImpl = std::static_pointer_cast<TextureImplementation>(texture);
-    if (textureImpl.get() == nullptr || textureImpl == nullptr) std::cout << "Invalid texture" << std::endl;
-
-    // Retrieve the shader uniforms
-    if (shaderImpl->mUniformHandles.count(uniform.data()) != 0)
+    auto shaderImpl = std::static_pointer_cast<ShaderImplementation>(getShaders().at(shader));
+    auto textureImpl = std::static_pointer_cast<TextureImplementation>(texture);
+    if (shaderImpl->mUniformHandles.count(uniform) > 0 && bgfx::isValid(shaderImpl->mUniformHandles.at(uniform).mHandle) && bgfx::isValid(textureImpl->mHandle))
     {
-        bgfx::UniformHandle uniformHandle = shaderImpl->mUniformHandles[uniform.data()].mHandle;
-        const uint8_t unit = shaderImpl->mUniformHandles[uniform.data()].unit;
-
-        if (bgfx::isValid(uniformHandle) && bgfx::isValid(textureImpl->mHandle))
-        {
-           // printf("binding unit %s %u \n", uniform.data(), shaderImpl->mUniformHandles[uniform.data()].unit);
-           bgfx::setTexture(unit, uniformHandle, textureImpl->mHandle);
-        }
-        else
-        {
-            //std::cout << "invalid uniform" << std::endl;
-        }
+        bgfx::setTexture(shaderImpl->mUniformHandles.at(uniform).unit, shaderImpl->mUniformHandles.at(uniform).mHandle, textureImpl->mHandle);
     }
-    else
-    {
-        //printf("Could not find %s uniform in uniform map of size %u \n", uniform.data(), shaderImpl->mUniformHandles.size());
-    }
-    
 }
 
 void RenderContextImplementation::submitDebugTextOnScreen(uint16_t x, uint16_t y, std::string_view text, ...)

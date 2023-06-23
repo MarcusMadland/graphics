@@ -33,7 +33,7 @@ public:
 
 	virtual void clear(uint16_t flags, uint16_t width = 0, uint16_t height = 0) override;
 
-	virtual void setParameter(const std::string_view& shader, const std::string_view& uniform, const std::shared_ptr<Texture>& texture) override;
+	virtual void setParameter(const std::string& shader, const std::string& uniform, const std::shared_ptr<Texture>& texture) override;
 
 	virtual void submitDebugTextOnScreen(uint16_t x, uint16_t y, std::string_view text, ...) override;
 	virtual void submitDebugTextOnScreen(uint16_t x, uint16_t y, Color color, std::string_view text, ...) override;
