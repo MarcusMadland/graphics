@@ -233,11 +233,6 @@ void RenderContextImplementation::setRenderables(std::vector<std::shared_ptr<Ren
     mRenderables = std::move(renderables);
 }
 
-void RenderContextImplementation::addBuffer(const std::string_view& name, std::shared_ptr<Texture> buffer)
-{
-    mBuffers[name.data()] = std::move(buffer);
-}
-
 void RenderContextImplementation::setRenderStateCount(uint32_t stateCount)
 {
     mRenderStateCount = stateCount;
@@ -257,7 +252,7 @@ void RenderContextImplementation::render(const std::shared_ptr<Camera>& camera)
     }
 }
 
-void RenderContextImplementation::frame()
+void RenderContextImplementation::swapBuffers()
 {
     // Backend frame call
     bgfx::frame();

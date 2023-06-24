@@ -25,7 +25,7 @@ public:
 	virtual void cleanup() override;
 
 	virtual void render(const std::shared_ptr<Camera>& camera) override;
-	virtual void frame() override;
+	virtual void swapBuffers() override;
 
 	virtual void setClearColor(uint32_t rgba) override;
 	virtual void writeToBuffers(std::shared_ptr<Framebuffer> framebuffer) override;
@@ -50,8 +50,6 @@ public:
 	virtual void addRenderable(std::shared_ptr<Renderable> renderable) override;
 	virtual void setRenderables(std::vector<std::shared_ptr<Renderable>> renderables) override;
 
-	virtual void addBuffer(const std::string_view& name, std::shared_ptr<Texture> buffer) override;
-
 	virtual [[nodiscard]] const RenderSettings getSettings() const override { return mSettings; }
 	virtual [[nodiscard]] const std::shared_ptr<Renderer>& getRenderer() const override { return mRenderer; };
 	virtual [[nodiscard]] const std::unordered_map<std::string, std::shared_ptr<Texture>>& getBuffers() const override { return mBuffers; }
@@ -63,6 +61,7 @@ public:
 
 private:
 	virtual void setRenderStateCount(uint32_t stateCount) override;
+
 	uint8_t colorToAnsi(const Color& color);
 	bool setupRenderSystems();
 	void setupResetFlags();

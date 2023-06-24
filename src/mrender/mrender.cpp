@@ -29,13 +29,7 @@ std::shared_ptr<RenderState> RenderContext::createRenderState(uint64_t flags)
 
 std::shared_ptr<Framebuffer> RenderContext::createFramebuffer(std::vector<std::string> buffers)
 {
-	std::vector<std::shared_ptr<Texture>> textures;
-	for (auto& buffer : buffers)
-	{
-		textures.push_back(getBuffers().at(buffer));
-	}
-
-	return std::make_shared<FramebufferImplementation>(textures);
+	return std::make_shared<FramebufferImplementation>(*this, buffers);
 }
 
 std::shared_ptr<Texture> RenderContext::createTexture(TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height)

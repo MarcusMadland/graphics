@@ -3,15 +3,16 @@
 
 namespace mrender {
 
-FramebufferImplementation::FramebufferImplementation(std::vector<std::shared_ptr<Texture>> textures)
+FramebufferImplementation::FramebufferImplementation(RenderContext& context, std::vector<std::string> buffers)
 {
 	std::vector<bgfx::TextureHandle> fbtextures;
-	for (auto& texture : textures)
+	for (auto& buffer : buffers)
 	{
+		auto& texture = context.getBuffers().at(buffer);
 		auto textureImpl = std::static_pointer_cast<TextureImplementation>(texture);
 		fbtextures.push_back(textureImpl->mHandle);
 	}
-	mHandle = bgfx::createFrameBuffer(fbtextures.size(), fbtextures.data(), false);
+	mHandle = bgfx::createFrameBuffer(static_cast<uint8_t>(fbtextures.size()), fbtextures.data(), false);
 }
 
 FramebufferImplementation::~FramebufferImplementation()

@@ -195,20 +195,22 @@ class Renderable;
 
 class RenderContext
 {
+	friend class RenderStateImplementation;
+
 public:
 	virtual void initialize(const RenderSettings& settings) = 0;
 	virtual void cleanup() = 0;
 
 	virtual void render(const std::shared_ptr<Camera>& camera) = 0;
-	virtual void frame() = 0; // @todo Rename to swap buffers
+	virtual void swapBuffers() = 0; // @todo Rename to swap buffers
 
+	virtual void setSettings(const RenderSettings& settings) = 0;
 	virtual void setClearColor(uint32_t rgba) = 0;
-	
-	virtual void writeToBuffers(std::shared_ptr<Framebuffer> framebuffer) = 0;// null will write to back buffer
-	virtual void setRenderState(std::shared_ptr<RenderState> renderState) = 0;
-
 	virtual void clear(uint16_t flags, uint16_t width = 0, uint16_t height = 0) = 0;
-
+	
+	virtual void setRenderState(std::shared_ptr<RenderState> renderState) = 0;
+	virtual void writeToBuffers(std::shared_ptr<Framebuffer> framebuffer) = 0;// null will write to back buffer
+	
 	virtual void setParameter(const std::string& shader, const std::string& uniform, const std::shared_ptr<Texture>& texture) = 0;
 
 	virtual void submitDebugTextOnScreen(uint16_t x, uint16_t y, std::string_view text, ...) = 0;
@@ -221,14 +223,8 @@ public:
 	virtual void loadShader(char const* fileName, char const* filePath) = 0;
 	virtual void reloadShaders() = 0;
 
-	virtual void setSettings(const RenderSettings& settings) = 0;
-
 	virtual void addRenderable(std::shared_ptr<Renderable> renderable) = 0;
 	virtual void setRenderables(std::vector<std::shared_ptr<Renderable>> renderables) = 0;
-
-	virtual void addBuffer(const std::string_view& name, std::shared_ptr<Texture> buffer) = 0;
-
-	virtual void setRenderStateCount(uint32_t passCount) = 0;
 
 	std::shared_ptr<Shader> createShader();
 	std::shared_ptr<RenderState> createRenderState(uint64_t flags);
@@ -246,6 +242,9 @@ public:
 	virtual [[nodiscard]] const std::vector<std::shared_ptr<Renderable>>& getRenderables() const = 0;
 	virtual [[nodiscard]] const std::shared_ptr<Camera>& getCamera() const = 0;
 	virtual [[nodiscard]] const uint32_t getRenderStateCount() const = 0;
+
+private:
+	virtual void setRenderStateCount(uint32_t passCount) = 0;
 };
 
 class Framebuffer

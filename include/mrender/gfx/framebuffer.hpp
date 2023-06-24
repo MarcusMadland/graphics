@@ -11,7 +11,7 @@ class FramebufferImplementation : public Framebuffer
 	friend class RenderContextImplementation;
 
 public:
-	FramebufferImplementation(std::vector<std::shared_ptr<Texture>> textures);
+	FramebufferImplementation(RenderContext& context, std::vector<std::string> buffers);
 	~FramebufferImplementation();
 
 private:
