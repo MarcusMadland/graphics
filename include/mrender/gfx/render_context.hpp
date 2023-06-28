@@ -81,6 +81,8 @@ private:
 	uint32_t mResetFlags;
 	uint32_t mClearColor = 0xFF00FFFF;
 	uint32_t mRenderStateCount = 0;
+
+	std::shared_ptr<Texture> mEmptyTexture;
 };
 
 }	// namespace mrender

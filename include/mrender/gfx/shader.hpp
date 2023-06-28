@@ -21,7 +21,7 @@ private:
 
 private:
 	bgfx::ProgramHandle mHandle = BGFX_INVALID_HANDLE;
-	std::unordered_map<std::string, bgfx::UniformHandle> mUniformHandles;
+	std::unordered_map<std::string, std::pair<bgfx::UniformHandle, uint8_t>> mUniformHandles;
 	const char* mFileName = nullptr;
 	const char* mFilePath = nullptr;
 };

@@ -50,6 +50,13 @@ void RenderContextImplementation::initialize(const RenderSettings& settings)
 
     // Setup renderer and render sub systems
     setupRenderSystems();
+
+    // Setup empty texture
+    constexpr uint32_t width = 4;
+    constexpr uint32_t height = 4;
+    const bgfx::Memory* textureData = bgfx::alloc(width * height * 4);
+    std::memset(textureData->data, 0, textureData->size);
+    mEmptyTexture = createTexture((uint8_t*)textureData, TextureFormat::RGBA8, BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_MIP_POINT, width, height, 4);
 }
 
 void RenderContextImplementation::cleanup()
@@ -90,22 +97,22 @@ void RenderContextImplementation::setParameter(const std::string& shader, const 
 {
     auto shaderImpl = std::static_pointer_cast<ShaderImplementation>(getShaders().at(shader));
     auto textureImpl = std::static_pointer_cast<TextureImplementation>(data);
-    if (shaderImpl->mUniformHandles.count(uniform) > 0 && bgfx::isValid(shaderImpl->mUniformHandles.at(uniform)) && textureImpl && bgfx::isValid(textureImpl->mHandle))
+    if (shaderImpl->mUniformHandles.count(uniform) > 0 && bgfx::isValid(shaderImpl->mUniformHandles.at(uniform).first) && textureImpl && bgfx::isValid(textureImpl->mHandle))
     {
-        bgfx::setTexture(unit, shaderImpl->mUniformHandles.at(uniform), textureImpl->mHandle);
+        bgfx::setTexture(unit, shaderImpl->mUniformHandles.at(uniform).first, textureImpl->mHandle);
     }
-    else if (shaderImpl->mUniformHandles.count(uniform) > 0 && bgfx::isValid(shaderImpl->mUniformHandles.at(uniform)))
+    else if (shaderImpl->mUniformHandles.count(uniform) > 0 && bgfx::isValid(shaderImpl->mUniformHandles.at(uniform).first))
     {
-        bgfx::setTexture(unit, shaderImpl->mUniformHandles.at(uniform), BGFX_INVALID_HANDLE);
+        bgfx::setTexture(unit, shaderImpl->mUniformHandles.at(uniform).first, BGFX_INVALID_HANDLE);
     }
 }
 
 void RenderContextImplementation::setParameter(const std::string& shader, const std::string& uniform, std::shared_ptr<void> data)
 {
     auto shaderImpl = std::static_pointer_cast<ShaderImplementation>(getShaders().at(shader));
-    if (shaderImpl->mUniformHandles.count(uniform) > 0 && bgfx::isValid(shaderImpl->mUniformHandles.at(uniform)) && data)
+    if (shaderImpl->mUniformHandles.count(uniform) > 0 && bgfx::isValid(shaderImpl->mUniformHandles.at(uniform).first) && data)
     {
-        bgfx::setUniform(shaderImpl->mUniformHandles.at(uniform), data.get());
+        bgfx::setUniform(shaderImpl->mUniformHandles.at(uniform).first, data.get());
     }
 }
 
@@ -190,7 +197,6 @@ void RenderContextImplementation::submit(const std::shared_ptr<Renderable>& rend
     bgfx::setTransform(renderable->getTransform());
 
     // Set unifroms to the material data @todo texture unit should be in material data IMPORTANT
-    uint8_t textureUnit = 1;
     auto shaderName = renderable->getMaterial()->getShaderName();
     auto shaderImpl = std::static_pointer_cast<ShaderImplementation>(getShaders().at(shaderName));
     for (auto iter = shaderImpl->mUniformHandles.begin(); iter != shaderImpl->mUniformHandles.end(); ++iter) 
@@ -201,15 +207,15 @@ void RenderContextImplementation::submit(const std::shared_ptr<Renderable>& rend
 
         if (renderable->getMaterial()->getUniformData().count(key) <= 0)
         {
-            setParameter(shaderName, key, nullptr, 0);
+            setParameter(shaderName, key, mEmptyTexture, value.second);
+            //bgfx::setTexture(value.second, value.first, mEmptyTextureHandle);
         }
         else
         {
             const auto& uniformData = renderable->getMaterial()->getUniformData().at(key);
             if (uniformData.mType == UniformType::Sampler)
             {
-                setParameter(shaderName, key, uniformData.mValue, textureUnit);
-                textureUnit++;
+                setParameter(shaderName, key, uniformData.mValue, value.second);
             }
             else
             {

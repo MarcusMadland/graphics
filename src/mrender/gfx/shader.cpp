@@ -56,9 +56,17 @@ void ShaderImplementation::loadProgram(char const* fileName, char const* filePat
         bgfx::getUniformInfo(uniforms[i], info);
         std::string name = info.name;
         
-        mUniformHandles[name] = uniforms[i];
+        if (info.type == bgfx::UniformType::Sampler)
+        {
+            mUniformHandles[name] = { uniforms[i], unit };
+            unit++;
+        }
+        else
+        {
+            mUniformHandles[name] = { uniforms[i], 0 };
+        }
 
-        printf("Created uniform %s in shader %s number %u\n", name, fileName, i);
+        printf("Created uniform %s in shader %s number %u\n", name.data(), fileName, i);
     }
 }
 
