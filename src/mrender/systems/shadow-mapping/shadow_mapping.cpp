@@ -23,7 +23,7 @@ bool ShadowMapping::init(mrender::RenderContext& context)
 	context.loadShader("shadow", "C:/Users/marcu/Dev/mengine/mrender/shaders/shadow");
 
 	// Render State
-	mState = context.createRenderState(0
+	mState = context.createRenderState("Shadow Mapping", 0
 		| BGFX_STATE_WRITE_Z
 		| BGFX_STATE_DEPTH_TEST_LESS
 		| BGFX_STATE_CULL_CCW
@@ -37,7 +37,9 @@ bool ShadowMapping::init(mrender::RenderContext& context)
 	cameraSettings.mProjectionType = ProjectionType::Orthographic;
 	cameraSettings.mWidth = 30.0f;
 	cameraSettings.mHeight = 30.0f;
-	cameraSettings.mPosition[2] = -5.0f;
+	cameraSettings.mPosition[0] = 5.0f;
+	cameraSettings.mPosition[1] = 5.0f;
+	cameraSettings.mPosition[2] = 2.0f;
 	mCamera = context.createCamera(cameraSettings);
     
     return true;

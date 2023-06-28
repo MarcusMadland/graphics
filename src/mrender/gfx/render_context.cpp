@@ -10,12 +10,14 @@
 #include "mrender/renderers/my-renderer2/my_renderer2.hpp"
 
 #include <bgfx/bgfx.h>
+#include <bx/bx.h>
 #include <bgfx/platform.h>
 #include <bx/math.h>
 #include <string>
 #include <iostream>
 #include <cassert>
 #include <cstdlib>
+#include <bx/pixelformat.h>
 
 namespace mrender {
 
@@ -84,13 +86,26 @@ void RenderContextImplementation::clear(uint16_t flags, uint16_t width, uint16_t
     bgfx::setViewClear(mRenderState->mId, flags, mClearColor, 1.0f, 0);
 }
 
-void RenderContextImplementation::setParameter(const std::string& shader, const std::string& uniform, const std::shared_ptr<Texture>& texture)
+void RenderContextImplementation::setParameter(const std::string& shader, const std::string& uniform, std::shared_ptr<void> data, uint8_t unit)
 {
     auto shaderImpl = std::static_pointer_cast<ShaderImplementation>(getShaders().at(shader));
-    auto textureImpl = std::static_pointer_cast<TextureImplementation>(texture);
-    if (shaderImpl->mUniformHandles.count(uniform) > 0 && bgfx::isValid(shaderImpl->mUniformHandles.at(uniform).mHandle) && bgfx::isValid(textureImpl->mHandle))
+    auto textureImpl = std::static_pointer_cast<TextureImplementation>(data);
+    if (shaderImpl->mUniformHandles.count(uniform) > 0 && bgfx::isValid(shaderImpl->mUniformHandles.at(uniform)) && textureImpl && bgfx::isValid(textureImpl->mHandle))
     {
-        bgfx::setTexture(shaderImpl->mUniformHandles.at(uniform).unit, shaderImpl->mUniformHandles.at(uniform).mHandle, textureImpl->mHandle);
+        bgfx::setTexture(unit, shaderImpl->mUniformHandles.at(uniform), textureImpl->mHandle);
+    }
+    else if (shaderImpl->mUniformHandles.count(uniform) > 0 && bgfx::isValid(shaderImpl->mUniformHandles.at(uniform)))
+    {
+        bgfx::setTexture(unit, shaderImpl->mUniformHandles.at(uniform), BGFX_INVALID_HANDLE);
+    }
+}
+
+void RenderContextImplementation::setParameter(const std::string& shader, const std::string& uniform, std::shared_ptr<void> data)
+{
+    auto shaderImpl = std::static_pointer_cast<ShaderImplementation>(getShaders().at(shader));
+    if (shaderImpl->mUniformHandles.count(uniform) > 0 && bgfx::isValid(shaderImpl->mUniformHandles.at(uniform)) && data)
+    {
+        bgfx::setUniform(shaderImpl->mUniformHandles.at(uniform), data.get());
     }
 }
 
@@ -165,14 +180,46 @@ void RenderContextImplementation::submit(const std::shared_ptr<Geometry>& geomet
     ShaderImplementation* shaderImpl = reinterpret_cast<ShaderImplementation*>(mShaders[shaderName.data()].get());
     if (shaderImpl)
     {
-        bgfx::submit(mRenderState->mId, shaderImpl->mHandle);
+        bgfx::submit(mRenderState->mId, shaderImpl->mHandle, BGFX_DISCARD_STATE);
     }
 }
 
 void RenderContextImplementation::submit(const std::shared_ptr<Renderable>& renderable, const std::shared_ptr<Camera>& camera)
 {
+    // Set transform
     bgfx::setTransform(renderable->getTransform());
-    submit(renderable->getGeometry(), renderable->getShader(), camera);
+
+    // Set unifroms to the material data @todo texture unit should be in material data IMPORTANT
+    uint8_t textureUnit = 1;
+    auto shaderName = renderable->getMaterial()->getShaderName();
+    auto shaderImpl = std::static_pointer_cast<ShaderImplementation>(getShaders().at(shaderName));
+    for (auto iter = shaderImpl->mUniformHandles.begin(); iter != shaderImpl->mUniformHandles.end(); ++iter) 
+    {
+        auto key = iter->first;
+        auto value = iter->second;
+        auto shaderName = renderable->getMaterial()->getShaderName();
+
+        if (renderable->getMaterial()->getUniformData().count(key) <= 0)
+        {
+            setParameter(shaderName, key, nullptr, 0);
+        }
+        else
+        {
+            const auto& uniformData = renderable->getMaterial()->getUniformData().at(key);
+            if (uniformData.mType == UniformType::Sampler)
+            {
+                setParameter(shaderName, key, uniformData.mValue, textureUnit);
+                textureUnit++;
+            }
+            else
+            {
+                setParameter(shaderName, key, uniformData.mValue);
+            }
+        }
+    }
+
+    // Submit geometry for rendering
+    submit(renderable->getGeometry(), renderable->getMaterial()->getShaderName(), camera);
 }
 
 void RenderContextImplementation::submit(const std::vector<std::shared_ptr<Renderable>>& renderables, const std::shared_ptr<Camera>& camera)

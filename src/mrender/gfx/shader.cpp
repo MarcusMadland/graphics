@@ -56,20 +56,9 @@ void ShaderImplementation::loadProgram(char const* fileName, char const* filePat
         bgfx::getUniformInfo(uniforms[i], info);
         std::string name = info.name;
         
-        if (info.type == bgfx::UniformType::Sampler)
-        {
-            UniformData data;
-            data.mHandle = uniforms[i];
-            data.unit = unit;
-            mUniformHandles[name] = data;
-            //printf("Uniform name: %s with unit: %u \n", name.data(), data.unit);
-            unit++;
-        }
-        else
-        {
-            //printf("Uniform name: %s with no unit \n", name.data());
-            mUniformHandles[name] = UniformData(uniforms[i], UINT8_MAX); // magic number: should never be read since its not a texture @todo
-        }
+        mUniformHandles[name] = uniforms[i];
+
+        printf("Created uniform %s in shader %s number %u\n", name, fileName, i);
     }
 }
 

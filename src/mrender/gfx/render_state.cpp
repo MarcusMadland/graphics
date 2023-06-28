@@ -3,12 +3,13 @@
 
 namespace mrender {
 
-	RenderStateImplementation::RenderStateImplementation(RenderContext& context, uint64_t flags)
+	RenderStateImplementation::RenderStateImplementation(RenderContext& context, std::string name, uint64_t flags)
 		: mFlags(flags)
 	{
 		auto contextImpl = static_cast<RenderContextImplementation&>(context);
 		mId = context.getRenderStateCount() + 1;
 		context.setRenderStateCount(mId);
+		bgfx::setViewName(mId, name.data());
 	}
 
 }	// namespace mrender

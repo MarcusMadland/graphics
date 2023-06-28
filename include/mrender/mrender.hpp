@@ -149,6 +149,21 @@ enum class ProjectionType
 	Orthographic,
 };
 
+enum class UniformType
+{
+	Sampler,
+	Vec4,
+	Mat3,
+	Mat4,
+};
+
+enum class LightType
+{
+	Point,
+	Spot,
+	Directional,
+};
+
 struct RenderSettings
 {
 	std::string_view mRendererName = "none";
@@ -183,8 +198,28 @@ struct BufferLayout
 	std::vector<BufferElement> mElements;
 };
 
+struct UniformData
+{
+	UniformType mType;
+	std::shared_ptr<void> mValue;
+};
+
+struct LightData
+{
+	LightType mType = LightType::Point;
+
+	float mColor[3] = { 0.0f, 0.0f, 0.0f };
+	float mIntensity = 1.0f;
+	float mPosition[3] = { 0.0f, 0.0f, 0.0f }; // only valid for point+spot lights
+	float mDirection[3] = { 0.0f, 0.0f, -1.0f }; //only valid for directional+spot lights
+	float mRange = FLT_MAX; //only valid for point+spot lights
+	float mInnerConeAngle = 0.0f; //only valid for spot lights
+	float mOuterConeAngle = 3.1415926535897932384626433832795f / 4.0f; //only valid for spot lights
+};
+
 class Framebuffer;
 class RenderState;
+class Material;
 class Texture;
 class Shader;
 class RenderSystem;
@@ -211,7 +246,8 @@ public:
 	virtual void setRenderState(std::shared_ptr<RenderState> renderState) = 0;
 	virtual void writeToBuffers(std::shared_ptr<Framebuffer> framebuffer) = 0;// null will write to back buffer
 	
-	virtual void setParameter(const std::string& shader, const std::string& uniform, const std::shared_ptr<Texture>& texture) = 0;
+	virtual void setParameter(const std::string& shader, const std::string& uniform, std::shared_ptr<void> data, uint8_t unit) = 0;
+	virtual void setParameter(const std::string& shader, const std::string& uniform, std::shared_ptr<void> data) = 0;
 
 	virtual void submitDebugTextOnScreen(uint16_t x, uint16_t y, std::string_view text, ...) = 0;
 	virtual void submitDebugTextOnScreen(uint16_t x, uint16_t y, Color color, std::string_view text, ...) = 0;
@@ -227,12 +263,14 @@ public:
 	virtual void setRenderables(std::vector<std::shared_ptr<Renderable>> renderables) = 0;
 
 	std::shared_ptr<Shader> createShader();
-	std::shared_ptr<RenderState> createRenderState(uint64_t flags);
+	std::shared_ptr<RenderState> createRenderState(std::string name, uint64_t flags);
 	std::shared_ptr<Framebuffer> createFramebuffer(std::vector<std::string> buffers);
 	std::shared_ptr<Texture> createTexture(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0);
+	std::shared_ptr<Texture> createTexture(const uint8_t* data, TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height, uint16_t channels);
 	std::shared_ptr<Camera> createCamera(const CameraSettings& settings);
 	std::shared_ptr<Geometry> createGeometry(const BufferLayout& layout, void* vertexData, uint32_t vertexSize, std::vector<uint16_t> indices);
-	std::shared_ptr<Renderable> createRenderable(std::shared_ptr<Geometry> geometry, const std::string_view& shader);
+	std::shared_ptr<Renderable> createRenderable(std::shared_ptr<Geometry> geometry, std::shared_ptr<Material> material);
+	std::shared_ptr<Material> createMaterial(const std::string& shaderName);
 	
 	virtual [[nodiscard]] const RenderSettings getSettings() const = 0;
 	virtual [[nodiscard]] const std::shared_ptr<Renderer>& getRenderer() const = 0;
@@ -257,10 +295,18 @@ class RenderState
 public:
 };
 
+class Material
+{
+public:
+	virtual void setUniform(std::string name, UniformType type, std::shared_ptr<void> data) = 0;
+	[[nodiscard]] virtual const std::unordered_map<std::string, UniformData>& getUniformData() = 0;
+	[[nodiscard]] virtual const std::string getShaderName() const = 0;
+};
+
 class Texture
 {
 public:
-	virtual [[nodiscard]] TextureFormat getFormat() const = 0;
+	[[nodiscard]] virtual TextureFormat getFormat() const = 0;
 };
 
 class Shader
@@ -300,7 +346,7 @@ public:
 	virtual void recalculate() = 0;
 
 	virtual void setSettings(const CameraSettings& settings) = 0;
-	virtual [[nodiscard]] const CameraSettings getSettings() const = 0;
+	[[nodiscard]] virtual const CameraSettings getSettings() const = 0;
 };
 
 class Geometry
@@ -317,7 +363,7 @@ public:
 	[[nodiscard]] virtual float* getTransform() = 0;
 
 	[[nodiscard]] virtual std::shared_ptr<Geometry> getGeometry() = 0;
-	[[nodiscard]] virtual const std::string_view getShader() const = 0;
+	[[nodiscard]] virtual std::shared_ptr<Material> getMaterial() = 0;
 };
 
 std::shared_ptr<RenderContext> createRenderContext();

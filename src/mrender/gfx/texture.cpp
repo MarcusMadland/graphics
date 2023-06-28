@@ -18,6 +18,28 @@ TextureImplementation::TextureImplementation(TextureFormat format, uint64_t text
 	printf("Want to create texture\n");
 }
 
+TextureImplementation::TextureImplementation(const uint8_t* data, TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height, uint16_t channels)
+	: mFormat(format)
+{
+	if (data)
+	{
+		mHandle = bgfx::createTexture2D(
+			width
+			, height
+			, false
+			, 1
+			, toBgfx(format)
+			, textureFlags
+			, bgfx::copy(data, width * height * channels));
+
+		//delete data;
+	}
+	else
+	{
+		mHandle = BGFX_INVALID_HANDLE;
+	}
+}
+
 TextureImplementation::~TextureImplementation()
 {
 	if (bgfx::isValid(mHandle))

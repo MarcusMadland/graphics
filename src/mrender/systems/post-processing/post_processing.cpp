@@ -21,7 +21,7 @@ bool PostProcessing::init(RenderContext& context)
     context.loadShader("screen", "C:/Users/marcu/Dev/mengine/mrender/shaders/screen");
 
     // Render state
-    mState = context.createRenderState(0
+    mState = context.createRenderState("Post Processing", 0
         | BGFX_STATE_WRITE_RGB
         | BGFX_STATE_WRITE_A);
 
@@ -45,8 +45,8 @@ void PostProcessing::render(RenderContext& context)
     context.clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
 
     // Set shader uniforms
-    context.setParameter("screen", "s_Shadow", context.getBuffers().at("ShadowMap"));
-    context.setParameter("screen", "s_Color", context.getBuffers().at("GBufferColor"));
+    context.setParameter("screen", "u_shadowMap", context.getBuffers().at("ShadowMap"), 0);
+    context.setParameter("screen", "u_color", context.getBuffers().at("GDiffuse"), 1);
 
     // Submit quad
     context.submit(mScreenQuad, "screen", nullptr);

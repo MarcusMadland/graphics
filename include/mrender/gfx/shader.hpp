@@ -7,17 +7,10 @@
 
 namespace mrender {
 
-struct UniformData
-{
-	bgfx::UniformHandle mHandle = BGFX_INVALID_HANDLE;
-	uint8_t unit = UINT8_MAX;
-};
-
 class ShaderImplementation : public Shader
 {
 	friend class RenderContextImplementation;
-	friend class ShadowMapping; // @todo remove
-	friend class PostProcessing; // @todo remove
+	friend class MaterialImplementation;
 
 public:
 	virtual void loadProgram(char const* fileName, char const* filePath) override;
@@ -28,7 +21,7 @@ private:
 
 private:
 	bgfx::ProgramHandle mHandle = BGFX_INVALID_HANDLE;
-	std::unordered_map<std::string, UniformData> mUniformHandles;
+	std::unordered_map<std::string, bgfx::UniformHandle> mUniformHandles;
 	const char* mFileName = nullptr;
 	const char* mFilePath = nullptr;
 };

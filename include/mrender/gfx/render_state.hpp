@@ -9,7 +9,7 @@ namespace mrender {
 		friend class RenderContextImplementation;
 
 	public:
-		RenderStateImplementation(RenderContext& context, uint64_t flags);
+		RenderStateImplementation(RenderContext& context, std::string name, uint64_t flags);
 
 	private:
 		uint16_t mId;
