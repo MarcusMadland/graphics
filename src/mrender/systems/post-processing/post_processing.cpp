@@ -38,6 +38,8 @@ bool PostProcessing::init(RenderContext& context)
 
 void PostProcessing::render(RenderContext& context)
 {
+    PROFILE_SCOPE(mName);
+
     // Set current renderpass id
     context.setRenderState(mState);
 

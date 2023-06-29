@@ -1,15 +1,13 @@
 #include "mrender/renderers/my-renderer2/my_renderer2.hpp"
 
-#include <bgfx/bgfx.h>
-#include <bgfx/platform.h>
-#include <bx/math.h>
+#include "mrender/systems/empty/empty.hpp"
 
 namespace mrender {
 
 std::vector<std::shared_ptr<RenderSystem>> MyRenderer2::setupRenderSystems(RenderContext& context)
 {
     std::vector<std::shared_ptr<RenderSystem>> render_techniques;
-    // more ..
+    render_techniques.emplace_back(std::make_shared<Empty>());
     return render_techniques;
 }
 

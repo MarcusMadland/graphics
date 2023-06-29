@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils/factory.hpp"
+#include "utils/timable.hpp"
 
 #include <string_view>
 #include <memory>
@@ -172,6 +173,7 @@ struct RenderSettings
 	void* mNativeWindow = nullptr;
 	void* mNativeDisplay = nullptr;
 	bool mVSync = false;
+	bool mRenderDebugText = true;
 };
 
 struct CameraSettings
@@ -204,7 +206,7 @@ struct UniformData
 	std::shared_ptr<void> mValue;
 };
 
-struct LightData
+struct LightData // @todo
 {
 	LightType mType = LightType::Point;
 
@@ -316,7 +318,7 @@ public:
 	virtual void reloadProgram() = 0;
 };
 
-class RenderSystem // @todo Simplify class
+class RenderSystem : public Timable// @todo Simplify class
 {
 public:
 	RenderSystem(const std::string_view& name);

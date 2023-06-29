@@ -47,6 +47,8 @@ bool ShadowMapping::init(mrender::RenderContext& context)
 
 void ShadowMapping::render(RenderContext& context)
 {
+	PROFILE_SCOPE(mName);
+
 	// Set current render pass id
 	context.setRenderState(mState);
 
@@ -55,8 +57,12 @@ void ShadowMapping::render(RenderContext& context)
 	context.clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, shadowSize, shadowSize);
 
 	// Submit scene
-	auto renderables = context.getRenderables();
-	context.submit(renderables, mCamera);
+	{
+		PROFILE_SCOPE("Render Scene");
+
+		auto renderables = context.getRenderables();
+		context.submit(renderables, mCamera);
+	}
 }
 
 std::unordered_map<std::string, std::shared_ptr<Texture>> ShadowMapping::getBuffers(RenderContext& context)

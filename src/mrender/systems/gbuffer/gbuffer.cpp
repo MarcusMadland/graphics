@@ -31,6 +31,8 @@ bool GBuffer::init(mrender::RenderContext& context)
 
 void GBuffer::render(RenderContext& context)
 {
+	PROFILE_SCOPE(mName);
+
 	// Set current render pass id
 	context.setRenderState(mState);
 
@@ -38,9 +40,14 @@ void GBuffer::render(RenderContext& context)
 	{
 		context.writeToBuffers(mFramebuffer);
 		context.clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
-
+		
 		// Submit scene
-		context.submit(context.getRenderables(), context.getCamera());
+		{
+			PROFILE_SCOPE("Render Scene");
+
+			auto renderables = context.getRenderables();
+			context.submit(renderables, context.getCamera());
+		}
 	}
 }
 

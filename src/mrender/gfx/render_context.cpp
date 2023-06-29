@@ -6,7 +6,7 @@
 #include "mrender/gfx/render_state.hpp"
 #include "mrender/utils/file_ops.hpp"
 
-#include "mrender/renderers/my-renderer/my_renderer.hpp"
+#include "mrender/renderers/deferred/deferred.hpp"
 #include "mrender/renderers/my-renderer2/my_renderer2.hpp"
 
 #include <bgfx/bgfx.h>
@@ -44,9 +44,8 @@ void RenderContextImplementation::initialize(const RenderSettings& settings)
     bgfx_init.platformData.ndt = mSettings.mNativeDisplay;
     printf("Backend init result: %s\n", bgfx::init(bgfx_init) ? "Success" : "Failed");
 
-    // @todo Add so only show in debug mode
-    bgfx::setDebug(BGFX_DEBUG_TEXT);
-    // bgfx::setDebug(BGFX_DEBUG_STATS);
+    bgfx::setDebug(mSettings.mRenderDebugText ? BGFX_DEBUG_TEXT : BGFX_DEBUG_NONE);
+    //bgfx::setDebug(BGFX_DEBUG_STATS);
 
     // Setup renderer and render sub systems
     setupRenderSystems();
@@ -110,6 +109,7 @@ void RenderContextImplementation::setParameter(const std::string& shader, const 
 void RenderContextImplementation::setParameter(const std::string& shader, const std::string& uniform, std::shared_ptr<void> data)
 {
     auto shaderImpl = std::static_pointer_cast<ShaderImplementation>(getShaders().at(shader));
+
     if (shaderImpl->mUniformHandles.count(uniform) > 0 && bgfx::isValid(shaderImpl->mUniformHandles.at(uniform).first) && data)
     {
         bgfx::setUniform(shaderImpl->mUniformHandles.at(uniform).first, data.get());
@@ -199,27 +199,40 @@ void RenderContextImplementation::submit(const std::shared_ptr<Renderable>& rend
     // Set unifroms to the material data @todo texture unit should be in material data IMPORTANT
     auto shaderName = renderable->getMaterial()->getShaderName();
     auto shaderImpl = std::static_pointer_cast<ShaderImplementation>(getShaders().at(shaderName));
-    for (auto iter = shaderImpl->mUniformHandles.begin(); iter != shaderImpl->mUniformHandles.end(); ++iter) 
+    for (auto uniformHandle : shaderImpl->mUniformHandles)
     {
-        auto key = iter->first;
-        auto value = iter->second;
+        auto key = uniformHandle.first;
+        auto value = uniformHandle.second;
         auto shaderName = renderable->getMaterial()->getShaderName();
 
-        if (renderable->getMaterial()->getUniformData().count(key) <= 0)
-        {
-            setParameter(shaderName, key, mEmptyTexture, value.second);
-            //bgfx::setTexture(value.second, value.first, mEmptyTextureHandle);
-        }
-        else
+        bgfx::UniformInfo uniformInfo;
+        bgfx::getUniformInfo(value.first, uniformInfo);
+
+        // If material contains data for the uniform we set the value depending on if the uniform is a sampler or other
+        if (renderable->getMaterial()->getUniformData().count(key) > 0)
         {
             const auto& uniformData = renderable->getMaterial()->getUniformData().at(key);
-            if (uniformData.mType == UniformType::Sampler)
+
+            if (uniformInfo.type == bgfx::UniformType::Sampler)
             {
                 setParameter(shaderName, key, uniformData.mValue, value.second);
             }
             else
             {
                 setParameter(shaderName, key, uniformData.mValue);
+            }
+        }
+        // If material contains no data for the uniform we set to it null or empty texture depending on if the uniform is a sampler or other
+        else
+        {
+            if (uniformInfo.type == bgfx::UniformType::Sampler)
+            {
+                setParameter(shaderName, key, mEmptyTexture, value.second);
+            }
+            else
+            {
+                static float data = 0.0f; // @todo Check that this work on all non sampler uniforms, such as mat4, mat3 and vec4
+                bgfx::setUniform(shaderImpl->mUniformHandles.at(key).first, &data);
             }
         }
     }
@@ -253,9 +266,9 @@ void RenderContextImplementation::reloadShaders()
 
 void RenderContextImplementation::setSettings(const RenderSettings& settings)
 {
-    const bool resetViewAndFlags = (mSettings.mVSync != settings.mVSync || mSettings.mResolutionWidth != settings.mResolutionWidth || mSettings.mResolutionHeight != settings.mResolutionHeight);
-    const bool rebuildRenderer = (mSettings.mRendererName != settings.mRendererName || mRenderer == nullptr) || resetViewAndFlags;
-
+    const bool rebuildRenderer = (mSettings.mRendererName != settings.mRendererName || mRenderer == nullptr);
+    const bool resetViewAndFlags = (mSettings.mVSync != settings.mVSync || mSettings.mResolutionWidth != settings.mResolutionWidth || mSettings.mResolutionHeight != settings.mResolutionHeight) || rebuildRenderer;
+    
     mSettings = settings;
 
     // Rebuild renderer and all its sub systems if renderer has been changed
