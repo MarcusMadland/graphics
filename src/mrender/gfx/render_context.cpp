@@ -21,7 +21,7 @@
 
 namespace mrender {
 
-void RenderContextImplementation::initialize(const RenderSettings& settings)
+RenderContextImplementation::RenderContextImplementation(const RenderSettings& settings)
 {
     mSettings = settings;
 
@@ -32,7 +32,7 @@ void RenderContextImplementation::initialize(const RenderSettings& settings)
 
     bgfx::renderFrame(); // @todo This is single threaded mode, add setting for this?
     setupResetFlags();
-     
+
     // Setup render backend
     bgfx::Init bgfx_init;
     bgfx_init.type = bgfx::RendererType::Count; // Auto? read about it @todo Think it uses the defines in build script
@@ -56,9 +56,9 @@ void RenderContextImplementation::initialize(const RenderSettings& settings)
     const bgfx::Memory* textureData = bgfx::alloc(width * height * 4);
     std::memset(textureData->data, 0, textureData->size);
     mEmptyTexture = createTexture((uint8_t*)textureData, TextureFormat::RGBA8, BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_MIP_POINT, width, height, 4);
-}
 
-void RenderContextImplementation::cleanup()
+}
+RenderContextImplementation::~RenderContextImplementation()
 {
     bgfx::shutdown();
 }

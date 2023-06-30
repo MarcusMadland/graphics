@@ -21,8 +21,8 @@ class RenderContextImplementation : public RenderContext
 	friend class GBuffer;
 
 public:
-	virtual void initialize(const RenderSettings& settings) override;
-	virtual void cleanup() override;
+	RenderContextImplementation(const RenderSettings& settings);
+	~RenderContextImplementation();
 
 	virtual void render(const std::shared_ptr<Camera>& camera) override;
 	virtual void swapBuffers() override;

@@ -243,9 +243,6 @@ public:
 	std::shared_ptr<Renderable> createRenderable(std::shared_ptr<Geometry> geometry, std::shared_ptr<Material> material);
 	std::shared_ptr<Material> createMaterial(const std::string& shaderName);
 
-	virtual void initialize(const RenderSettings& settings) = 0;
-	virtual void cleanup() = 0;
-
 	virtual void render(const std::shared_ptr<Camera>& camera) = 0;
 	virtual void swapBuffers() = 0;
 
@@ -274,12 +271,14 @@ public:
 
 	virtual [[nodiscard]] const RenderSettings getSettings() const = 0;
 	virtual [[nodiscard]] const std::shared_ptr<Renderer>& getRenderer() const = 0;
-	virtual [[nodiscard]] const std::unordered_map<std::string, std::shared_ptr<Texture>>& getBuffers() const = 0;
 	virtual [[nodiscard]] const std::vector<std::shared_ptr<RenderSystem>>& getRenderSystems() const = 0;
+	virtual [[nodiscard]] const std::unordered_map<std::string, std::shared_ptr<Texture>>& getBuffers() const = 0;
 	virtual [[nodiscard]] const std::unordered_map<std::string, std::shared_ptr<Shader>>& getShaders() const = 0;
 	virtual [[nodiscard]] const std::vector<std::shared_ptr<Renderable>>& getRenderables() const = 0;
 	virtual [[nodiscard]] const std::shared_ptr<Camera>& getCamera() const = 0;
 };
+
+std::shared_ptr<RenderContext> createRenderContext(const RenderSettings& settings);
 
 
 class Framebuffer
@@ -362,7 +361,5 @@ public:
 	[[nodiscard]] virtual std::shared_ptr<Geometry> getGeometry() = 0;
 	[[nodiscard]] virtual std::shared_ptr<Material> getMaterial() = 0;
 };
-
-std::shared_ptr<RenderContext> createRenderContext();
 
 }	// namespace mrender

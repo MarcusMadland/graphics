@@ -63,9 +63,9 @@ std::shared_ptr<Material> RenderContext::createMaterial(const std::string& shade
 	return std::make_shared<MaterialImplementation>(*this, shaderName);
 }
 
-std::shared_ptr<RenderContext> createRenderContext()
+std::shared_ptr<RenderContext> createRenderContext(const RenderSettings& settings)
 {
-	return std::make_shared<RenderContextImplementation>();
+	return std::make_shared<RenderContextImplementation>(settings);
 }
 
 }	// namespace mrender
