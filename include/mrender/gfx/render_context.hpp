@@ -58,10 +58,10 @@ public:
 	virtual [[nodiscard]] const std::unordered_map<std::string, std::shared_ptr<Shader>>& getShaders() const override { return mShaders; }
 	virtual [[nodiscard]] const std::vector<std::shared_ptr<Renderable>>& getRenderables() const override { return mRenderables; }
 	virtual [[nodiscard]] const std::shared_ptr<Camera>& getCamera() const override { return mCamera; }
-	virtual [[nodiscard]] const uint32_t getRenderStateCount() const override { return mRenderStateCount; };
-
+	
 private:
-	virtual void setRenderStateCount(uint32_t stateCount) override;
+	virtual void setRenderStateCount(uint32_t stateCount);
+	virtual [[nodiscard]] const uint32_t getRenderStateCount() const { return mRenderStateCount; };
 
 	uint8_t colorToAnsi(const Color& color);
 	bool setupRenderSystems();

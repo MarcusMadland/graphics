@@ -10,6 +10,17 @@
 
 namespace mrender {
 
+class Framebuffer;
+class RenderState;
+class Material;
+class Texture;
+class Shader;
+class RenderSystem;
+class Renderer;
+class Camera;
+class Geometry;
+class Renderable;
+
 enum class AttribType
 {
 	Uint8,
@@ -43,34 +54,34 @@ enum class Attrib
 
 enum class TextureFormat
 {
-	BC1,          
-	BC2,          
-	BC3,          
-	BC4,          
-	BC5,          
-	BC6H,         
-	BC7,          
-	ETC1,         
-	ETC2,         
-	ETC2A,        
-	ETC2A1,       
-	PTC12,        
-	PTC14,        
-	PTC12A,       
-	PTC14A,       
-	PTC22,        
-	PTC24,        
-	ATC,          
-	ATCE,         
-	ATCI,         
-	ASTC4x4,      
-	ASTC5x5,      
-	ASTC6x6,      
-	ASTC8x5,      
-	ASTC8x6,      
-	ASTC10x5,     
+	BC1,
+	BC2,
+	BC3,
+	BC4,
+	BC5,
+	BC6H,
+	BC7,
+	ETC1,
+	ETC2,
+	ETC2A,
+	ETC2A1,
+	PTC12,
+	PTC14,
+	PTC12A,
+	PTC14A,
+	PTC22,
+	PTC24,
+	ATC,
+	ATCE,
+	ATCI,
+	ASTC4x4,
+	ASTC5x5,
+	ASTC6x6,
+	ASTC8x5,
+	ASTC8x6,
+	ASTC10x5,
 
-	Unknown,     
+	Unknown,
 
 	R1,
 	A8,
@@ -122,7 +133,7 @@ enum class TextureFormat
 	RGB10A2,
 	RG11B10F,
 
-	UnknownDepth, 
+	UnknownDepth,
 
 	D16,
 	D24,
@@ -139,7 +150,7 @@ enum class TextureFormat
 enum class Color
 {
 	White,
-	Red, 
+	Red,
 	Blue,
 	Green,
 };
@@ -180,8 +191,8 @@ struct CameraSettings
 {
 	ProjectionType mProjectionType = ProjectionType::Perspective;
 	float mFov = 45.0f;
-	float mWidth = 0.0f;
-	float mHeight = 0.0f;
+	float mWidth = 16.0f;
+	float mHeight = 9.0f;
 	float mClipNear = 0.001f;
 	float mClipFar = 100.0f;
 	float mPosition[3] = { 0.0f, 0.0f, 0.0f }; 
@@ -219,35 +230,32 @@ struct LightData // @todo
 	float mOuterConeAngle = 3.1415926535897932384626433832795f / 4.0f; //only valid for spot lights
 };
 
-class Framebuffer;
-class RenderState;
-class Material;
-class Texture;
-class Shader;
-class RenderSystem;
-class Renderer;
-class Camera;
-class Geometry;
-class Renderable;
-
 class RenderContext
 {
-	friend class RenderStateImplementation;
-
 public:
+	std::shared_ptr<Shader> createShader();
+	std::shared_ptr<RenderState> createRenderState(std::string name, uint64_t flags);
+	std::shared_ptr<Framebuffer> createFramebuffer(std::vector<std::string> buffers);
+	std::shared_ptr<Texture> createTexture(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0);
+	std::shared_ptr<Texture> createTexture(const uint8_t* data, TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height, uint16_t channels);
+	std::shared_ptr<Camera> createCamera(const CameraSettings& settings);
+	std::shared_ptr<Geometry> createGeometry(const BufferLayout& layout, void* vertexData, uint32_t vertexSize, std::vector<uint16_t> indices);
+	std::shared_ptr<Renderable> createRenderable(std::shared_ptr<Geometry> geometry, std::shared_ptr<Material> material);
+	std::shared_ptr<Material> createMaterial(const std::string& shaderName);
+
 	virtual void initialize(const RenderSettings& settings) = 0;
 	virtual void cleanup() = 0;
 
 	virtual void render(const std::shared_ptr<Camera>& camera) = 0;
-	virtual void swapBuffers() = 0; // @todo Rename to swap buffers
+	virtual void swapBuffers() = 0;
 
 	virtual void setSettings(const RenderSettings& settings) = 0;
 	virtual void setClearColor(uint32_t rgba) = 0;
 	virtual void clear(uint16_t flags, uint16_t width = 0, uint16_t height = 0) = 0;
-	
+
 	virtual void setRenderState(std::shared_ptr<RenderState> renderState) = 0;
 	virtual void writeToBuffers(std::shared_ptr<Framebuffer> framebuffer) = 0;// null will write to back buffer
-	
+
 	virtual void setParameter(const std::string& shader, const std::string& uniform, std::shared_ptr<void> data, uint8_t unit) = 0;
 	virtual void setParameter(const std::string& shader, const std::string& uniform, std::shared_ptr<void> data) = 0;
 
@@ -264,16 +272,6 @@ public:
 	virtual void addRenderable(std::shared_ptr<Renderable> renderable) = 0;
 	virtual void setRenderables(std::vector<std::shared_ptr<Renderable>> renderables) = 0;
 
-	std::shared_ptr<Shader> createShader();
-	std::shared_ptr<RenderState> createRenderState(std::string name, uint64_t flags);
-	std::shared_ptr<Framebuffer> createFramebuffer(std::vector<std::string> buffers);
-	std::shared_ptr<Texture> createTexture(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0);
-	std::shared_ptr<Texture> createTexture(const uint8_t* data, TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height, uint16_t channels);
-	std::shared_ptr<Camera> createCamera(const CameraSettings& settings);
-	std::shared_ptr<Geometry> createGeometry(const BufferLayout& layout, void* vertexData, uint32_t vertexSize, std::vector<uint16_t> indices);
-	std::shared_ptr<Renderable> createRenderable(std::shared_ptr<Geometry> geometry, std::shared_ptr<Material> material);
-	std::shared_ptr<Material> createMaterial(const std::string& shaderName);
-	
 	virtual [[nodiscard]] const RenderSettings getSettings() const = 0;
 	virtual [[nodiscard]] const std::shared_ptr<Renderer>& getRenderer() const = 0;
 	virtual [[nodiscard]] const std::unordered_map<std::string, std::shared_ptr<Texture>>& getBuffers() const = 0;
@@ -281,11 +279,8 @@ public:
 	virtual [[nodiscard]] const std::unordered_map<std::string, std::shared_ptr<Shader>>& getShaders() const = 0;
 	virtual [[nodiscard]] const std::vector<std::shared_ptr<Renderable>>& getRenderables() const = 0;
 	virtual [[nodiscard]] const std::shared_ptr<Camera>& getCamera() const = 0;
-	virtual [[nodiscard]] const uint32_t getRenderStateCount() const = 0;
-
-private:
-	virtual void setRenderStateCount(uint32_t passCount) = 0;
 };
+
 
 class Framebuffer
 {
