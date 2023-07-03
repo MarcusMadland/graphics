@@ -5,7 +5,7 @@
 namespace mrender {
 
 GBuffer::GBuffer()
-    : RenderSystem("G Buffer")
+    : RenderSystem("G Buffer"), mState(INVALID_HANDLE), mFramebuffer(INVALID_HANDLE)
 {
 }
 
@@ -13,10 +13,10 @@ GBuffer::~GBuffer()
 {
 }
 
-bool GBuffer::init(mrender::RenderContext& context)
+bool GBuffer::init(GfxContext* context)
 { 
 	// Render State
-	mState = context.createRenderState("G Buffers", 0
+	mState = context->createRenderState(0
 		| BGFX_STATE_WRITE_RGB
 		| BGFX_STATE_WRITE_A
 		| BGFX_STATE_WRITE_Z
@@ -24,42 +24,39 @@ bool GBuffer::init(mrender::RenderContext& context)
 		| BGFX_STATE_MSAA);
 
 	// Framebuffer
-	mFramebuffer = context.createFramebuffer({ "GDiffuse", "GNormal", "GSpecular", "GPosition", "GDepth" });
+	mFramebuffer = context->createFramebuffer(mBuffers);
 
     return true;
 }
 
-void GBuffer::render(RenderContext& context)
+void GBuffer::render(GfxContext* context)
 {
 	PROFILE_SCOPE(mName);
 
 	// Set current render pass id
-	context.setRenderState(mState);
+	context->setActiveRenderState(mState);
 
 	// Clear 
-	{
-		context.writeToBuffers(mFramebuffer);
-		context.clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
+	context->setActiveFramebuffer(mFramebuffer);
+	context->clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
 		
-		// Submit scene
-		{
-			PROFILE_SCOPE("Render Scene");
+	// Submit scene
+	{
+		PROFILE_SCOPE("Render Scene");
 
-			auto renderables = context.getRenderables();
-			context.submit(renderables, context.getCamera());
-		}
+		auto renderables = context->getActiveRenderables();
+		context->submit(renderables, context->getActiveCamera());
 	}
 }
 
-std::unordered_map<std::string, std::shared_ptr<Texture>> GBuffer::getBuffers(RenderContext& context)
+BufferList GBuffer::getBuffers(GfxContext* context)
 {
-	std::unordered_map<std::string, std::shared_ptr<Texture>> buffers;
-	buffers.emplace("GDiffuse", context.createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
-	buffers.emplace("GNormal", context.createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
-	buffers.emplace("GSpecular", context.createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
-	buffers.emplace("GPosition", context.createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
-	buffers.emplace("GDepth", context.createTexture(TextureFormat::D32F, BGFX_TEXTURE_RT));
-	return buffers;
+	mBuffers.emplace("GDiffuse", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
+	mBuffers.emplace("GNormal", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
+	mBuffers.emplace("GSpecular", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
+	mBuffers.emplace("GPosition", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
+	mBuffers.emplace("GDepth", context->createTexture(TextureFormat::D32F, BGFX_TEXTURE_RT));
+	return mBuffers;
 }
 
 }   // namespace mrender

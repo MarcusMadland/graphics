@@ -8,7 +8,7 @@ namespace mrender {
 
 class TextureImplementation : public Texture
 {
-	friend class RenderContextImplementation;
+	friend class GfxContextImplementation;
 	friend class FramebufferImplementation;
 	friend class PostProcessing;
 	friend class ShadowMapping;
@@ -19,14 +19,14 @@ public:
 	TextureImplementation(const uint8_t* data, TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height, uint16_t channels);
 	~TextureImplementation();
 
-	virtual [[nodiscard]] TextureFormat getFormat() const override { return mFormat; }
+	virtual [[nodiscard]] TextureFormat getFormat() const { return mFormat; }
 
 private:
 	bgfx::TextureFormat::Enum toBgfx(const TextureFormat& format);
 
 private:
-	bgfx::TextureHandle mHandle;
-	TextureFormat mFormat;
+	bgfx::TextureHandle mHandle = BGFX_INVALID_HANDLE;
+	TextureFormat mFormat = TextureFormat::Count;
 };
 
 }	// namespace mrender

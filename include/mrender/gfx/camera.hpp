@@ -6,15 +6,15 @@ namespace mrender {
 
 class CameraImplementation : public Camera
 {
-	friend class RenderContextImplementation;
+	friend class GfxContextImplementation;
 
 public:
 	CameraImplementation(const CameraSettings& settings);
 
-	virtual void recalculate() override;
+	virtual void recalculate() ;
 
-	virtual void setSettings(const CameraSettings& settings) override;
-	virtual [[nodiscard]] const CameraSettings getSettings() const override { return mSettings; }
+	virtual void setSettings(const CameraSettings& settings) ;
+	virtual [[nodiscard]] const CameraSettings getSettings() { return mSettings; }
 
 	[[nodiscard]] float* getViewMatrix() { return mView; }
 	[[nodiscard]] float* getProjMatrix() { return mProj; }

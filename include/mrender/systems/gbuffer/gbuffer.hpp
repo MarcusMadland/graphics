@@ -10,14 +10,15 @@ public:
     GBuffer();
     ~GBuffer();
 
-    bool init(RenderContext& context) override;
-    void render(RenderContext& context) override;
+    bool init(GfxContext* context) override;
+    void render(GfxContext* context) override;
 
-    std::unordered_map<std::string, std::shared_ptr<Texture>> getBuffers(RenderContext& context) override;
+    BufferList getBuffers(GfxContext* context) override;
 
 private:
-    std::shared_ptr<RenderState> mState;
-    std::shared_ptr<Framebuffer> mFramebuffer;
+    RenderStateHandle mState;
+    BufferList mBuffers;
+    FramebufferHandle mFramebuffer;
 };
 
 }   // namespace mrender

@@ -21,14 +21,14 @@ void CameraImplementation::recalculate()
     // Projection matrix
     switch (mSettings.mProjectionType)
     {
-    case mrender::ProjectionType::Perspective:
+    case mrender::CameraSettings::Perspective:
     {
         bx::mtxProj(
             mProj, mSettings.mFov, mSettings.mWidth / mSettings.mHeight, mSettings.mClipNear,
             mSettings.mClipFar, bgfx::getCaps()->homogeneousDepth);
         break;
     }
-    case mrender::ProjectionType::Orthographic:
+    case mrender::CameraSettings::Orthographic:
     {
         const float x = mSettings.mWidth / 2.0f;
         const float y = mSettings.mHeight / 2.0f;
@@ -38,7 +38,6 @@ void CameraImplementation::recalculate()
     }
     default: { break; }
     }
-    
 }
 
 void CameraImplementation::setSettings(const CameraSettings& settings)

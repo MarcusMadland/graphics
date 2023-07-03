@@ -7,10 +7,10 @@ GeometryImplementation::GeometryImplementation(const BufferLayout& layout, void*
 {
 	bgfx::VertexLayout bgfxLayout;
 	bgfxLayout.begin();
-	for (auto& element : layout.mElements)
+	for (auto& element : layout)
 	{
 		bgfxLayout.add(attribToBgfx(element.mAttrib), element.mNum,
-			attribTypeToBgfx(element.mAttribType), element.mAttribType == AttribType::Uint8 || element.mAttribType == AttribType::Int16, element.mAttribType == AttribType::Int16);
+			attribTypeToBgfx(element.mAttribType), element.mAttribType == BufferElement::AttribType::Uint8 || element.mAttribType == BufferElement::AttribType::Int16, element.mAttribType == BufferElement::AttribType::Int16);
 					// @todo Need a better solution to "normalized" param
 	}
 	bgfxLayout.end();
@@ -22,62 +22,62 @@ GeometryImplementation::GeometryImplementation(const BufferLayout& layout, void*
         bgfx::makeRef(mIndexData.data(), static_cast<uint32_t>(mIndexData.size() * sizeof(uint16_t))));
 }
 
-bgfx::Attrib::Enum GeometryImplementation::attribToBgfx(const Attrib& attrib)
+bgfx::Attrib::Enum GeometryImplementation::attribToBgfx(const BufferElement::Attrib& attrib)
 {
 	switch (attrib)
 	{
-	case Attrib::Position:
+	case BufferElement::Attrib::Position:
 		return bgfx::Attrib::Position;
 
-	case Attrib::Normal:
+	case BufferElement::Attrib::Normal:
 		return bgfx::Attrib::Normal;
 
-	case Attrib::Tangent:
+	case BufferElement::Attrib::Tangent:
 		return bgfx::Attrib::Tangent;
 
-	case Attrib::Bitangent:
+	case BufferElement::Attrib::Bitangent:
 		return bgfx::Attrib::Bitangent;
 
-	case Attrib::Color0:
+	case BufferElement::Attrib::Color0:
 		return bgfx::Attrib::Color0;
 
-	case Attrib::Color1:
+	case BufferElement::Attrib::Color1:
 		return bgfx::Attrib::Color1;
 
-	case Attrib::Color2:
+	case BufferElement::Attrib::Color2:
 		return bgfx::Attrib::Color2;
 
-	case Attrib::Color3:
+	case BufferElement::Attrib::Color3:
 		return bgfx::Attrib::Color3;
 
-	case Attrib::Indices:
+	case BufferElement::Attrib::Indices:
 		return bgfx::Attrib::Indices;
 
-	case Attrib::Weight:
+	case BufferElement::Attrib::Weight:
 		return bgfx::Attrib::Weight;
 
-	case Attrib::TexCoord0:
+	case BufferElement::Attrib::TexCoord0:
 		return bgfx::Attrib::TexCoord0;
 
-	case Attrib::TexCoord1:
+	case BufferElement::Attrib::TexCoord1:
 		return bgfx::Attrib::TexCoord1;
 
-	case Attrib::TexCoord2:
+	case BufferElement::Attrib::TexCoord2:
 		return bgfx::Attrib::TexCoord2;
 
-	case Attrib::TexCoord3:
+	case BufferElement::Attrib::TexCoord3:
 		return bgfx::Attrib::TexCoord3;
 
-	case Attrib::TexCoord4:
+	case BufferElement::Attrib::TexCoord4:
 		return bgfx::Attrib::TexCoord4;
 
-	case Attrib::TexCoord5:
+	case BufferElement::Attrib::TexCoord5:
 		return bgfx::Attrib::TexCoord5;
 
-	case Attrib::TexCoord6:
+	case BufferElement::Attrib::TexCoord6:
 		return bgfx::Attrib::TexCoord6;
 
-	case Attrib::TexCoord7:
+	case BufferElement::Attrib::TexCoord7:
 		return bgfx::Attrib::TexCoord7;
 
 	default:
@@ -85,23 +85,23 @@ bgfx::Attrib::Enum GeometryImplementation::attribToBgfx(const Attrib& attrib)
 	}
 }
 
-bgfx::AttribType::Enum GeometryImplementation::attribTypeToBgfx(const AttribType& attribType)
+bgfx::AttribType::Enum GeometryImplementation::attribTypeToBgfx(const BufferElement::AttribType& attribType)
 {
 	switch (attribType)
 	{
-	case AttribType::Uint8:
+	case BufferElement::AttribType::Uint8:
 		return bgfx::AttribType::Uint8;
 
-	case AttribType::Uint10:
+	case BufferElement::AttribType::Uint10:
 		return bgfx::AttribType::Uint10;
 
-	case AttribType::Int16:
+	case BufferElement::AttribType::Int16:
 		return bgfx::AttribType::Int16;
 
-	case AttribType::Half:
+	case BufferElement::AttribType::Half:
 		return bgfx::AttribType::Half;
 
-	case AttribType::Float:
+	case BufferElement::AttribType::Float:
 		return bgfx::AttribType::Float;
 
 	default:

@@ -8,10 +8,10 @@ namespace mrender {
 
 class FramebufferImplementation : public Framebuffer
 {
-	friend class RenderContextImplementation;
+	friend class GfxContextImplementation;
 
 public:
-	FramebufferImplementation(RenderContext& context, std::vector<std::string> buffers);
+	FramebufferImplementation(GfxContext* context, BufferList buffers);
 	~FramebufferImplementation();
 
 private:

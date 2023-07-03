@@ -12,9 +12,7 @@ public:
     Deferred() {}
 
     std::vector<std::shared_ptr<RenderSystem>> setupRenderSystems(
-        mrender::RenderContext& context) override;
-
-private:
+        mrender::GfxContext* context) override;
 };
 
 }   // namespace mrender

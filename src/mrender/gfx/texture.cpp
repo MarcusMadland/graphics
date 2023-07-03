@@ -15,7 +15,6 @@ TextureImplementation::TextureImplementation(TextureFormat format, uint64_t text
 	{
 		mHandle = bgfx::createTexture2D(bgfx::BackbufferRatio::Equal, false, 1, toBgfx(format), textureFlags);
 	}
-	printf("Want to create texture\n");
 }
 
 TextureImplementation::TextureImplementation(const uint8_t* data, TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height, uint16_t channels)
@@ -32,7 +31,7 @@ TextureImplementation::TextureImplementation(const uint8_t* data, TextureFormat 
 			, textureFlags
 			, bgfx::copy(data, width * height * channels));
 
-		//delete data;
+		//delete data; @todo
 	}
 	else
 	{
@@ -44,7 +43,6 @@ TextureImplementation::~TextureImplementation()
 {
 	if (bgfx::isValid(mHandle))
 	{
-		printf("Want to destroy texture\n");
 		bgfx::destroy(mHandle);
 	}
 }

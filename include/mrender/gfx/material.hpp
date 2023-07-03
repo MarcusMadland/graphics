@@ -2,21 +2,23 @@
 
 #include "mrender/mrender.hpp"
 
+#include "mrender/gfx/render_context.hpp"
+
 namespace mrender {
 
 class MaterialImplementation : public Material
 {
 public:
-	MaterialImplementation(RenderContext& context, const std::string& shaderName);
+	MaterialImplementation(GfxContext* context, ShaderHandle shader);
 
-	virtual void setUniform(std::string name, UniformType type, std::shared_ptr<void> data) override;
-	[[nodiscard]] virtual const std::unordered_map<std::string, UniformData>& getUniformData() override { return mUniformData; };
-	[[nodiscard]] virtual const std::string getShaderName() const override { return mShaderName; }
+	virtual void setParameter(std::string name, UniformData::UniformType type, std::shared_ptr<void> data) ;
+	[[nodiscard]] virtual const ParameterList& getParameters()  { return mUniformData; };
+	[[nodiscard]] virtual const ShaderHandle getShader() const  { return mShader; }
 
 private:
-	RenderContext& mContext;
-	std::string mShaderName;
-	std::unordered_map<std::string, UniformData> mUniformData;
+	GfxContext* mContext;
+	ShaderHandle mShader;
+	ParameterList mUniformData;
 };
 
 }	// namespace mrender
