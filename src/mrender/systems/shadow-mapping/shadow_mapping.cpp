@@ -17,59 +17,58 @@ ShadowMapping::~ShadowMapping()
 {
 }
 
-bool ShadowMapping::init(mrender::RenderContext& context)
+bool ShadowMapping::init(mrender::GfxContext* context)
 { 
 	// Shader
-	context.loadShader("shadow", "C:/Users/marcu/Dev/mengine/mrender/shaders/shadow");
+	mShader = context->createShader("shadow", "C:/Users/marcu/Dev/mengine/mrender/shaders/shadow");
 
 	// Render State
-	mState = context.createRenderState("Shadow Mapping", 0
+	mState = context->createRenderState(0
 		| BGFX_STATE_WRITE_Z
 		| BGFX_STATE_DEPTH_TEST_LESS
 		| BGFX_STATE_CULL_CCW
 		| BGFX_STATE_MSAA);
 
 	// Framebuffer
-	mFramebuffer = context.createFramebuffer({ "ShadowMap" });
+	mFramebuffer = context->createFramebuffer(mBuffers);
 
 	// Camera
 	CameraSettings cameraSettings;
-	cameraSettings.mProjectionType = ProjectionType::Orthographic;
+	cameraSettings.mProjectionType = CameraSettings::Orthographic;
 	cameraSettings.mWidth = 30.0f;
 	cameraSettings.mHeight = 30.0f;
 	cameraSettings.mPosition[0] = 5.0f;
 	cameraSettings.mPosition[1] = 5.0f;
 	cameraSettings.mPosition[2] = 2.0f;
-	mCamera = context.createCamera(cameraSettings);
+	mCamera = context->createCamera(cameraSettings);
     
     return true;
 }
 
-void ShadowMapping::render(RenderContext& context)
+void ShadowMapping::render(GfxContext* context)
 {
 	PROFILE_SCOPE(mName);
 
 	// Set current render pass id
-	context.setRenderState(mState);
+	context->setActiveRenderState(mState);
 
 	// Clear render pass
-	context.writeToBuffers(mFramebuffer);
-	context.clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, shadowSize, shadowSize);
+	context->setActiveFramebuffer(mFramebuffer);
+	context->clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, shadowSize, shadowSize);
 
 	// Submit scene
 	{
 		PROFILE_SCOPE("Render Scene");
 
-		auto renderables = context.getRenderables();
-		context.submit(renderables, mCamera);
+		auto renderables = context->getActiveRenderables();
+		context->submit(renderables, mCamera);
 	}
 }
 
-std::unordered_map<std::string, std::shared_ptr<Texture>> ShadowMapping::getBuffers(RenderContext& context)
+BufferList ShadowMapping::getBuffers(GfxContext* context)
 {
-	std::unordered_map<std::string, std::shared_ptr<Texture>> buffers;
-	buffers.emplace("ShadowMap", context.createTexture(TextureFormat::D16, BGFX_TEXTURE_RT | BGFX_SAMPLER_COMPARE_LEQUAL, shadowSize, shadowSize));
-	return buffers;
+	mBuffers.emplace("ShadowMap", context->createTexture(TextureFormat::D16, BGFX_TEXTURE_RT, shadowSize, shadowSize));
+	return mBuffers;
 }
 
 }   // namespace mrender

@@ -5,7 +5,7 @@
 
 namespace mrender {
 
-std::vector<std::shared_ptr<RenderSystem>> Deferred::setupRenderSystems(RenderContext& context)
+std::vector<std::shared_ptr<RenderSystem>> Deferred::setupRenderSystems(GfxContext* context)
 {
     std::vector<std::shared_ptr<RenderSystem>> render_techniques;
     render_techniques.emplace_back(std::make_shared<ShadowMapping>());

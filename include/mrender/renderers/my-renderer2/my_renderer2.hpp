@@ -12,7 +12,7 @@ public:
     MyRenderer2() {}
 
     std::vector<std::shared_ptr<RenderSystem>> setupRenderSystems(
-        mrender::RenderContext& context) override;
+        mrender::GfxContext* context) override;
 
 private:
 };

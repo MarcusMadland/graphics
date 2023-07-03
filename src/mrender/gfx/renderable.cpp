@@ -4,8 +4,8 @@
 
 namespace mrender {
 
-RenderableImplementation::RenderableImplementation(std::shared_ptr<Geometry> geometry, std::shared_ptr<Material> material)
-	: mGeometry(std::move(geometry)), mMaterial(std::move(material))
+RenderableImplementation::RenderableImplementation(GeometryHandle geometry, MaterialHandle material)
+	: mGeometry(geometry), mMaterial(material)
 {
 	bx::mtxIdentity(mTransform);
 }

@@ -3,6 +3,16 @@
 
 namespace mrender {
 
+ShaderImplementation::ShaderImplementation()
+    : mHandle(BGFX_INVALID_HANDLE), mFileName(nullptr), mFilePath(nullptr)
+{
+}
+
+ShaderImplementation::~ShaderImplementation()
+{
+    bgfx::destroy(mHandle);
+}
+
 void ShaderImplementation::loadProgram(char const* fileName, char const* filePath)
 {
     mFileName = fileName;

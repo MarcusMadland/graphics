@@ -3,17 +3,17 @@
 
 namespace mrender {
 
-MaterialImplementation::MaterialImplementation(RenderContext& context, const std::string& shaderName)
-	: mContext(context), mShaderName(shaderName)
+MaterialImplementation::MaterialImplementation(GfxContext* context, ShaderHandle shader)
+	: mContext(context), mShader(shader)
 {
-	mUniformData.clear();
 }
 
-void MaterialImplementation::setUniform(std::string name, UniformType type, std::shared_ptr<void> data)
+void MaterialImplementation::setParameter(std::string name, UniformData::UniformType type, std::shared_ptr<void> data)
 {
 	if (data == nullptr) printf("Setting uniform %s with invalid data\n", name.data());
 
-	auto shaderImpl = std::static_pointer_cast<ShaderImplementation>(mContext.getShaders().at(mShaderName));
+	auto contextImpl = static_cast<GfxContextImplementation*>(mContext);
+	auto shaderImpl = STATIC_IMPL_CAST(Shader, contextImpl->mShaders.at(mShader.idx));
 	if (shaderImpl->mUniformHandles.count(name) > 0)
 	{
 		mUniformData[name] = { type, std::move(data) };

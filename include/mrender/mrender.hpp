@@ -1,57 +1,32 @@
 #pragma once
 
-#include "utils/factory.hpp"
-#include "utils/timable.hpp"
-
 #include <string_view>
 #include <memory>
 #include <vector>
 #include <unordered_map>
 
+#include "utils/factory.hpp"
+#include "utils/timable.hpp"
+
+#define HANDLE(name) struct name { uint16_t idx; }; inline bool isValid(name handle) { return handle.idx != UINT16_MAX; }
+#define INVALID_HANDLE { UINT16_MAX }
+
+#define STATIC_IMPL_CAST(T, value) std::static_pointer_cast<T##Implementation>(value)
+
 namespace mrender {
 
-class Framebuffer;
-class RenderState;
-class Material;
-class Texture;
-class Shader;
-class RenderSystem;
-class Renderer;
-class Camera;
-class Geometry;
-class Renderable;
+class GfxContext;
 
-enum class AttribType
-{
-	Uint8,
-	Uint10,
-	Int16,
-	Half,
-	Float,
-};
+HANDLE(CameraHandle)
+HANDLE(FramebufferHandle)
+HANDLE(RenderStateHandle)
+HANDLE(MaterialHandle)
+HANDLE(TextureHandle)
+HANDLE(ShaderHandle)
+HANDLE(GeometryHandle)
+HANDLE(RenderableHandle)
 
-enum class Attrib
-{
-	Position,
-	Normal,
-	Tangent,
-	Bitangent,
-	Color0,
-	Color1,
-	Color2,
-	Color3,
-	Indices,
-	Weight,
-	TexCoord0,
-	TexCoord1,
-	TexCoord2,
-	TexCoord3,
-	TexCoord4,
-	TexCoord5,
-	TexCoord6,
-	TexCoord7,
-};
-
+// 
 enum class TextureFormat
 {
 	BC1,
@@ -155,20 +130,6 @@ enum class Color
 	Green,
 };
 
-enum class ProjectionType
-{
-	Perspective,
-	Orthographic,
-};
-
-enum class UniformType
-{
-	Sampler,
-	Vec4,
-	Mat3,
-	Mat4,
-};
-
 enum class LightType
 {
 	Point,
@@ -189,7 +150,12 @@ struct RenderSettings
 
 struct CameraSettings
 {
-	ProjectionType mProjectionType = ProjectionType::Perspective;
+	enum ProjectionType
+	{
+		Perspective,
+		Orthographic,
+	} mProjectionType = ProjectionType::Perspective;
+
 	float mFov = 45.0f;
 	float mWidth = 16.0f;
 	float mHeight = 9.0f;
@@ -201,19 +167,51 @@ struct CameraSettings
 
 struct BufferElement
 {
-	AttribType mAttribType;
-	uint8_t mNum;
-	Attrib mAttrib;
-};
+	enum class AttribType
+	{
+		Uint8,
+		Uint10,
+		Int16,
+		Half,
+		Float,
+	} mAttribType;
 
-struct BufferLayout
-{
-	std::vector<BufferElement> mElements;
+	enum class Attrib
+	{
+		Position,
+		Normal,
+		Tangent,
+		Bitangent,
+		Color0,
+		Color1,
+		Color2,
+		Color3,
+		Indices,
+		Weight,
+		TexCoord0,
+		TexCoord1,
+		TexCoord2,
+		TexCoord3,
+		TexCoord4,
+		TexCoord5,
+		TexCoord6,
+		TexCoord7,
+	} mAttrib;
+ 
+	uint8_t mNum;
 };
+using BufferLayout = std::vector<BufferElement>;
 
 struct UniformData
 {
-	UniformType mType;
+	enum class UniformType
+	{
+		Sampler,
+		Vec4,
+		Mat3,
+		Mat4,
+	} mType;
+
 	std::shared_ptr<void> mValue;
 };
 
@@ -230,88 +228,37 @@ struct LightData // @todo
 	float mOuterConeAngle = 3.1415926535897932384626433832795f / 4.0f; //only valid for spot lights
 };
 
-class RenderContext
-{
-public:
-	std::shared_ptr<Shader> createShader();
-	std::shared_ptr<RenderState> createRenderState(std::string name, uint64_t flags);
-	std::shared_ptr<Framebuffer> createFramebuffer(std::vector<std::string> buffers);
-	std::shared_ptr<Texture> createTexture(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0);
-	std::shared_ptr<Texture> createTexture(const uint8_t* data, TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height, uint16_t channels);
-	std::shared_ptr<Camera> createCamera(const CameraSettings& settings);
-	std::shared_ptr<Geometry> createGeometry(const BufferLayout& layout, void* vertexData, uint32_t vertexSize, std::vector<uint16_t> indices);
-	std::shared_ptr<Renderable> createRenderable(std::shared_ptr<Geometry> geometry, std::shared_ptr<Material> material);
-	std::shared_ptr<Material> createMaterial(const std::string& shaderName);
+//
+class Camera {};
+using CameraRef = std::shared_ptr<Camera>;
 
-	virtual void render(const std::shared_ptr<Camera>& camera) = 0;
-	virtual void swapBuffers() = 0;
+class Framebuffer {};
+using FramebufferRef = std::shared_ptr<Framebuffer>;
 
-	virtual void setSettings(const RenderSettings& settings) = 0;
-	virtual void setClearColor(uint32_t rgba) = 0;
-	virtual void clear(uint16_t flags, uint16_t width = 0, uint16_t height = 0) = 0;
+class RenderState {};
+using RenderStateRef = std::shared_ptr<RenderState>;
 
-	virtual void setRenderState(std::shared_ptr<RenderState> renderState) = 0;
-	virtual void writeToBuffers(std::shared_ptr<Framebuffer> framebuffer) = 0;// null will write to back buffer
+class Material {};
+using MaterialRef = std::shared_ptr<Material>;
 
-	virtual void setParameter(const std::string& shader, const std::string& uniform, std::shared_ptr<void> data, uint8_t unit) = 0;
-	virtual void setParameter(const std::string& shader, const std::string& uniform, std::shared_ptr<void> data) = 0;
+class Texture {};
+using TextureRef = std::shared_ptr<Texture>;
 
-	virtual void submitDebugTextOnScreen(uint16_t x, uint16_t y, std::string_view text, ...) = 0;
-	virtual void submitDebugTextOnScreen(uint16_t x, uint16_t y, Color color, std::string_view text, ...) = 0;
-	virtual void submitDebugTextOnScreen(uint16_t x, uint16_t y, Color color, bool right, bool top, std::string_view text, ...) = 0;
-	virtual void submit(const std::shared_ptr<Geometry>& geometry, const std::string_view& shaderName, const std::shared_ptr<Camera>& camera) = 0;
-	virtual void submit(const std::shared_ptr<Renderable>& renderables, const std::shared_ptr<Camera>& camera) = 0;
-	virtual void submit(const std::vector<std::shared_ptr<Renderable>>& renderables, const std::shared_ptr<Camera>& camera) = 0;
+class Shader {};
+using ShaderRef = std::shared_ptr<Shader>;
 
-	virtual void loadShader(char const* fileName, char const* filePath) = 0;
-	virtual void reloadShaders() = 0;
+class Geometry {};
+using GeometryRef = std::shared_ptr<Geometry>;
 
-	virtual void addRenderable(std::shared_ptr<Renderable> renderable) = 0;
-	virtual void setRenderables(std::vector<std::shared_ptr<Renderable>> renderables) = 0;
+class Renderable {};
+using RenderableRef = std::shared_ptr<Renderable>;
 
-	virtual [[nodiscard]] const RenderSettings getSettings() const = 0;
-	virtual [[nodiscard]] const std::shared_ptr<Renderer>& getRenderer() const = 0;
-	virtual [[nodiscard]] const std::vector<std::shared_ptr<RenderSystem>>& getRenderSystems() const = 0;
-	virtual [[nodiscard]] const std::unordered_map<std::string, std::shared_ptr<Texture>>& getBuffers() const = 0;
-	virtual [[nodiscard]] const std::unordered_map<std::string, std::shared_ptr<Shader>>& getShaders() const = 0;
-	virtual [[nodiscard]] const std::vector<std::shared_ptr<Renderable>>& getRenderables() const = 0;
-	virtual [[nodiscard]] const std::shared_ptr<Camera>& getCamera() const = 0;
-};
+//
+using ParameterList = std::unordered_map<std::string, UniformData>;
+using BufferList = std::unordered_map<std::string, TextureHandle>;
+using RenderableList = std::vector<RenderableHandle>;
 
-std::shared_ptr<RenderContext> createRenderContext(const RenderSettings& settings);
-
-
-class Framebuffer
-{
-public:
-};
-
-class RenderState 
-{
-public:
-};
-
-class Material
-{
-public:
-	virtual void setUniform(std::string name, UniformType type, std::shared_ptr<void> data) = 0;
-	[[nodiscard]] virtual const std::unordered_map<std::string, UniformData>& getUniformData() = 0;
-	[[nodiscard]] virtual const std::string getShaderName() const = 0;
-};
-
-class Texture
-{
-public:
-	[[nodiscard]] virtual TextureFormat getFormat() const = 0;
-};
-
-class Shader
-{
-public:
-	virtual void loadProgram(char const* fileName, char const* filePath) = 0;
-	virtual void reloadProgram() = 0;
-};
-
+//
 class RenderSystem : public Timable// @todo Simplify class
 {
 public:
@@ -319,10 +266,10 @@ public:
 
 	[[nodiscard]] std::string_view getName() const { return mName; }
 
-	virtual bool init(RenderContext& context) = 0;
-	virtual void render(RenderContext& context) = 0;
+	virtual bool init(GfxContext* context) = 0;
+	virtual void render(GfxContext* context) = 0;
 
-	virtual std::unordered_map<std::string, std::shared_ptr<Texture>> getBuffers(RenderContext& context) = 0;
+	virtual BufferList getBuffers(GfxContext* context) = 0;
 
 protected:
 	std::string_view mName;
@@ -333,33 +280,77 @@ class Renderer : public Factory<Renderer> // @todo Simplify class
 public:
 	Renderer(Key) {}
 
-	virtual std::vector<std::shared_ptr<RenderSystem>> setupRenderSystems(RenderContext& context) = 0;
+	virtual std::vector<std::shared_ptr<RenderSystem>> setupRenderSystems(GfxContext* context) = 0;
 };
 
-class Camera
+//
+class GfxContext
 {
 public:
-	virtual void recalculate() = 0;
+	virtual CameraHandle createCamera(const CameraSettings& settings) = 0;
+	virtual FramebufferHandle createFramebuffer(BufferList buffers) = 0;
+	virtual RenderStateHandle createRenderState(uint64_t flags) = 0;
+	virtual MaterialHandle createMaterial(ShaderHandle shader) = 0;
+	virtual TextureHandle createTexture(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0) = 0;
+	virtual TextureHandle createTexture(const uint8_t* data, TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height, uint16_t channels) = 0;
+	virtual ShaderHandle createShader(const std::string& fileName, const std::string& filePath) = 0;
+	virtual GeometryHandle createGeometry(const BufferLayout& layout, void* vertexData, uint32_t vertexSize, const std::vector<uint16_t>& indices) = 0;
+	virtual RenderableHandle createRenderable(GeometryHandle geometry, MaterialHandle material) = 0;
 
-	virtual void setSettings(const CameraSettings& settings) = 0;
-	[[nodiscard]] virtual const CameraSettings getSettings() const = 0;
+	virtual void destroy(CameraHandle handle) = 0;
+	virtual void destroy(FramebufferHandle handle) = 0;
+	virtual void destroy(RenderStateHandle handle) = 0;
+	virtual void destroy(MaterialHandle handle) = 0;
+	virtual void destroy(TextureHandle handle) = 0;
+	virtual void destroy(ShaderHandle handle) = 0;
+	virtual void destroy(GeometryHandle handle) = 0;
+	virtual void destroy(RenderableHandle handle) = 0;
+
+	virtual void render(CameraHandle handle) = 0;
+	virtual void swapBuffers() = 0;
+	virtual void clear(uint16_t flags, uint16_t width = 0, uint16_t height = 0) = 0;
+	virtual void setClearColor(uint32_t rgba) = 0;
+	virtual void reloadShaders() = 0;
+
+	virtual void setActiveRenderState(RenderStateHandle handle) = 0; 
+	virtual void setActiveFramebuffer(FramebufferHandle handle) = 0; // null will write to back buffer
+	virtual void setActiveRenderable(RenderableHandle renderable) = 0;
+	virtual void setActiveRenderables(RenderableList renderables) = 0;
+
+	virtual [[nodiscard]] CameraHandle getActiveCamera() = 0;
+	virtual [[nodiscard]] RenderStateHandle getActiveRenderState() = 0;
+	virtual [[nodiscard]] RenderableList getActiveRenderables() = 0;
+	virtual [[nodiscard]] BufferList getSharedBuffers() = 0;
+
+	virtual void submitDebugText(uint16_t x, uint16_t y, const std::string_view& text, ...) = 0;
+	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, const std::string_view& text, ...) = 0;
+	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, bool right, bool top, const std::string_view& text, ...) = 0;
+	
+	virtual void submit(GeometryHandle, ShaderHandle shaderName, CameraHandle camera) = 0;
+	virtual void submit(RenderableHandle renderable, CameraHandle camera) = 0;
+	virtual void submit(RenderableList renderables, CameraHandle camera) = 0;
+	
+	virtual void setUniform(ShaderHandle shader, const std::string& uniform, std::shared_ptr<void> data, uint8_t unit) = 0;
+	virtual void setUniform(ShaderHandle shader, const std::string& uniform, std::shared_ptr<void> data) = 0;
+
+	virtual CameraSettings getCameraSettings(CameraHandle camera) = 0;
+	virtual void setCameraSettings(CameraHandle camera, const CameraSettings& settings) = 0;
+
+	virtual void setMaterialParameter(MaterialHandle material, const std::string& name, UniformData::UniformType type, std::shared_ptr<void> data) = 0;
+	virtual [[nodiscard]] const ParameterList& getMaterialParameters(MaterialHandle material) = 0;
+	virtual [[nodiscard]] const ShaderHandle getMaterialShader(MaterialHandle material) = 0;
+
+	virtual [[nodiscard]] TextureRef getTextureData(TextureHandle texture) = 0;
+	virtual [[nodiscard]] TextureFormat getTextureFormat(TextureHandle texture) = 0;
+
+	virtual void setRenderableTransform(RenderableHandle renderable, float* matrix) = 0;
+	virtual float* getRenderableTransform(RenderableHandle renderable) = 0;
+
+	virtual void setSettings(const RenderSettings& settings) = 0;
+	virtual RenderSettings getSettings() = 0;
+
 };
 
-class Geometry
-{
-public:
-	[[nodiscard]] virtual const uint8_t* getVertexData() const = 0;
-	[[nodiscard]] virtual const std::vector<uint16_t> getIndexData() const = 0;
-};
-
-class Renderable
-{
-public:
-	virtual void setTransform(float matrix[16]) = 0; 
-	[[nodiscard]] virtual float* getTransform() = 0;
-
-	[[nodiscard]] virtual std::shared_ptr<Geometry> getGeometry() = 0;
-	[[nodiscard]] virtual std::shared_ptr<Material> getMaterial() = 0;
-};
+GfxContext* createGfxContext(const RenderSettings& settings);
 
 }	// namespace mrender

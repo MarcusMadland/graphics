@@ -6,10 +6,10 @@ namespace mrender {
 
 	class RenderStateImplementation : public RenderState
 	{
-		friend class RenderContextImplementation;
+		friend class GfxContextImplementation;
 
 	public:
-		RenderStateImplementation(RenderContext& context, std::string name, uint64_t flags);
+		RenderStateImplementation(GfxContext* context, uint64_t flags);
 
 	private:
 		uint16_t mId;

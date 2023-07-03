@@ -7,7 +7,7 @@
 namespace mrender {
 
 PostProcessing::PostProcessing()
-    : RenderSystem("Post Processing")
+    : RenderSystem("Post Processing"), mShader(INVALID_HANDLE), mState(INVALID_HANDLE), mScreenQuad(INVALID_HANDLE)
 {
 }
 
@@ -15,48 +15,51 @@ PostProcessing::~PostProcessing()
 {
 }
 
-bool PostProcessing::init(RenderContext& context)
+bool PostProcessing::init(GfxContext* context)
 {
     // Shader
-    context.loadShader("screen", "C:/Users/marcu/Dev/mengine/mrender/shaders/screen");
+    mShader = context->createShader("screen", "C:/Users/marcu/Dev/mengine/mrender/shaders/screen");
 
     // Render state
-    mState = context.createRenderState("Post Processing", 0
+    mState = context->createRenderState(0
         | BGFX_STATE_WRITE_RGB
         | BGFX_STATE_WRITE_A);
 
     // Screen quad
     BufferLayout layout =
-    { {
-        { AttribType::Float, 3, Attrib::Position },
-        { AttribType::Float, 2, Attrib::TexCoord0 },
-    } };
-    mScreenQuad = context.createGeometry(layout, mQuadVertices.data(), static_cast<uint32_t>(mQuadVertices.size() * sizeof(VertexData)), mQuadIndices);
+    {
+        { BufferElement::AttribType::Float, BufferElement::Attrib::Position, 3 },
+        { BufferElement::AttribType::Float, BufferElement::Attrib::TexCoord0, 2 },
+    };
+    mScreenQuad = context->createGeometry(layout, mQuadVertices.data(), static_cast<uint32_t>(mQuadVertices.size() * sizeof(VertexData)), mQuadIndices);
 
     return true;
 }
 
-void PostProcessing::render(RenderContext& context)
+void PostProcessing::render(GfxContext* context)
 {
     PROFILE_SCOPE(mName);
 
     // Set current renderpass id
-    context.setRenderState(mState);
+    context->setActiveRenderState(mState);
 
     // Clear
-    context.clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
+    context->clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
 
     // Set shader uniforms
-    context.setParameter("screen", "u_shadowMap", context.getBuffers().at("ShadowMap"), 0);
-    context.setParameter("screen", "u_color", context.getBuffers().at("GDiffuse"), 1);
+    TextureHandle shadowBuffer = context->getSharedBuffers().at("ShadowMap");
+    context->setUniform(mShader, "u_shadowMap", context->getTextureData(shadowBuffer), 0);
+
+    TextureHandle diffuseBuffer = context->getSharedBuffers().at("GDiffuse");
+    context->setUniform(mShader, "u_color", context->getTextureData(diffuseBuffer), 1);
 
     // Submit quad
-    context.submit(mScreenQuad, "screen", nullptr);
+    context->submit(mScreenQuad, mShader, INVALID_HANDLE);
 }
 
-std::unordered_map<std::string, std::shared_ptr<Texture>> PostProcessing::getBuffers(RenderContext& context)
+BufferList PostProcessing::getBuffers(GfxContext* context)
 {
-    std::unordered_map<std::string, std::shared_ptr<Texture>> buffers;
+    BufferList buffers;
     return buffers;
 }
 
