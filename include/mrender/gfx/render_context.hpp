@@ -62,9 +62,9 @@ public:
 	virtual [[nodiscard]] RenderableList getActiveRenderables() { return mCurrentRenderables; }
 	virtual [[nodiscard]] BufferList getSharedBuffers() { return mSharedBuffers; }
 
-	virtual void submitDebugText(uint16_t x, uint16_t y, const std::string_view& text, ...) override;
-	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, const std::string_view& text, ...) override;
-	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, bool right, bool top, const std::string_view& text, ...) override;
+	virtual void submitDebugText(uint16_t x, uint16_t y, std::string_view text, ...) override;
+	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, std::string_view text, ...) override;
+	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, bool right, bool top, std::string_view text, ...) override;
 
 	virtual void submit(GeometryHandle, ShaderHandle shaderName, CameraHandle camera) override;
 	virtual void submit(RenderableHandle renderable, CameraHandle camera) override;

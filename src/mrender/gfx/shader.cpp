@@ -62,6 +62,11 @@ void ShaderImplementation::loadProgram(char const* fileName, char const* filePat
     uint8_t unit = 0;
     for (uint8_t i = 0; i < uniformNum; i++)
     {
+        if (!bgfx::isValid(uniforms[i]))
+        {
+            return;
+        }
+
         bgfx::UniformInfo info;
         bgfx::getUniformInfo(uniforms[i], info);
         std::string name = info.name;

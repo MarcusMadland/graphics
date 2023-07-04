@@ -250,53 +250,50 @@ void GfxContextImplementation::setActiveRenderables(std::vector<RenderableHandle
     }
 }
 
-void GfxContextImplementation::submitDebugText(uint16_t x, uint16_t y, const std::string_view& text, ...)
+void GfxContextImplementation::submitDebugText(uint16_t x, uint16_t y, std::string_view text, ...)
 {
-    /*
     constexpr int maxBufferSize = 256;
     char buffer[maxBufferSize];
 
     va_list args;
-    va_start(args, text.data());
+    va_start(args, text);
     vsprintf_s(buffer, text.data(), args);
     va_end(args);
 
     const bgfx::Stats* stats = bgfx::getStats();
-    bgfx::dbgTextPrintf(stats->textWidth - x, y, 0x0f, buffer);*/
+    bgfx::dbgTextPrintf(stats->textWidth - x, y, 0x0f, buffer);
 }
 
-void GfxContextImplementation::submitDebugText(uint16_t x, uint16_t y, Color color, const std::string_view& text, ...)
+void GfxContextImplementation::submitDebugText(uint16_t x, uint16_t y, Color color, std::string_view text, ...)
 {
-    /*
     constexpr int maxBufferSize = 256;
     char buffer[maxBufferSize];
 
     va_list args;
-    va_start(args, text.data());
+    va_start(args, text);
 
     vsprintf_s(buffer, text.data(), args);
 
     va_end(args);
 
     const bgfx::Stats* stats = bgfx::getStats();
-    bgfx::dbgTextPrintf(stats->textWidth - x, y, colorToAnsi(color), buffer);*/
+    bgfx::dbgTextPrintf(stats->textWidth - x, y, colorToAnsi(color), buffer);
 }
 
-void GfxContextImplementation::submitDebugText(uint16_t x, uint16_t y, Color color, bool right, bool top, const std::string_view& text, ...)
+void GfxContextImplementation::submitDebugText(uint16_t x, uint16_t y, Color color, bool right, bool top, std::string_view text, ...)
 {
-    /*
     constexpr int maxBufferSize = 256;
     char buffer[maxBufferSize];
 
     va_list args;
-    va_start(args, text.data());
+    va_start(args, text);
 
     vsprintf_s(buffer, text.data(), args);
 
     va_end(args);
 
     const bgfx::Stats* stats = bgfx::getStats();
-    bgfx::dbgTextPrintf(right ? stats->textWidth - x : x, top ? y : stats->textHeight - y, colorToAnsi(color), buffer);*/
+    bgfx::dbgTextPrintf(right ? stats->textWidth - x : x, top ? y : stats->textHeight - y, colorToAnsi(color), buffer);
 }
 
 void GfxContextImplementation::submit(GeometryHandle geometry, ShaderHandle shader, CameraHandle camera)
@@ -338,6 +335,11 @@ void GfxContextImplementation::submit(RenderableHandle renderable, CameraHandle 
     {
         std::string key = uniformHandle.first;
         std::pair<bgfx::UniformHandle, uint8_t> value = uniformHandle.second;
+
+        if (!bgfx::isValid(value.first))
+        {
+            return;
+        }
 
         bgfx::UniformInfo uniformInfo;
         bgfx::getUniformInfo(value.first, uniformInfo);

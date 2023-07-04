@@ -322,9 +322,9 @@ public:
 	virtual [[nodiscard]] RenderableList getActiveRenderables() = 0;
 	virtual [[nodiscard]] BufferList getSharedBuffers() = 0;
 
-	virtual void submitDebugText(uint16_t x, uint16_t y, const std::string_view& text, ...) = 0;
-	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, const std::string_view& text, ...) = 0;
-	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, bool right, bool top, const std::string_view& text, ...) = 0;
+	virtual void submitDebugText(uint16_t x, uint16_t y, std::string_view text, ...) = 0;
+	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, std::string_view text, ...) = 0;
+	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, bool right, bool top, std::string_view text, ...) = 0;
 	
 	virtual void submit(GeometryHandle, ShaderHandle shaderName, CameraHandle camera) = 0;
 	virtual void submit(RenderableHandle renderable, CameraHandle camera) = 0;
