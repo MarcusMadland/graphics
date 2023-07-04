@@ -206,7 +206,6 @@ struct UniformData
 {
 	enum class UniformType
 	{
-		Sampler,
 		Vec4,
 		Mat3,
 		Mat4,
@@ -254,7 +253,8 @@ class Renderable {};
 using RenderableRef = std::shared_ptr<Renderable>;
 
 //
-using ParameterList = std::unordered_map<std::string, UniformData>;
+using UniformDataList = std::unordered_map<std::string, UniformData>;
+using TextureDataList = std::unordered_map<std::string, TextureHandle>;
 using BufferList = std::unordered_map<std::string, TextureHandle>;
 using RenderableList = std::vector<RenderableHandle>;
 
@@ -330,14 +330,16 @@ public:
 	virtual void submit(RenderableHandle renderable, CameraHandle camera) = 0;
 	virtual void submit(RenderableList renderables, CameraHandle camera) = 0;
 	
-	virtual void setUniform(ShaderHandle shader, const std::string& uniform, std::shared_ptr<void> data, uint8_t unit) = 0;
+	virtual void setTexture(ShaderHandle shader, const std::string& uniform, TextureHandle data, uint8_t unit) = 0;
 	virtual void setUniform(ShaderHandle shader, const std::string& uniform, std::shared_ptr<void> data) = 0;
 
 	virtual CameraSettings getCameraSettings(CameraHandle camera) = 0;
 	virtual void setCameraSettings(CameraHandle camera, const CameraSettings& settings) = 0;
 
-	virtual void setMaterialParameter(MaterialHandle material, const std::string& name, UniformData::UniformType type, std::shared_ptr<void> data) = 0;
-	virtual [[nodiscard]] const ParameterList& getMaterialParameters(MaterialHandle material) = 0;
+	virtual void setMaterialUniformData(MaterialHandle material, const std::string& name, UniformData::UniformType type, std::shared_ptr<void> data) = 0;
+	virtual void setMaterialTextureData(MaterialHandle material, const std::string& name, TextureHandle texture) = 0;
+	virtual [[nodiscard]] const UniformDataList& getMaterialUniformData(MaterialHandle material) = 0;
+	virtual [[nodiscard]] const TextureDataList& getMaterialTextureData(MaterialHandle material) = 0;
 	virtual [[nodiscard]] const ShaderHandle getMaterialShader(MaterialHandle material) = 0;
 
 	virtual [[nodiscard]] TextureRef getTextureData(TextureHandle texture) = 0;

@@ -48,10 +48,10 @@ void PostProcessing::render(GfxContext* context)
 
     // Set shader uniforms
     TextureHandle shadowBuffer = context->getSharedBuffers().at("ShadowMap");
-    context->setUniform(mShader, "u_shadowMap", context->getTextureData(shadowBuffer), 0);
+    context->setTexture(mShader, "u_shadowMap", shadowBuffer, 0);
 
     TextureHandle diffuseBuffer = context->getSharedBuffers().at("GDiffuse");
-    context->setUniform(mShader, "u_color", context->getTextureData(diffuseBuffer), 1);
+    context->setTexture(mShader, "u_color", diffuseBuffer, 1);
 
     // Submit quad
     context->submit(mScreenQuad, mShader, INVALID_HANDLE);

@@ -70,14 +70,16 @@ public:
 	virtual void submit(RenderableHandle renderable, CameraHandle camera) override;
 	virtual void submit(std::vector<RenderableHandle> renderables, CameraHandle camera) override;
 
-	virtual void setUniform(ShaderHandle shader, const std::string& uniform, std::shared_ptr<void> data, uint8_t unit) override;
+	virtual void setTexture(ShaderHandle shader, const std::string& uniform, TextureHandle data, uint8_t unit) override;
 	virtual void setUniform(ShaderHandle shader, const std::string& uniform, std::shared_ptr<void> data) override;
 
 	virtual CameraSettings getCameraSettings(CameraHandle camera) override;
 	virtual void setCameraSettings(CameraHandle camera, const CameraSettings& settings) override;
 
-	virtual void setMaterialParameter(MaterialHandle material, const std::string& name, UniformData::UniformType type, std::shared_ptr<void> data) override;
-	virtual [[nodiscard]] const ParameterList& getMaterialParameters(MaterialHandle material) override;
+	virtual void setMaterialUniformData(MaterialHandle material, const std::string& name, UniformData::UniformType type, std::shared_ptr<void> data) override;
+	virtual void setMaterialTextureData(MaterialHandle material, const std::string& name, TextureHandle texture) override;
+	virtual [[nodiscard]] const UniformDataList& getMaterialUniformData(MaterialHandle material) override;
+	virtual [[nodiscard]] const TextureDataList& getMaterialTextureData(MaterialHandle material) override;
 	virtual [[nodiscard]] const ShaderHandle getMaterialShader(MaterialHandle material) override;
 
 	virtual [[nodiscard]] TextureRef getTextureData(TextureHandle texture) override;

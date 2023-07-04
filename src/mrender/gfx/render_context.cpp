@@ -343,16 +343,16 @@ void GfxContextImplementation::submit(RenderableHandle renderable, CameraHandle 
         bgfx::getUniformInfo(value.first, uniformInfo);
 
         // If material contains data for the uniform we set the value depending on if the uniform is a sampler or other
-        if (materialImpl->getParameters().count(key) > 0)
+        if (materialImpl->getTextureDataList().count(key) > 0 || materialImpl->getUniformDataList().count(key) > 0)
         {
-            const UniformData& uniformData = materialImpl->getParameters().at(key);
-
             if (uniformInfo.type == bgfx::UniformType::Sampler)
             {
-                setUniform(materialImpl->getShader(), key, uniformData.mValue, value.second);
+                TextureHandle texture = materialImpl->getTextureDataList().at(key);
+                setTexture(materialImpl->getShader(), key, texture, value.second);
             }
             else
             {
+                const UniformData& uniformData = materialImpl->getUniformDataList().at(key);
                 setUniform(materialImpl->getShader(), key, uniformData.mValue);
             }
         }
@@ -360,14 +360,34 @@ void GfxContextImplementation::submit(RenderableHandle renderable, CameraHandle 
         // If material contains no data for the uniform we set to it null or empty texture depending on if the uniform is a sampler or other
         else
         {
-            if (uniformInfo.type == bgfx::UniformType::Sampler)
+            switch (uniformInfo.type)
             {
-                setUniform(materialImpl->getShader(), key, getTextureData(mEmptyTexture), value.second);
-            }
-            else
-            {
-                static float data = 0.0f; // @todo Check that this work on all non sampler uniforms, such as mat4, mat3 and vec4
-                bgfx::setUniform(shaderImpl->mUniformHandles.at(key).first, &data);
+                case bgfx::UniformType::Sampler:
+                {
+                    setTexture(materialImpl->getShader(), key, mEmptyTexture, value.second);
+                    break;
+                }
+
+                case bgfx::UniformType::Vec4:
+                {
+                    static float data[4] = { }; 
+                    bgfx::setUniform(shaderImpl->mUniformHandles.at(key).first, &data);
+                    break;
+                }
+                
+                case bgfx::UniformType::Mat3:
+                {
+                    static float data[9] = { };
+                    bgfx::setUniform(shaderImpl->mUniformHandles.at(key).first, &data);
+                    break;
+                }
+
+                case bgfx::UniformType::Mat4:
+                {
+                    static float data[16] = { };
+                    bgfx::setUniform(shaderImpl->mUniformHandles.at(key).first, &data);
+                    break;
+                }
             }
         }
     }
@@ -385,10 +405,10 @@ void GfxContextImplementation::submit(std::vector<RenderableHandle> renderables,
     }
 }
 
-void GfxContextImplementation::setUniform(ShaderHandle shader, const std::string& uniform, std::shared_ptr<void> data, uint8_t unit)
+void GfxContextImplementation::setTexture(ShaderHandle shader, const std::string& uniform, TextureHandle texture, uint8_t unit)
 {
     auto shaderImpl = STATIC_IMPL_CAST(Shader, mShaders.at(shader.idx));
-    auto textureImpl = STATIC_IMPL_CAST(Texture, std::static_pointer_cast<Texture>(data));
+    auto textureImpl = STATIC_IMPL_CAST(Texture, getTextureData(texture));
 
     if (shaderImpl->mUniformHandles.count(uniform) > 0 && bgfx::isValid(shaderImpl->mUniformHandles.at(uniform).first) && textureImpl && bgfx::isValid(textureImpl->mHandle))
     {
@@ -422,16 +442,28 @@ void GfxContextImplementation::setCameraSettings(CameraHandle camera, const Came
     cameraImpl->setSettings(settings);
 }
 
-void GfxContextImplementation::setMaterialParameter(MaterialHandle material, const std::string& name, UniformData::UniformType type, std::shared_ptr<void> data)
+void GfxContextImplementation::setMaterialUniformData(MaterialHandle material, const std::string& name, UniformData::UniformType type, std::shared_ptr<void> data)
 {
     std::shared_ptr<MaterialImplementation> materialImpl = STATIC_IMPL_CAST(Material, mMaterials.at(material.idx));
-    materialImpl->setParameter(name, type, data);
+    materialImpl->setUniformData(name, type, data);
 }
 
-const ParameterList& GfxContextImplementation::getMaterialParameters(MaterialHandle material)
+void GfxContextImplementation::setMaterialTextureData(MaterialHandle material, const std::string& name, TextureHandle texture)
 {
     std::shared_ptr<MaterialImplementation> materialImpl = STATIC_IMPL_CAST(Material, mMaterials.at(material.idx));
-    return materialImpl->getParameters();
+    materialImpl->setTextureData(name, texture);
+}
+
+const UniformDataList& GfxContextImplementation::getMaterialUniformData(MaterialHandle material)
+{
+    std::shared_ptr<MaterialImplementation> materialImpl = STATIC_IMPL_CAST(Material, mMaterials.at(material.idx));
+    return materialImpl->getUniformDataList();
+}
+
+const TextureDataList& GfxContextImplementation::getMaterialTextureData(MaterialHandle material)
+{
+    std::shared_ptr<MaterialImplementation> materialImpl = STATIC_IMPL_CAST(Material, mMaterials.at(material.idx));
+    return materialImpl->getTextureDataList();
 }
 
 const ShaderHandle GfxContextImplementation::getMaterialShader(MaterialHandle material)
