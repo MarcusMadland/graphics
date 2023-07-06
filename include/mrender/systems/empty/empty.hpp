@@ -14,6 +14,7 @@ public:
 	void render(GfxContext* context) override;
 
 	BufferList getBuffers(GfxContext* context) override;
+	UniformDataList getUniformData(GfxContext* context) override;
 
 private:
 	RenderStateRef mState;

@@ -53,8 +53,8 @@ GfxContextImplementation::GfxContextImplementation(const RenderSettings& setting
     setupRenderSystems();
 
     // Setup empty texture
-    constexpr uint32_t width = 4;
-    constexpr uint32_t height = 4;
+    constexpr uint32_t width = 128;
+    constexpr uint32_t height = 128;
     const bgfx::Memory* textureData = bgfx::alloc(width * height * 4);
     std::memset(textureData->data, 0, textureData->size);
     mEmptyTexture = createTexture((uint8_t*)textureData, TextureFormat::RGBA8, BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_MIP_POINT, width, height, 4);
@@ -80,10 +80,10 @@ FramebufferHandle GfxContextImplementation::createFramebuffer(BufferList buffers
     return handle;
 }
 
-RenderStateHandle GfxContextImplementation::createRenderState(uint64_t flags)
+RenderStateHandle GfxContextImplementation::createRenderState(std::string_view name, uint64_t flags)
 {
     RenderStateHandle handle = { static_cast<uint16_t>(mRenderStates.size()) };
-    mRenderStates[handle.idx] = std::move(std::make_shared<RenderStateImplementation>(this, flags));
+    mRenderStates[handle.idx] = std::move(std::make_shared<RenderStateImplementation>(this, name, flags));
     return handle;
 }
 
@@ -112,7 +112,7 @@ ShaderHandle GfxContextImplementation::createShader(const std::string& fileName,
 {
     ShaderHandle handle = { static_cast<uint16_t>(mShaders.size()) };
     std::shared_ptr<ShaderImplementation> shader = std::make_shared<ShaderImplementation>();
-    shader->loadProgram(fileName.c_str(), filePath.c_str());
+    shader->loadProgram(fileName, filePath);
     mShaders[handle.idx] = std::move(shader);
     return handle;
 }
@@ -174,6 +174,9 @@ void GfxContextImplementation::destroy(RenderableHandle handle)
 void GfxContextImplementation::render(CameraHandle camera)
 {
     mCurrentCamera = camera;
+
+    // Update stats
+    updateStats();
 
     // @todo
     bgfx::touch(0); 
@@ -303,6 +306,11 @@ void GfxContextImplementation::submit(GeometryHandle geometry, ShaderHandle shad
     auto shaderImpl = STATIC_IMPL_CAST(Shader, mShaders.at(shader.idx));
     auto cameraImpl = isValid(camera) ? STATIC_IMPL_CAST(Camera, mCameras.at(camera.idx)) : nullptr;
 
+    if (!bgfx::isValid(shaderImpl->mHandle))
+    {
+        return;
+    }
+
     // Set render states for this draw call
     bgfx::setState(renderStateImpl->mFlags);
 
@@ -398,12 +406,32 @@ void GfxContextImplementation::submit(RenderableHandle renderable, CameraHandle 
     submit(renderableImpl->getGeometry(), materialImpl->getShader(), camera);
 }
 
-void GfxContextImplementation::submit(std::vector<RenderableHandle> renderables, CameraHandle camera)
+void GfxContextImplementation::submit(RenderableList renderables, CameraHandle camera)
 {
-    for (auto& renderable : renderables)
+    // Submit renderables for rendering
+    for (const auto& renderable : renderables)
     {
-        // Submit geometry for rendering
         submit(renderable, camera);
+    }
+}
+
+void GfxContextImplementation::submit(RenderableHandle renderable, ShaderHandle shader, CameraHandle camera)
+{
+    auto renderableImpl = STATIC_IMPL_CAST(Renderable, mRenderables.at(renderable.idx));
+ 
+    // Set transform
+    bgfx::setTransform(renderableImpl->getTransform());
+    
+    // Submit geometry for rendering
+    submit(renderableImpl->getGeometry(), shader, camera);
+}
+
+void GfxContextImplementation::submit(RenderableList renderables, ShaderHandle shader, CameraHandle camera)
+{
+    // Submit renderables for rendering
+    for (const auto& renderable : renderables)
+    {
+        submit(renderable, shader, camera);
     }
 }
 
@@ -422,13 +450,13 @@ void GfxContextImplementation::setTexture(ShaderHandle shader, const std::string
     }
 }
 
-void GfxContextImplementation::setUniform(ShaderHandle shader, const std::string& uniform, std::shared_ptr<void> data)
+void GfxContextImplementation::setUniform(ShaderHandle shader, const std::string& uniform, void* data)
 {
     auto shaderImpl = STATIC_IMPL_CAST(Shader, mShaders.at(shader.idx));
 
     if (shaderImpl->mUniformHandles.count(uniform) > 0 && bgfx::isValid(shaderImpl->mUniformHandles.at(uniform).first) && data)
     {
-        bgfx::setUniform(shaderImpl->mUniformHandles.at(uniform).first, data.get());
+        bgfx::setUniform(shaderImpl->mUniformHandles.at(uniform).first, data);
     }
 }
 
@@ -438,13 +466,19 @@ CameraSettings GfxContextImplementation::getCameraSettings(CameraHandle camera)
     return cameraImpl->getSettings();
 }
 
+float* GfxContextImplementation::getCameraProjection(CameraHandle camera)
+{
+    std::shared_ptr<CameraImplementation> cameraImpl = STATIC_IMPL_CAST(Camera, mCameras.at(camera.idx));
+    return cameraImpl->getProjMatrix();
+}
+
 void GfxContextImplementation::setCameraSettings(CameraHandle camera, const CameraSettings& settings)
 {
     std::shared_ptr<CameraImplementation> cameraImpl = STATIC_IMPL_CAST(Camera, mCameras.at(camera.idx));
     cameraImpl->setSettings(settings);
 }
 
-void GfxContextImplementation::setMaterialUniformData(MaterialHandle material, const std::string& name, UniformData::UniformType type, std::shared_ptr<void> data)
+void GfxContextImplementation::setMaterialUniformData(MaterialHandle material, const std::string& name, UniformData::UniformType type, void* data)
 {
     std::shared_ptr<MaterialImplementation> materialImpl = STATIC_IMPL_CAST(Material, mMaterials.at(material.idx));
     materialImpl->setUniformData(name, type, data);
@@ -483,6 +517,12 @@ TextureFormat GfxContextImplementation::getTextureFormat(TextureHandle texture)
 {
     auto textureImpl = STATIC_IMPL_CAST(Texture, mTextures.at(texture.idx));
     return textureImpl->getFormat();
+}
+
+void GfxContextImplementation::setRenderableMaterial(RenderableHandle renderable, MaterialHandle material)
+{
+    auto renderableImpl = STATIC_IMPL_CAST(Renderable, mRenderables.at(renderable.idx));
+    renderableImpl->setMaterial(material);
 }
 
 void GfxContextImplementation::setRenderableTransform(RenderableHandle renderable, float* matrix)
@@ -525,6 +565,28 @@ void GfxContextImplementation::setSettings(const RenderSettings& settings)
 void GfxContextImplementation::setRenderStateCount(uint32_t stateCount)
 {
     mRenderStateCount = stateCount;
+}
+
+void GfxContextImplementation::updateStats()
+{
+    const bgfx::Stats* stats = bgfx::getStats();
+    const double toCpuMs = 1000.0 / double(stats->cpuTimerFreq);
+    const double toGpuMs = 1000.0 / double(stats->gpuTimerFreq);
+
+    mStats.mCpuTime = float((stats->cpuTimeEnd - stats->cpuTimeBegin) * toCpuMs);
+    mStats.mGpuTime = float((stats->gpuTimeEnd - stats->gpuTimeBegin) * toGpuMs);
+
+    mStats.mNumDrawCalls = stats->numDraw;
+    mStats.mTextureMemoryUsed = stats->textureMemoryUsed / (1024 * 1024);
+
+    mStats.mNumCameras = static_cast<uint32_t>(mCameras.size());
+    mStats.mNumFramebuffers = static_cast<uint32_t>(mFramebuffers.size());
+    mStats.mNumRenderStates = static_cast<uint32_t>(mRenderStates.size());
+    mStats.mNumMaterials = static_cast<uint32_t>(mMaterials.size());
+    mStats.mNumTextures = static_cast<uint32_t>(mTextures.size());
+    mStats.mNumShaders = static_cast<uint32_t>(mShaders.size());
+    mStats.mNumGeometries = static_cast<uint32_t>(mGeometries.size());
+    mStats.mNumRenderables = static_cast<uint32_t>(mRenderables.size());
 }
 
 uint8_t GfxContextImplementation::colorToAnsi(const Color& color)
@@ -589,6 +651,11 @@ bool GfxContextImplementation::setupRenderSystems()
         }
 
         renderSystem->init(this);
+
+        for (auto& uniformData : renderSystem->getUniformData(this))
+        {
+            mSharedUniformData[uniformData.first] = uniformData.second;
+        }
     }
 
     return true;

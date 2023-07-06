@@ -4,5 +4,5 @@ $input v_color0
 
 void main() {
 	vec4 color = v_color0;
-      gl_FragColor = vec4_splat(0.0);
+        gl_FragColor = vec4_splat(0.0);
 }

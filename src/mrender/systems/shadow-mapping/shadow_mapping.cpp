@@ -5,7 +5,6 @@
 namespace mrender {
 
 // @todo Make a render option system
-static constexpr bool useShadowSampler = true;
 static constexpr uint32_t shadowSize = 512;
 
 ShadowMapping::ShadowMapping()
@@ -23,10 +22,9 @@ bool ShadowMapping::init(mrender::GfxContext* context)
 	mShader = context->createShader("shadow", "C:/Users/marcu/Dev/mengine/mrender/shaders/shadow");
 
 	// Render State
-	mState = context->createRenderState(0
+	mState = context->createRenderState("Shadow Mapping", 0
 		| BGFX_STATE_WRITE_Z
 		| BGFX_STATE_DEPTH_TEST_LESS
-		| BGFX_STATE_CULL_CCW
 		| BGFX_STATE_MSAA);
 
 	// Framebuffer
@@ -61,14 +59,21 @@ void ShadowMapping::render(GfxContext* context)
 		PROFILE_SCOPE("Render Scene");
 
 		auto renderables = context->getActiveRenderables();
-		context->submit(renderables, mCamera);
+		context->submit(renderables, mShader, mCamera);
 	}
 }
 
 BufferList ShadowMapping::getBuffers(GfxContext* context)
 {
-	mBuffers.emplace("ShadowMap", context->createTexture(TextureFormat::D16, BGFX_TEXTURE_RT, shadowSize, shadowSize));
+	mBuffers.emplace("ShadowMap", context->createTexture(TextureFormat::D32F, BGFX_TEXTURE_RT, shadowSize, shadowSize));
 	return mBuffers;
+}
+
+UniformDataList ShadowMapping::getUniformData(GfxContext* context)
+{
+	UniformDataList uniformDataList;
+	uniformDataList.emplace("u_shadowViewProj", UniformData(UniformData::UniformType::Mat4, context->getCameraProjection(mCamera)));
+	return uniformDataList;
 }
 
 }   // namespace mrender

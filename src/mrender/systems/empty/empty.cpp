@@ -29,4 +29,9 @@ BufferList Empty::getBuffers(GfxContext* context)
 	return buffers;
 }
 
+UniformDataList Empty::getUniformData(GfxContext* context)
+{
+	return UniformDataList();
+}
+
 }	// namespace mrender

@@ -4,7 +4,7 @@
 namespace mrender {
 
 ShaderImplementation::ShaderImplementation()
-    : mHandle(BGFX_INVALID_HANDLE), mFileName(nullptr), mFilePath(nullptr)
+    : mHandle(BGFX_INVALID_HANDLE)
 {
 }
 
@@ -13,12 +13,12 @@ ShaderImplementation::~ShaderImplementation()
     bgfx::destroy(mHandle);
 }
 
-void ShaderImplementation::loadProgram(char const* fileName, char const* filePath)
+void ShaderImplementation::loadProgram(const std::string& fileName, const std::string& filePath)
 {
     mFileName = fileName;
     mFilePath = filePath;
-	const std::string vertexPath = std::string(mFilePath) + "/" + std::string(mFileName) + "-vert.bin";
-	const std::string fragmentPath = std::string(mFilePath) + "/" + std::string(mFileName) + "-frag.bin";
+	const std::string vertexPath = mFilePath + "/" + mFileName + "-vert.bin";
+	const std::string fragmentPath = mFilePath + "/" + mFileName + "-frag.bin";
 
     std::string vshader;
     if (!mrender::read_file(vertexPath, vshader))

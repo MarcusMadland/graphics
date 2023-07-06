@@ -9,7 +9,7 @@ namespace mrender {
 		friend class GfxContextImplementation;
 
 	public:
-		RenderStateImplementation(GfxContext* context, uint64_t flags);
+		RenderStateImplementation(GfxContext* context, std::string_view name, uint64_t flags);
 
 	private:
 		uint16_t mId;

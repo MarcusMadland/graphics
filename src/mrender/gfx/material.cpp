@@ -8,7 +8,7 @@ MaterialImplementation::MaterialImplementation(GfxContext* context, ShaderHandle
 {
 }
 
-void MaterialImplementation::setUniformData(std::string name, UniformData::UniformType type, std::shared_ptr<void> data)
+void MaterialImplementation::setUniformData(std::string name, UniformData::UniformType type, void* data)
 {
 	if (data == nullptr) printf("Setting uniform %s with invalid data\n", name.data());
 

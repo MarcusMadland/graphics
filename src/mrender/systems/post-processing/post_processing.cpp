@@ -21,7 +21,7 @@ bool PostProcessing::init(GfxContext* context)
     mShader = context->createShader("screen", "C:/Users/marcu/Dev/mengine/mrender/shaders/screen");
 
     // Render state
-    mState = context->createRenderState(0
+    mState = context->createRenderState("Post Processing", 0
         | BGFX_STATE_WRITE_RGB
         | BGFX_STATE_WRITE_A);
 
@@ -42,15 +42,10 @@ void PostProcessing::render(GfxContext* context)
 
     // Set current renderpass id
     context->setActiveRenderState(mState);
-
-    // Clear
     context->clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
 
     // Set shader uniforms
-    TextureHandle shadowBuffer = context->getSharedBuffers().at("ShadowMap");
-    context->setTexture(mShader, "u_shadowMap", shadowBuffer, 0);
-
-    TextureHandle diffuseBuffer = context->getSharedBuffers().at("GDiffuse");
+    TextureHandle diffuseBuffer = context->getSharedBuffers().at("Combine");
     context->setTexture(mShader, "u_color", diffuseBuffer, 1);
 
     // Submit quad
@@ -61,6 +56,11 @@ BufferList PostProcessing::getBuffers(GfxContext* context)
 {
     BufferList buffers;
     return buffers;
+}
+
+UniformDataList PostProcessing::getUniformData(GfxContext* context)
+{
+    return UniformDataList();
 }
 
 }   // namespace mrender

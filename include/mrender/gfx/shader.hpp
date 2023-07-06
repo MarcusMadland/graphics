@@ -16,7 +16,7 @@ public:
 	ShaderImplementation();
 	~ShaderImplementation();
 
-	virtual void loadProgram(char const* fileName, char const* filePath);
+	virtual void loadProgram(const std::string& fileName, const std::string& filePath);
 	virtual void reloadProgram();
 
 private:
@@ -25,8 +25,8 @@ private:
 private:
 	bgfx::ProgramHandle mHandle;
 	std::unordered_map<std::string, std::pair<bgfx::UniformHandle, uint8_t>> mUniformHandles;
-	const char* mFileName;
-	const char* mFilePath;
+	std::string mFileName;
+	std::string mFilePath;
 };
 
 }	// namespace mrender

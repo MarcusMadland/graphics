@@ -137,6 +137,14 @@ enum class LightType
 	Directional,
 };
 
+struct EnviormentData
+{
+	float mSunLightDirection[4] = { -5.0f, -5.0f, -2.0f, 0.0f };
+	float mSunLightColor[4] = { 1.0f, 1.0f, 1.0f, 0.0f };
+	// @todo and maybe add camera to this? 
+	// @todo and skybox?
+};
+
 struct RenderSettings
 {
 	std::string_view mRendererName = "none";
@@ -211,7 +219,7 @@ struct UniformData
 		Mat4,
 	} mType;
 
-	std::shared_ptr<void> mValue;
+	void* mValue;
 };
 
 struct LightData // @todo
@@ -225,6 +233,25 @@ struct LightData // @todo
 	float mRange = FLT_MAX; //only valid for point+spot lights
 	float mInnerConeAngle = 0.0f; //only valid for spot lights
 	float mOuterConeAngle = 3.1415926535897932384626433832795f / 4.0f; //only valid for spot lights
+};
+
+struct Stats
+{
+	float mCpuTime;
+	float mGpuTime;
+
+	uint32_t mNumDrawCalls;    
+
+	uint32_t mNumCameras;
+	uint32_t mNumFramebuffers;
+	uint32_t mNumRenderStates;
+	uint32_t mNumMaterials;
+	uint32_t mNumTextures;
+	uint32_t mNumShaders;
+	uint32_t mNumGeometries;
+	uint32_t mNumRenderables;
+
+	int64_t mTextureMemoryUsed;  // in MiBs 
 };
 
 //
@@ -270,11 +297,14 @@ public:
 	virtual void render(GfxContext* context) = 0;
 
 	virtual BufferList getBuffers(GfxContext* context) = 0;
+	virtual UniformDataList getUniformData(GfxContext* context) = 0;
 
 protected:
 	std::string_view mName;
 };
+using RenderSystemList = std::vector<std::shared_ptr<RenderSystem>>;
 
+//
 class Renderer : public Factory<Renderer> // @todo Simplify class
 {
 public:
@@ -282,6 +312,7 @@ public:
 
 	virtual std::vector<std::shared_ptr<RenderSystem>> setupRenderSystems(GfxContext* context) = 0;
 };
+using RendererRef = std::shared_ptr<Renderer>;
 
 //
 class GfxContext
@@ -289,7 +320,7 @@ class GfxContext
 public:
 	virtual CameraHandle createCamera(const CameraSettings& settings) = 0;
 	virtual FramebufferHandle createFramebuffer(BufferList buffers) = 0;
-	virtual RenderStateHandle createRenderState(uint64_t flags) = 0;
+	virtual RenderStateHandle createRenderState(std::string_view name, uint64_t flags) = 0;
 	virtual MaterialHandle createMaterial(ShaderHandle shader) = 0;
 	virtual TextureHandle createTexture(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0) = 0;
 	virtual TextureHandle createTexture(const uint8_t* data, TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height, uint16_t channels) = 0;
@@ -321,22 +352,26 @@ public:
 	virtual [[nodiscard]] RenderStateHandle getActiveRenderState() = 0;
 	virtual [[nodiscard]] RenderableList getActiveRenderables() = 0;
 	virtual [[nodiscard]] BufferList getSharedBuffers() = 0;
+	virtual [[nodiscard]] UniformDataList getSharedUniformData() = 0;
 
 	virtual void submitDebugText(uint16_t x, uint16_t y, std::string_view text, ...) = 0;
 	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, std::string_view text, ...) = 0;
 	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, bool right, bool top, std::string_view text, ...) = 0;
 	
-	virtual void submit(GeometryHandle, ShaderHandle shaderName, CameraHandle camera) = 0;
+	virtual void submit(GeometryHandle, ShaderHandle shader, CameraHandle camera) = 0;
 	virtual void submit(RenderableHandle renderable, CameraHandle camera) = 0;
 	virtual void submit(RenderableList renderables, CameraHandle camera) = 0;
+	virtual void submit(RenderableHandle renderable, ShaderHandle shader, CameraHandle camera) = 0;
+	virtual void submit(RenderableList renderables, ShaderHandle shader, CameraHandle camera) = 0;
 	
 	virtual void setTexture(ShaderHandle shader, const std::string& uniform, TextureHandle data, uint8_t unit) = 0;
-	virtual void setUniform(ShaderHandle shader, const std::string& uniform, std::shared_ptr<void> data) = 0;
+	virtual void setUniform(ShaderHandle shader, const std::string& uniform, void* data) = 0;
 
 	virtual CameraSettings getCameraSettings(CameraHandle camera) = 0;
+	virtual float* getCameraProjection(CameraHandle camera) = 0;
 	virtual void setCameraSettings(CameraHandle camera, const CameraSettings& settings) = 0;
 
-	virtual void setMaterialUniformData(MaterialHandle material, const std::string& name, UniformData::UniformType type, std::shared_ptr<void> data) = 0;
+	virtual void setMaterialUniformData(MaterialHandle material, const std::string& name, UniformData::UniformType type, void* data) = 0;
 	virtual void setMaterialTextureData(MaterialHandle material, const std::string& name, TextureHandle texture) = 0;
 	virtual [[nodiscard]] const UniformDataList& getMaterialUniformData(MaterialHandle material) = 0;
 	virtual [[nodiscard]] const TextureDataList& getMaterialTextureData(MaterialHandle material) = 0;
@@ -345,11 +380,16 @@ public:
 	virtual [[nodiscard]] TextureRef getTextureData(TextureHandle texture) = 0;
 	virtual [[nodiscard]] TextureFormat getTextureFormat(TextureHandle texture) = 0;
 
+	virtual void setRenderableMaterial(RenderableHandle renderable, MaterialHandle material) = 0;
 	virtual void setRenderableTransform(RenderableHandle renderable, float* matrix) = 0;
 	virtual float* getRenderableTransform(RenderableHandle renderable) = 0;
 
 	virtual void setSettings(const RenderSettings& settings) = 0;
 	virtual RenderSettings getSettings() = 0;
+
+	virtual Stats* getStats() = 0;
+	virtual RendererRef getRenderer() = 0;
+	virtual RenderSystemList getRenderSystems() = 0;
 
 };
 

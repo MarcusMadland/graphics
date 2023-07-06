@@ -29,7 +29,7 @@ public:
 
 	virtual CameraHandle createCamera(const CameraSettings& settings) override;
 	virtual FramebufferHandle createFramebuffer(BufferList buffers) override;
-	virtual RenderStateHandle createRenderState(uint64_t flags) override;
+	virtual RenderStateHandle createRenderState(std::string_view name, uint64_t flags) override;
 	virtual MaterialHandle createMaterial(ShaderHandle shader) override;
 	virtual TextureHandle createTexture(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0) override;
 	virtual TextureHandle createTexture(const uint8_t* data, TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height, uint16_t channels) override;
@@ -57,26 +57,30 @@ public:
 	virtual void setActiveRenderable(RenderableHandle renderable) override;
 	virtual void setActiveRenderables(std::vector<RenderableHandle> renderables) override;
 
-	virtual [[nodiscard]] CameraHandle getActiveCamera() { return mCurrentCamera; }
-	virtual [[nodiscard]] RenderStateHandle getActiveRenderState() { return mCurrentRenderState; }
-	virtual [[nodiscard]] RenderableList getActiveRenderables() { return mCurrentRenderables; }
-	virtual [[nodiscard]] BufferList getSharedBuffers() { return mSharedBuffers; }
+	virtual [[nodiscard]] CameraHandle getActiveCamera() override { return mCurrentCamera; }
+	virtual [[nodiscard]] RenderStateHandle getActiveRenderState() override { return mCurrentRenderState; }
+	virtual [[nodiscard]] RenderableList getActiveRenderables() override { return mCurrentRenderables; }
+	virtual [[nodiscard]] BufferList getSharedBuffers() override { return mSharedBuffers; }
+	virtual [[nodiscard]] UniformDataList getSharedUniformData() override { return mSharedUniformData; }
 
 	virtual void submitDebugText(uint16_t x, uint16_t y, std::string_view text, ...) override;
 	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, std::string_view text, ...) override;
 	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, bool right, bool top, std::string_view text, ...) override;
 
-	virtual void submit(GeometryHandle, ShaderHandle shaderName, CameraHandle camera) override;
+	virtual void submit(GeometryHandle, ShaderHandle shader, CameraHandle camera) override;
 	virtual void submit(RenderableHandle renderable, CameraHandle camera) override;
-	virtual void submit(std::vector<RenderableHandle> renderables, CameraHandle camera) override;
+	virtual void submit(RenderableList renderables, CameraHandle camera) override;
+	virtual void submit(RenderableHandle renderable, ShaderHandle shader, CameraHandle camera) override;
+	virtual void submit(RenderableList renderables, ShaderHandle shader, CameraHandle camera) override;
 
 	virtual void setTexture(ShaderHandle shader, const std::string& uniform, TextureHandle data, uint8_t unit) override;
-	virtual void setUniform(ShaderHandle shader, const std::string& uniform, std::shared_ptr<void> data) override;
+	virtual void setUniform(ShaderHandle shader, const std::string& uniform, void* data) override;
 
 	virtual CameraSettings getCameraSettings(CameraHandle camera) override;
+	virtual float* getCameraProjection(CameraHandle camera) override;
 	virtual void setCameraSettings(CameraHandle camera, const CameraSettings& settings) override;
 
-	virtual void setMaterialUniformData(MaterialHandle material, const std::string& name, UniformData::UniformType type, std::shared_ptr<void> data) override;
+	virtual void setMaterialUniformData(MaterialHandle material, const std::string& name, UniformData::UniformType type, void* data) override;
 	virtual void setMaterialTextureData(MaterialHandle material, const std::string& name, TextureHandle texture) override;
 	virtual [[nodiscard]] const UniformDataList& getMaterialUniformData(MaterialHandle material) override;
 	virtual [[nodiscard]] const TextureDataList& getMaterialTextureData(MaterialHandle material) override;
@@ -85,26 +89,32 @@ public:
 	virtual [[nodiscard]] TextureRef getTextureData(TextureHandle texture) override;
 	virtual [[nodiscard]] TextureFormat getTextureFormat(TextureHandle texture) override;
 
+	virtual void setRenderableMaterial(RenderableHandle renderable, MaterialHandle material) override;
 	virtual void setRenderableTransform(RenderableHandle renderable, float* matrix) override;
 	virtual float* getRenderableTransform(RenderableHandle renderable) override;
 
 	virtual void setSettings(const RenderSettings& settings) override;
 	virtual RenderSettings getSettings() override { return mSettings; };
 
+	virtual Stats* getStats() override { return &mStats; };
+	virtual RendererRef getRenderer() override { return mRenderer; }
+	virtual RenderSystemList getRenderSystems() override { return mRenderSystems; }
+
 private:
 	virtual void setRenderStateCount(uint32_t stateCount);
 	virtual [[nodiscard]] const uint32_t getRenderStateCount() const { return mRenderStateCount; };
-
+	void updateStats();
 	uint8_t colorToAnsi(const Color& color);
 	bool setupRenderSystems();
 	void setupResetFlags();
 
 private:
 	RenderSettings mSettings;
+	Stats mStats;
 
 	// Renderer
-	std::shared_ptr<Renderer> mRenderer;
-	std::vector<std::shared_ptr<RenderSystem>> mRenderSystems;
+	RendererRef mRenderer;
+	RenderSystemList mRenderSystems;
 
 	// Gfx data
 	std::unordered_map<uint16_t, CameraRef> mCameras;
@@ -120,15 +130,16 @@ private:
 	CameraHandle mCurrentCamera;
 	RenderStateHandle mCurrentRenderState;
 	RenderableList mCurrentRenderables;
+
 	BufferList mSharedBuffers;
-	TextureHandle mEmptyTexture; // @todo better way?
+	UniformDataList mSharedUniformData;
+
+	TextureHandle mEmptyTexture; // @todo better way? something is wrong on this texture anyway
 
 	// Backend 
 	uint32_t mResetFlags;
 	uint32_t mClearColor;
 	uint32_t mRenderStateCount;
-
-	
 };
 
 }	// namespace mrender
