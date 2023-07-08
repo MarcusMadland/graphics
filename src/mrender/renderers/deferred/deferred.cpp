@@ -2,6 +2,7 @@
 #include "mrender/systems/shadow-mapping/shadow_mapping.hpp"
 #include "mrender/systems/gbuffer/gbuffer.hpp"
 #include "mrender/systems/post-processing/post_processing.hpp"
+#include "mrender/systems/empty/empty.hpp"
 
 namespace mrender {
 
@@ -11,6 +12,7 @@ std::vector<std::shared_ptr<RenderSystem>> Deferred::setupRenderSystems(GfxConte
     render_techniques.emplace_back(std::make_shared<ShadowMapping>());
     render_techniques.emplace_back(std::make_shared<GBuffer>());
     render_techniques.emplace_back(std::make_shared<PostProcessing>());
+   
     // more ..
     return render_techniques;
 }

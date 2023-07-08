@@ -6,6 +6,7 @@
 #include "mrender/gfx/material.hpp"
 #include "mrender/gfx/renderable.hpp"
 #include "mrender/gfx/render_state.hpp"
+#include "mrender/gfx/shapes.hpp"
 #include "mrender/utils/file_ops.hpp"
 
 #include "mrender/renderers/deferred/deferred.hpp"
@@ -53,17 +54,24 @@ GfxContextImplementation::GfxContextImplementation(const RenderSettings& setting
     setupRenderSystems();
 
     // Setup empty texture
-    constexpr uint32_t width = 128;
-    constexpr uint32_t height = 128;
-    const bgfx::Memory* textureData = bgfx::alloc(width * height * 4);
-    std::memset(textureData->data, 0, textureData->size);
-    mEmptyTexture = createTexture((uint8_t*)textureData, TextureFormat::RGBA8, BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_MIP_POINT, width, height, 4);
+    uint8_t* textureData = new uint8_t[1 * 1 * 4];
+    std::memset(textureData, 0, 1 * 1 * 4);
+    mEmptyTexture = createTexture((uint8_t*)textureData, TextureFormat::RGBA8, 0, 1, 1, 4);
 
+    // Setup debug shader
+    mDebugDrawShader = createShader("debug_draw", "C:/Users/marcu/Dev/mengine/mrender/shaders/debug_draw");
+
+    // Setup debug shapes
+    mDebugRenderCube = createRenderable(createGeometry(
+        BufferLayout({ BufferElement(BufferElement::AttribType::Float, BufferElement::Attrib::Position, 3) }),
+        sDebugShapeVertices.data(),
+        sDebugShapeVertices.size() * sizeof(PosVertex), sDebugShapeIndices),
+        INVALID_HANDLE);
 }
 
 GfxContextImplementation::~GfxContextImplementation()
 {
-    //bgfx::shutdown();
+   // bgfx::shutdown();
 }
 
 CameraHandle GfxContextImplementation::createCamera(const CameraSettings& settings)
@@ -299,6 +307,32 @@ void GfxContextImplementation::submitDebugText(uint16_t x, uint16_t y, Color col
     bgfx::dbgTextPrintf(right ? stats->textWidth - x : x, top ? y : stats->textHeight - y, colorToAnsi(color), buffer);
 }
 
+void GfxContextImplementation::submitDebugCube(float* transform, Color color)
+{
+    std::vector<float> colorValues;
+    switch (color)
+    {
+    case mrender::Color::White:
+        colorValues = { 1.0f, 1.0f, 1.0f, 1.0f };
+        break;
+    case mrender::Color::Red:
+        colorValues = { 1.0f, 0.0f, 0.0f, 1.0f };
+        break;
+    case mrender::Color::Blue:
+        colorValues = { 0.0f, 0.0f, 1.0f, 1.0f };
+        break;
+    case mrender::Color::Green:
+        colorValues = { 0.0f, 1.0f, 0.0f, 1.0f };
+        break;
+    default:
+        colorValues = { 1.0f, 1.0f, 1.0f, 1.0f };
+        break;
+    }
+    setRenderableTransform(mDebugRenderCube,transform);
+    setUniform(mDebugDrawShader, "u_debugColor", colorValues.data());
+    submit(mDebugRenderCube, mDebugDrawShader, getActiveCamera());
+}
+
 void GfxContextImplementation::submit(GeometryHandle geometry, ShaderHandle shader, CameraHandle camera)
 {
     auto renderStateImpl = STATIC_IMPL_CAST(RenderState, mRenderStates.at(mCurrentRenderState.idx));
@@ -319,6 +353,26 @@ void GfxContextImplementation::submit(GeometryHandle geometry, ShaderHandle shad
     {
         bgfx::setViewTransform(renderStateImpl->mId, cameraImpl->getViewMatrix(), cameraImpl->getProjMatrix());
     }
+    else
+    {
+        float view[16];
+        float proj[16];
+        for (size_t i = 0; i < 16; ++i)
+        {
+            if (i % 5 == 0)
+            {
+                view[i] = 1.0f; 
+                proj[i] = 1.0f;
+            }
+            else
+            {
+                view[i] = 0.0f; 
+                proj[i] = 0.0f;
+            }
+        }
+        
+        bgfx::setViewTransform(renderStateImpl->mId, &view, &proj);
+    }
 
     // Set geometry data to render
     bgfx::setVertexBuffer(0, geometryImpl->mVertexBufferHandle);
@@ -331,7 +385,6 @@ void GfxContextImplementation::submit(GeometryHandle geometry, ShaderHandle shad
 void GfxContextImplementation::submit(RenderableHandle renderable, CameraHandle camera)
 {
     auto renderableImpl = STATIC_IMPL_CAST(Renderable, mRenderables.at(renderable.idx));
-    auto cameraImpl = STATIC_IMPL_CAST(Camera, mCameras.at(camera.idx));
     auto materialImpl = STATIC_IMPL_CAST(Material, mMaterials.at(renderableImpl->getMaterial().idx));
     auto shaderImpl = STATIC_IMPL_CAST(Shader, mShaders.at(materialImpl->getShader().idx));
 
@@ -454,6 +507,23 @@ void GfxContextImplementation::setUniform(ShaderHandle shader, const std::string
 {
     auto shaderImpl = STATIC_IMPL_CAST(Shader, mShaders.at(shader.idx));
 
+    /*
+    if (shaderImpl->mUniformHandles.count(uniform) <= 0)
+    {
+        printf("[setUniform] Could not find uniform %s inside shader\n", uniform.data());
+        return;
+    }
+    if (!bgfx::isValid(shaderImpl->mUniformHandles.at(uniform).first))
+    {
+        printf("[setUniform] Backend handle does not exist\n");
+        return;
+    }
+    if (data == nullptr)
+    {
+        printf("[setUniform] Data is invalid\n");
+        return;
+    }*/
+
     if (shaderImpl->mUniformHandles.count(uniform) > 0 && bgfx::isValid(shaderImpl->mUniformHandles.at(uniform).first) && data)
     {
         bgfx::setUniform(shaderImpl->mUniformHandles.at(uniform).first, data);
@@ -513,6 +583,12 @@ TextureRef GfxContextImplementation::getTextureData(TextureHandle texture)
     return mTextures.at(texture.idx);
 }
 
+uint16_t GfxContextImplementation::getTextureID(TextureHandle texture)
+{
+    auto textureImpl = STATIC_IMPL_CAST(Texture, mTextures.at(texture.idx));
+    return textureImpl->getTextureID();
+}
+
 TextureFormat GfxContextImplementation::getTextureFormat(TextureHandle texture)
 {
     auto textureImpl = STATIC_IMPL_CAST(Texture, mTextures.at(texture.idx));
@@ -523,6 +599,18 @@ void GfxContextImplementation::setRenderableMaterial(RenderableHandle renderable
 {
     auto renderableImpl = STATIC_IMPL_CAST(Renderable, mRenderables.at(renderable.idx));
     renderableImpl->setMaterial(material);
+}
+
+std::string GfxContextImplementation::getShaderName(ShaderHandle shader)
+{
+    auto shaderImpl = STATIC_IMPL_CAST(Shader, mShaders.at(shader.idx));
+    return shaderImpl->mFileName;
+}
+
+MaterialHandle GfxContextImplementation::getRenderableMaterial(RenderableHandle renderable)
+{
+    auto renderableImpl = STATIC_IMPL_CAST(Renderable, mRenderables.at(renderable.idx));
+    return renderableImpl->getMaterial();
 }
 
 void GfxContextImplementation::setRenderableTransform(RenderableHandle renderable, float* matrix)

@@ -26,11 +26,6 @@ private:
     BufferList mLightBuffers;
     ShaderHandle mLightShader;
 
-    RenderStateHandle mCombineState;
-    FramebufferHandle mCombineFramebuffer;
-    BufferList mCombineBuffers;
-    ShaderHandle mCombineShader;
-
     GeometryHandle mScreenQuad;
     struct VertexData
     {

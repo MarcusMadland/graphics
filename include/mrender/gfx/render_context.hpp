@@ -67,6 +67,8 @@ public:
 	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, std::string_view text, ...) override;
 	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, bool right, bool top, std::string_view text, ...) override;
 
+	virtual void submitDebugCube(float* transform, Color color = Color::Red) override;
+
 	virtual void submit(GeometryHandle, ShaderHandle shader, CameraHandle camera) override;
 	virtual void submit(RenderableHandle renderable, CameraHandle camera) override;
 	virtual void submit(RenderableList renderables, CameraHandle camera) override;
@@ -87,9 +89,13 @@ public:
 	virtual [[nodiscard]] const ShaderHandle getMaterialShader(MaterialHandle material) override;
 
 	virtual [[nodiscard]] TextureRef getTextureData(TextureHandle texture) override;
+	virtual [[nodiscard]] uint16_t getTextureID(TextureHandle texture) override;
 	virtual [[nodiscard]] TextureFormat getTextureFormat(TextureHandle texture) override;
 
+	virtual [[nodiscard]] std::string getShaderName(ShaderHandle shader) override;
+
 	virtual void setRenderableMaterial(RenderableHandle renderable, MaterialHandle material) override;
+	MaterialHandle getRenderableMaterial(RenderableHandle renderable) override;
 	virtual void setRenderableTransform(RenderableHandle renderable, float* matrix) override;
 	virtual float* getRenderableTransform(RenderableHandle renderable) override;
 
@@ -134,7 +140,9 @@ private:
 	BufferList mSharedBuffers;
 	UniformDataList mSharedUniformData;
 
-	TextureHandle mEmptyTexture; // @todo better way? something is wrong on this texture anyway
+	TextureHandle mEmptyTexture; // @todo better way? 
+	ShaderHandle mDebugDrawShader; // @todo better way? 
+	RenderableHandle mDebugRenderCube; // @todo better way?
 
 	// Backend 
 	uint32_t mResetFlags;

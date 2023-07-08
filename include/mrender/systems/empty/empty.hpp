@@ -17,7 +17,9 @@ public:
 	UniformDataList getUniformData(GfxContext* context) override;
 
 private:
-	RenderStateRef mState;
+	RenderStateHandle mEmptyRenderState;
+	FramebufferHandle mEmptyFramebuffer;
+	BufferList mBufferList;
 };
 
 }	// namespace mrender

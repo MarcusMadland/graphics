@@ -24,7 +24,7 @@ void main()
 	vec3 view = mul(u_view, vec4(wpos, 0.0) ).xyz;
 	v_view = mul(view, tbn);
 
-	v_normal    = viewNormal;
+	v_normal    = a_normal.rgb;
 	v_tangent   = viewTangent;
 	v_bitangent = viewBitangent;
 	v_wpos      = wpos;

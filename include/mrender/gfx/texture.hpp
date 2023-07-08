@@ -20,6 +20,7 @@ public:
 	~TextureImplementation();
 
 	virtual [[nodiscard]] TextureFormat getFormat() const { return mFormat; }
+	virtual [[nodiscard]] uint16_t getTextureID() const { return mHandle.idx; }
 
 private:
 	bgfx::TextureFormat::Enum toBgfx(const TextureFormat& format);

@@ -81,7 +81,7 @@ void ShaderImplementation::loadProgram(const std::string& fileName, const std::s
             mUniformHandles[name] = { uniforms[i], 0 };
         }
 
-        printf("Created uniform %s in shader %s number %u\n", name.data(), fileName, i);
+        printf("Created uniform %s in shader %s number %u\n", name.data(), mFileName.data(), i);
     }
 }
 

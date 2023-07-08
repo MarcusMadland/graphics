@@ -358,6 +358,8 @@ public:
 	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, std::string_view text, ...) = 0;
 	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, bool right, bool top, std::string_view text, ...) = 0;
 	
+	virtual void submitDebugCube(float* transform, Color color = Color::Red) = 0;
+
 	virtual void submit(GeometryHandle, ShaderHandle shader, CameraHandle camera) = 0;
 	virtual void submit(RenderableHandle renderable, CameraHandle camera) = 0;
 	virtual void submit(RenderableList renderables, CameraHandle camera) = 0;
@@ -378,9 +380,13 @@ public:
 	virtual [[nodiscard]] const ShaderHandle getMaterialShader(MaterialHandle material) = 0;
 
 	virtual [[nodiscard]] TextureRef getTextureData(TextureHandle texture) = 0;
+	virtual [[nodiscard]] uint16_t getTextureID(TextureHandle texture) = 0;
 	virtual [[nodiscard]] TextureFormat getTextureFormat(TextureHandle texture) = 0;
 
+	virtual [[nodiscard]] std::string getShaderName(ShaderHandle shader) = 0;
+
 	virtual void setRenderableMaterial(RenderableHandle renderable, MaterialHandle material) = 0;
+	virtual MaterialHandle getRenderableMaterial(RenderableHandle renderable) = 0;
 	virtual void setRenderableTransform(RenderableHandle renderable, float* matrix) = 0;
 	virtual float* getRenderableTransform(RenderableHandle renderable) = 0;
 
