@@ -38,6 +38,8 @@ void CameraImplementation::recalculate()
     }
     default: { break; }
     }
+
+    bx::mtxMul(mViewProj, mView, mProj);
 }
 
 void CameraImplementation::setSettings(const CameraSettings& settings)

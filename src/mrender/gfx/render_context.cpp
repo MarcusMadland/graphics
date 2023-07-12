@@ -536,10 +536,22 @@ CameraSettings GfxContextImplementation::getCameraSettings(CameraHandle camera)
     return cameraImpl->getSettings();
 }
 
-float* GfxContextImplementation::getCameraProjection(CameraHandle camera)
+float* GfxContextImplementation::getCameraView(CameraHandle camera)
+{
+    std::shared_ptr<CameraImplementation> cameraImpl = STATIC_IMPL_CAST(Camera, mCameras.at(camera.idx));
+    return cameraImpl->getViewMatrix();
+}
+
+float* GfxContextImplementation::getCameraProj(CameraHandle camera)
 {
     std::shared_ptr<CameraImplementation> cameraImpl = STATIC_IMPL_CAST(Camera, mCameras.at(camera.idx));
     return cameraImpl->getProjMatrix();
+}
+
+float* GfxContextImplementation::getCameraViewProj(CameraHandle camera)
+{
+    std::shared_ptr<CameraImplementation> cameraImpl = STATIC_IMPL_CAST(Camera, mCameras.at(camera.idx));
+    return cameraImpl->getViewProjMatrix();
 }
 
 void GfxContextImplementation::setCameraSettings(CameraHandle camera, const CameraSettings& settings)

@@ -79,7 +79,9 @@ public:
 	virtual void setUniform(ShaderHandle shader, const std::string& uniform, void* data) override;
 
 	virtual CameraSettings getCameraSettings(CameraHandle camera) override;
-	virtual float* getCameraProjection(CameraHandle camera) override;
+	virtual float* getCameraView(CameraHandle camera) override;
+	virtual float* getCameraProj(CameraHandle camera) override;
+	virtual float* getCameraViewProj(CameraHandle camera) override;
 	virtual void setCameraSettings(CameraHandle camera, const CameraSettings& settings) override;
 
 	virtual void setMaterialUniformData(MaterialHandle material, const std::string& name, UniformData::UniformType type, void* data) override;

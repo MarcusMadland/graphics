@@ -165,25 +165,23 @@ void GBuffer::render(GfxContext* context)
 		};
 		static float lightPositions[4][4]
 		{
-			{ 3.0f, 0.0f, 3.0f, 0.0f }, 
-			{ -3.0f, 0.0f, 3.0f, 0.0f },
-			{ 3.0f, 0.0f, -3.0f, 0.0f },
-			{ -3.0f, 0.0f, -3.0f, 0.0f },
+			{ 1.5f, 0.0f, 1.5f, 2.0f },
+			{ -1.5f, 0.0f, 1.5f, 2.0f },
+			{ 1.5f, 0.0f, -1.5f, 2.0f },
+			{ -1.5f, 0.0f, -1.5f, 2.0f },
 		};
 		static float lightColors[4][4]
 		{
-			{ 1.0f, 1.0f , 1.0f, 1.0f },
-			{ 1.0f, 1.0f , 1.0f, 1.0f },
-			{ 1.0f, 1.0f , 1.0f, 1.0f },
-			{ 1.0f, 1.0f , 1.0f, 1.0f },
+			{ 0.8f, 0.8f , 0.8f, 0.1f },
+			{ 0.8f, 0.8f , 0.8f, 0.1f },
+			{ 0.8f, 0.8f , 0.8f, 0.1f },
+			{ 0.8f, 0.8f , 0.8f, 0.1f },
 		};
 
-		context->setUniform(mLightShader, "u_lightPositions", &lightPositions[0][0]);
-		context->setUniform(mLightShader, "u_lightColors", &lightColors[0][0]);
+		context->setUniform(mLightShader, "u_lightPosOuterR", &context->mLightPositions[0][0]);
+		context->setUniform(mLightShader, "u_lightRgbInnerR", &lightColors[0][0]);
 		
-		context->setUniform(mLightShader, "u_viewPos", context->getCameraSettings(context->getActiveCamera()).mPosition);
-
-		context->setUniform(mLightShader, "u_shadowViewProj", context->getSharedUniformData().at("u_shadowViewProj").mValue);
+		context->setUniform(mLightShader, "u_mtx", context->getCameraViewProj(context->getActiveCamera()));
 		
 
 		// Submit quad

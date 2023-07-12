@@ -72,7 +72,7 @@ BufferList ShadowMapping::getBuffers(GfxContext* context)
 UniformDataList ShadowMapping::getUniformData(GfxContext* context)
 {
 	UniformDataList uniformDataList;
-	uniformDataList.emplace("u_shadowViewProj", UniformData(UniformData::UniformType::Mat4, context->getCameraProjection(mCamera)));
+	uniformDataList.emplace("u_shadowViewProj", UniformData(UniformData::UniformType::Mat4, context->getCameraViewProj(mCamera)));
 	return uniformDataList;
 }
 

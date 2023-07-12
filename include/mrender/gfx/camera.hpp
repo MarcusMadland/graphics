@@ -18,11 +18,13 @@ public:
 
 	[[nodiscard]] float* getViewMatrix() { return mView; }
 	[[nodiscard]] float* getProjMatrix() { return mProj; }
+	[[nodiscard]] float* getViewProjMatrix() { return mViewProj; }
 
 private:
 	CameraSettings mSettings;
 	float mView[16];
 	float mProj[16];
+	float mViewProj[16];
 };
 
 }	// namespace mrender

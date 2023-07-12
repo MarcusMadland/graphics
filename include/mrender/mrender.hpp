@@ -370,7 +370,9 @@ public:
 	virtual void setUniform(ShaderHandle shader, const std::string& uniform, void* data) = 0;
 
 	virtual CameraSettings getCameraSettings(CameraHandle camera) = 0;
-	virtual float* getCameraProjection(CameraHandle camera) = 0;
+	virtual float* getCameraView(CameraHandle camera) = 0;
+	virtual float* getCameraProj(CameraHandle camera) = 0;
+	virtual float* getCameraViewProj(CameraHandle camera) = 0;
 	virtual void setCameraSettings(CameraHandle camera, const CameraSettings& settings) = 0;
 
 	virtual void setMaterialUniformData(MaterialHandle material, const std::string& name, UniformData::UniformType type, void* data) = 0;
@@ -397,6 +399,7 @@ public:
 	virtual RendererRef getRenderer() = 0;
 	virtual RenderSystemList getRenderSystems() = 0;
 
+	float mLightPositions[4][4];
 };
 
 GfxContext* createGfxContext(const RenderSettings& settings);
