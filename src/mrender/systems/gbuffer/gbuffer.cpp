@@ -138,49 +138,26 @@ void GBuffer::render(GfxContext* context)
 		context->clear(BGFX_CLEAR_COLOR);
 
 		// Set shader uniforms
+		TextureHandle depthBuffer = context->getSharedBuffers().at("GDepth");
+		context->setTexture(mLightShader, "u_gdepth", depthBuffer, 0);
+
 		TextureHandle diffuseBuffer = context->getSharedBuffers().at("GDiffuse");
-		context->setTexture(mLightShader, "u_gdiffuse", diffuseBuffer, 0);
+		context->setTexture(mLightShader, "u_gdiffuse", diffuseBuffer, 1);
 
 		TextureHandle normalBuffer = context->getSharedBuffers().at("GNormal");
-		context->setTexture(mLightShader, "u_gnormal", normalBuffer, 1);
+		context->setTexture(mLightShader, "u_gnormal", normalBuffer, 2);
 
 		TextureHandle specularBuffer = context->getSharedBuffers().at("GSpecular");
-		context->setTexture(mLightShader, "u_gspecular", specularBuffer, 2);
+		context->setTexture(mLightShader, "u_gspecular", specularBuffer, 3);
 
 		TextureHandle positionBuffer = context->getSharedBuffers().at("GPosition");
-		context->setTexture(mLightShader, "u_gposition", positionBuffer, 3);
+		context->setTexture(mLightShader, "u_gposition", positionBuffer, 4);
 
 		TextureHandle shadowMap = context->getSharedBuffers().at("ShadowMap");
-		context->setTexture(mLightShader, "u_shadowMap", shadowMap,4);
-
-		static float sunLightDirection[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-		context->setUniform(mLightShader, "u_lightDir", &sunLightDirection);
-
-		static float sunLightColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-		context->setUniform(mLightShader, "u_lightColor", &sunLightColor);
-
-		struct LightData
-		{
-			float position[4];
-		};
-		static float lightPositions[4][4]
-		{
-			{ 1.5f, 0.0f, 1.5f, 2.0f },
-			{ -1.5f, 0.0f, 1.5f, 2.0f },
-			{ 1.5f, 0.0f, -1.5f, 2.0f },
-			{ -1.5f, 0.0f, -1.5f, 2.0f },
-		};
-		static float lightColors[4][4]
-		{
-			{ 0.8f, 0.8f , 0.8f, 0.1f },
-			{ 0.8f, 0.8f , 0.8f, 0.1f },
-			{ 0.8f, 0.8f , 0.8f, 0.1f },
-			{ 0.8f, 0.8f , 0.8f, 0.1f },
-		};
+		context->setTexture(mLightShader, "u_shadowMap", shadowMap,5);
 
 		context->setUniform(mLightShader, "u_lightPosOuterR", &context->mLightPositions[0][0]);
-		context->setUniform(mLightShader, "u_lightRgbInnerR", &lightColors[0][0]);
-		
+		context->setUniform(mLightShader, "u_lightRgbInnerR", &context->mLightColors[0][0]);
 		context->setUniform(mLightShader, "u_mtx", context->getCameraViewProj(context->getActiveCamera()));
 		
 

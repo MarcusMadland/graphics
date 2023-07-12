@@ -4,11 +4,12 @@ $input v_texcoord0
 #include <../mrender-common.sh>
 #include <light.sh>
 
-SAMPLER2D(u_gdiffuse, 0);
-SAMPLER2D(u_gnormal, 1);
-SAMPLER2D(u_gspecular, 2);
-SAMPLER2D(u_gposition, 3);
-SAMPLER2D(u_shadowMap, 4);
+SAMPLER2D(u_gdepth, 0);
+SAMPLER2D(u_gdiffuse, 1);
+SAMPLER2D(u_gnormal, 2);
+SAMPLER2D(u_gspecular, 3);
+SAMPLER2D(u_gposition, 4);
+SAMPLER2D(u_shadowMap, 5);
 
 const int NR_LIGHTS = 4;
 uniform vec4 u_lightPosOuterR[NR_LIGHTS];
@@ -17,11 +18,17 @@ uniform mat4 u_mtx;
 
 void main()
 {
-	vec3 wpos = texture2D(u_gposition, v_texcoord0).rgb;
-	vec4 normal4 = texture2D(u_gnormal, v_texcoord0);
-	vec3 normal = normal4.a > 0.0 ? decodeNormalUint(normal4.rgb) : vec3_splat(0.0);
-	
-	vec3 view = mul(u_view, vec4(wpos, 0.0)).xyz;
+	vec3  normal      = decodeNormalUint(texture2D(u_gnormal, v_texcoord0).xyz);
+	float deviceDepth = texture2D(u_gdepth, v_texcoord0).x;
+	float depth       = toClipSpaceDepth(deviceDepth);
+
+	vec3 clip = vec3(v_texcoord0 * 2.0 - 1.0, depth);
+#if !BGFX_SHADER_LANGUAGE_GLSL
+	clip.y = -clip.y;
+#endif // !BGFX_SHADER_LANGUAGE_GLSL
+	vec3 wpos = clipToWorld(u_mtx, clip);
+
+	vec3 view = mul(u_view, vec4(wpos, 0.0) ).xyz;
 	view = -normalize(view);
 	
 	vec3 lighting = vec3_splat(0.0);

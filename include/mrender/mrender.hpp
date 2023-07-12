@@ -400,6 +400,7 @@ public:
 	virtual RenderSystemList getRenderSystems() = 0;
 
 	float mLightPositions[4][4];
+	float mLightColors[4][4];
 };
 
 GfxContext* createGfxContext(const RenderSettings& settings);
