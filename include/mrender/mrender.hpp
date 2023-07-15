@@ -25,6 +25,7 @@ HANDLE(TextureHandle)
 HANDLE(ShaderHandle)
 HANDLE(GeometryHandle)
 HANDLE(RenderableHandle)
+HANDLE(LightHandle)
 
 // 
 enum class TextureFormat
@@ -130,13 +131,6 @@ enum class Color
 	Green,
 };
 
-enum class LightType
-{
-	Point,
-	Spot,
-	Directional,
-};
-
 struct EnviormentData
 {
 	float mSunLightDirection[4] = { -5.0f, -5.0f, -2.0f, 0.0f };
@@ -171,6 +165,24 @@ struct CameraSettings
 	float mClipFar = 100.0f;
 	float mPosition[3] = { 0.0f, 0.0f, 0.0f }; 
 	float mLookAt[3] = { 0.0f, 0.0f, 0.0f }; 
+};
+
+struct LightSettings
+{
+	enum LightType
+	{
+		Point,
+		Spot,
+		Directional,
+	} mLightType = LightType::Point;
+
+	float mColor[3] = { 0.0f, 0.0f, 0.0f };
+	float mIntensity = 1.0f;
+	float mPosition[3] = { 0.0f, 0.0f, 0.0f }; // only valid for point+spot lights
+	float mDirection[3] = { 0.0f, 0.0f, -1.0f }; //only valid for directional+spot lights
+	float mRange = FLT_MAX; //only valid for point+spot lights
+	float mInnerConeAngle = 0.0f; //only valid for spot lights
+	float mOuterConeAngle = 3.1415926535897932384626433832795f / 4.0f; //only valid for spot lights
 };
 
 struct BufferElement
@@ -222,19 +234,6 @@ struct UniformData
 	void* mValue;
 };
 
-struct LightData // @todo
-{
-	LightType mType = LightType::Point;
-
-	float mColor[3] = { 0.0f, 0.0f, 0.0f };
-	float mIntensity = 1.0f;
-	float mPosition[3] = { 0.0f, 0.0f, 0.0f }; // only valid for point+spot lights
-	float mDirection[3] = { 0.0f, 0.0f, -1.0f }; //only valid for directional+spot lights
-	float mRange = FLT_MAX; //only valid for point+spot lights
-	float mInnerConeAngle = 0.0f; //only valid for spot lights
-	float mOuterConeAngle = 3.1415926535897932384626433832795f / 4.0f; //only valid for spot lights
-};
-
 struct Stats
 {
 	float mCpuTime;
@@ -250,6 +249,7 @@ struct Stats
 	uint32_t mNumShaders;
 	uint32_t mNumGeometries;
 	uint32_t mNumRenderables;
+	uint32_t mNumLights;
 
 	int64_t mTextureMemoryUsed;  // in MiBs 
 };
@@ -279,11 +279,16 @@ using GeometryRef = std::shared_ptr<Geometry>;
 class Renderable {};
 using RenderableRef = std::shared_ptr<Renderable>;
 
+class Light {};
+using LightRef = std::shared_ptr<Light>;
+
 //
 using UniformDataList = std::unordered_map<std::string, UniformData>;
 using TextureDataList = std::unordered_map<std::string, TextureHandle>;
-using BufferList = std::unordered_map<std::string, TextureHandle>;
-using RenderableList = std::vector<RenderableHandle>;
+using BufferList      = std::unordered_map<std::string, TextureHandle>;
+using ShaderList	  = std::unordered_map<std::string, ShaderHandle>;
+using RenderableList  = std::vector<RenderableHandle>;
+using LightList		  = std::vector<LightHandle>;
 
 //
 class RenderSystem : public Timable// @todo Simplify class
@@ -324,9 +329,10 @@ public:
 	virtual MaterialHandle createMaterial(ShaderHandle shader) = 0;
 	virtual TextureHandle createTexture(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0) = 0;
 	virtual TextureHandle createTexture(const uint8_t* data, TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height, uint16_t channels) = 0;
-	virtual ShaderHandle createShader(const std::string& fileName, const std::string& filePath) = 0;
+	virtual ShaderHandle createShader(const std::string& vertexPath, const std::string& fragmentPath) = 0;
 	virtual GeometryHandle createGeometry(const BufferLayout& layout, void* vertexData, uint32_t vertexSize, const std::vector<uint16_t>& indices) = 0;
 	virtual RenderableHandle createRenderable(GeometryHandle geometry, MaterialHandle material) = 0;
+	virtual LightHandle createLight(const LightSettings& settings) = 0;
 
 	virtual void destroy(CameraHandle handle) = 0;
 	virtual void destroy(FramebufferHandle handle) = 0;
@@ -347,10 +353,15 @@ public:
 	virtual void setActiveFramebuffer(FramebufferHandle handle) = 0; // null will write to back buffer
 	virtual void setActiveRenderable(RenderableHandle renderable) = 0;
 	virtual void setActiveRenderables(RenderableList renderables) = 0;
+	virtual void setActiveLight(LightHandle light) = 0;
+	virtual void setActiveLights(LightList lights) = 0;
 
 	virtual [[nodiscard]] CameraHandle getActiveCamera() = 0;
 	virtual [[nodiscard]] RenderStateHandle getActiveRenderState() = 0;
+	virtual [[nodiscard]] ShaderList getActiveShaders() = 0;
 	virtual [[nodiscard]] RenderableList getActiveRenderables() = 0;
+	virtual [[nodiscard]] LightList getActiveLights() = 0;
+
 	virtual [[nodiscard]] BufferList getSharedBuffers() = 0;
 	virtual [[nodiscard]] UniformDataList getSharedUniformData() = 0;
 
@@ -365,6 +376,7 @@ public:
 	virtual void submit(RenderableList renderables, CameraHandle camera) = 0;
 	virtual void submit(RenderableHandle renderable, ShaderHandle shader, CameraHandle camera) = 0;
 	virtual void submit(RenderableList renderables, ShaderHandle shader, CameraHandle camera) = 0;
+	virtual void submit(ShaderHandle shader, uint64_t flags = 0) = 0;
 	
 	virtual void setTexture(ShaderHandle shader, const std::string& uniform, TextureHandle data, uint8_t unit) = 0;
 	virtual void setUniform(ShaderHandle shader, const std::string& uniform, void* data) = 0;
@@ -392,15 +404,15 @@ public:
 	virtual void setRenderableTransform(RenderableHandle renderable, float* matrix) = 0;
 	virtual float* getRenderableTransform(RenderableHandle renderable) = 0;
 
+	virtual LightSettings getLightSettings(LightHandle light) = 0;
+	virtual void setLightSettings(LightHandle light, const LightSettings& settings) = 0;
+
 	virtual void setSettings(const RenderSettings& settings) = 0;
 	virtual RenderSettings getSettings() = 0;
 
 	virtual Stats* getStats() = 0;
 	virtual RendererRef getRenderer() = 0;
 	virtual RenderSystemList getRenderSystems() = 0;
-
-	float mLightPositions[4][4];
-	float mLightColors[4][4];
 };
 
 GfxContext* createGfxContext(const RenderSettings& settings);

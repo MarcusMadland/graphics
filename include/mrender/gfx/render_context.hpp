@@ -33,9 +33,10 @@ public:
 	virtual MaterialHandle createMaterial(ShaderHandle shader) override;
 	virtual TextureHandle createTexture(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0) override;
 	virtual TextureHandle createTexture(const uint8_t* data, TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height, uint16_t channels) override;
-	virtual ShaderHandle createShader(const std::string& fileName, const std::string& filePath) override;
+	virtual ShaderHandle createShader(const std::string& vertexPath, const std::string& fragmentPath) override;
 	virtual GeometryHandle createGeometry(const BufferLayout& layout, void* vertexData, uint32_t vertexSize, const std::vector<uint16_t>& indices) override;
 	virtual RenderableHandle createRenderable(GeometryHandle geometry, MaterialHandle material) override;
+	virtual LightHandle createLight(const LightSettings& settings) override;
 
 	virtual void destroy(CameraHandle handle) override;
 	virtual void destroy(FramebufferHandle handle) override;
@@ -55,11 +56,16 @@ public:
 	virtual void setActiveRenderState(RenderStateHandle renderState) override;
 	virtual void setActiveFramebuffer(FramebufferHandle framebuffer) override;// null will write to back buffer
 	virtual void setActiveRenderable(RenderableHandle renderable) override;
-	virtual void setActiveRenderables(std::vector<RenderableHandle> renderables) override;
+	virtual void setActiveRenderables(RenderableList renderables) override;
+	virtual void setActiveLight(LightHandle light) override;
+	virtual void setActiveLights(LightList lights) override;
 
-	virtual [[nodiscard]] CameraHandle getActiveCamera() override { return mCurrentCamera; }
-	virtual [[nodiscard]] RenderStateHandle getActiveRenderState() override { return mCurrentRenderState; }
-	virtual [[nodiscard]] RenderableList getActiveRenderables() override { return mCurrentRenderables; }
+	virtual [[nodiscard]] CameraHandle getActiveCamera() override { return mActiveCamera; }
+	virtual [[nodiscard]] RenderStateHandle getActiveRenderState() override { return mActiveRenderState; }
+	virtual [[nodiscard]] ShaderList getActiveShaders() override { return mActiveShaders; }
+	virtual [[nodiscard]] RenderableList getActiveRenderables() override { return mActiveRenderables; }
+	virtual [[nodiscard]] LightList getActiveLights() override { return mActiveLights; };
+
 	virtual [[nodiscard]] BufferList getSharedBuffers() override { return mSharedBuffers; }
 	virtual [[nodiscard]] UniformDataList getSharedUniformData() override { return mSharedUniformData; }
 
@@ -74,6 +80,7 @@ public:
 	virtual void submit(RenderableList renderables, CameraHandle camera) override;
 	virtual void submit(RenderableHandle renderable, ShaderHandle shader, CameraHandle camera) override;
 	virtual void submit(RenderableList renderables, ShaderHandle shader, CameraHandle camera) override;
+	virtual void submit(ShaderHandle shader, uint64_t flags = 0) override;
 
 	virtual void setTexture(ShaderHandle shader, const std::string& uniform, TextureHandle data, uint8_t unit) override;
 	virtual void setUniform(ShaderHandle shader, const std::string& uniform, void* data) override;
@@ -100,6 +107,9 @@ public:
 	MaterialHandle getRenderableMaterial(RenderableHandle renderable) override;
 	virtual void setRenderableTransform(RenderableHandle renderable, float* matrix) override;
 	virtual float* getRenderableTransform(RenderableHandle renderable) override;
+
+	virtual LightSettings getLightSettings(LightHandle light) override;
+	virtual void setLightSettings(LightHandle light, const LightSettings& settings) override;
 
 	virtual void setSettings(const RenderSettings& settings) override;
 	virtual RenderSettings getSettings() override { return mSettings; };
@@ -133,11 +143,14 @@ private:
 	std::unordered_map<uint16_t, ShaderRef> mShaders;
 	std::unordered_map<uint16_t, GeometryRef> mGeometries;
 	std::unordered_map<uint16_t, RenderableRef> mRenderables;
+	std::unordered_map<uint16_t, LightRef> mLights;
 
 	// Internal handles
-	CameraHandle mCurrentCamera;
-	RenderStateHandle mCurrentRenderState;
-	RenderableList mCurrentRenderables;
+	CameraHandle mActiveCamera;
+	RenderStateHandle mActiveRenderState;
+	ShaderList mActiveShaders;
+	RenderableList mActiveRenderables;
+	LightList mActiveLights;
 
 	BufferList mSharedBuffers;
 	UniformDataList mSharedUniformData;

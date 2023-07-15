@@ -4,12 +4,12 @@
 
 namespace mrender {
 
-class Deferred : public Renderer::Registrar<Deferred>
+class DeferredRenderer : public Renderer::Registrar<DeferredRenderer>
 {
 public:
     static constexpr std::string_view Name = "Deferred";
 
-    Deferred() {}
+    DeferredRenderer() {}
 
     std::vector<std::shared_ptr<RenderSystem>> setupRenderSystems(
         mrender::GfxContext* context) override;

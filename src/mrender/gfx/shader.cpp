@@ -1,6 +1,8 @@
 #include "mrender/gfx/shader.hpp"
 #include "mrender/utils/file_ops.hpp"
 
+#include <filesystem>
+
 namespace mrender {
 
 ShaderImplementation::ShaderImplementation()
@@ -13,15 +15,17 @@ ShaderImplementation::~ShaderImplementation()
     bgfx::destroy(mHandle);
 }
 
-void ShaderImplementation::loadProgram(const std::string& fileName, const std::string& filePath)
+void ShaderImplementation::loadProgram(const std::string& vertexPath, const std::string& fragmentPath)
 {
-    mFileName = fileName;
-    mFilePath = filePath;
-	const std::string vertexPath = mFilePath + "/" + mFileName + "-vert.bin";
-	const std::string fragmentPath = mFilePath + "/" + mFileName + "-frag.bin";
+    mVertexFilePath = vertexPath;
+    mFragmentFilePath = fragmentPath;
+
+    std::filesystem::path filePath = std::filesystem::path(mFragmentFilePath);
+    std::string filename = filePath.filename().string();
+    mFileName = filename.substr(0, filename.find_last_of('-'));
 
     std::string vshader;
-    if (!mrender::read_file(vertexPath, vshader))
+    if (!mrender::read_file(mVertexFilePath, vshader))
     {
         std::cout << "Invalid path when loading shader" << std::endl;
         return;
@@ -35,7 +39,7 @@ void ShaderImplementation::loadProgram(const std::string& fileName, const std::s
     }
  
     std::string fshader;
-    if (!mrender::read_file(fragmentPath, fshader))
+    if (!mrender::read_file(mFragmentFilePath, fshader))
     {
         std::cout << "Invalid path when loading shader" << std::endl;
         return;
@@ -51,7 +55,7 @@ void ShaderImplementation::loadProgram(const std::string& fileName, const std::s
     mHandle = bgfx::createProgram(vsh, fsh, true);
     if (!bgfx::isValid(mHandle))
     {
-        std::cout << "Invalid Shader handle: " << fileName << std::endl;
+        std::cout << "Invalid Shader handle: " << mFileName << std::endl;
     }
 
     // Store all fragment uniforms
@@ -91,7 +95,7 @@ void ShaderImplementation::reloadProgram()
     {
         bgfx::destroy(mHandle);
     }
-    loadProgram(mFileName, mFilePath);
+    loadProgram(mVertexFilePath, mFragmentFilePath);
 }
 
 bgfx::ShaderHandle ShaderImplementation::createShader(const std::string& shader, const char* name)

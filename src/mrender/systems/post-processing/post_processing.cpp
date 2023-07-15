@@ -18,7 +18,9 @@ PostProcessing::~PostProcessing()
 bool PostProcessing::init(GfxContext* context)
 {
     // Shader
-    mShader = context->createShader("screen", "C:/Users/marcu/Dev/mengine/mrender/shaders/screen");
+    mShader = context->createShader(
+        "C:/Users/marcu/Dev/mengine/mrender/shaders/build/screen-vert.bin",
+        "C:/Users/marcu/Dev/mengine/mrender/shaders/build/screen-frag.bin");
 
     // Render state
     mState = context->createRenderState("Post Processing", 0

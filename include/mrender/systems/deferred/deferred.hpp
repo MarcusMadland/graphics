@@ -4,11 +4,11 @@
 
 namespace mrender {
 
-class GBuffer : public RenderSystem
+class Deferred : public RenderSystem
 {
 public:
-    GBuffer();
-    ~GBuffer();
+    Deferred();
+    ~Deferred();
 
     bool init(GfxContext* context) override;
     void render(GfxContext* context) override;
@@ -24,7 +24,9 @@ private:
     RenderStateHandle mLightState;
     FramebufferHandle mLightFramebuffer;
     BufferList mLightBuffers;
-    ShaderHandle mLightShader;
+    ShaderHandle mPointLightShader;
+    ShaderHandle mSpotLightShader;
+    ShaderHandle mDirectionalLightShader;
 
     GeometryHandle mScreenQuad;
     struct VertexData

@@ -7,6 +7,7 @@
 #include "mrender/gfx/renderable.hpp"
 #include "mrender/gfx/render_state.hpp"
 #include "mrender/gfx/shapes.hpp"
+#include "mrender/gfx/light.hpp"
 #include "mrender/utils/file_ops.hpp"
 
 #include "mrender/renderers/deferred/deferred.hpp"
@@ -57,9 +58,6 @@ GfxContextImplementation::GfxContextImplementation(const RenderSettings& setting
     uint8_t* textureData = new uint8_t[1 * 1 * 4];
     std::memset(textureData, 0, 1 * 1 * 4);
     mEmptyTexture = createTexture((uint8_t*)textureData, TextureFormat::RGBA8, 0, 1, 1, 4);
-
-    // Setup debug shader
-    mDebugDrawShader = createShader("debug_draw", "C:/Users/marcu/Dev/mengine/mrender/shaders/debug_draw");
 
     // Setup debug shapes
     mDebugRenderCube = createRenderable(createGeometry(
@@ -116,12 +114,13 @@ TextureHandle GfxContextImplementation::createTexture(const uint8_t* data, Textu
     return handle;
 }
 
-ShaderHandle GfxContextImplementation::createShader(const std::string& fileName, const std::string& filePath)
+ShaderHandle GfxContextImplementation::createShader(const std::string& vertexPath, const std::string& fragmentPath)// @todo This should take in two files (vertexPath & fragmentPath)
 {
     ShaderHandle handle = { static_cast<uint16_t>(mShaders.size()) };
     std::shared_ptr<ShaderImplementation> shader = std::make_shared<ShaderImplementation>();
-    shader->loadProgram(fileName, filePath);
+    shader->loadProgram(vertexPath, fragmentPath);
     mShaders[handle.idx] = std::move(shader);
+    mActiveShaders[getShaderName(handle)] = handle; // We activate all created shaders at once. @todo Do we want this?
     return handle;
 }
 
@@ -136,6 +135,13 @@ RenderableHandle GfxContextImplementation::createRenderable(GeometryHandle geome
 {
     RenderableHandle handle = { static_cast<uint16_t>(mRenderables.size()) };
     mRenderables[handle.idx] = std::move(std::make_shared<RenderableImplementation>(geometry, material));
+    return handle;
+}
+
+LightHandle GfxContextImplementation::createLight(const LightSettings& settings)
+{
+    LightHandle handle = { static_cast<uint16_t>(mLights.size()) };
+    mLights[handle.idx] = std::move(std::make_shared<LightImplementation>(settings));
     return handle;
 }
 
@@ -181,7 +187,7 @@ void GfxContextImplementation::destroy(RenderableHandle handle)
 
 void GfxContextImplementation::render(CameraHandle camera)
 {
-    mCurrentCamera = camera;
+    mActiveCamera = camera;
 
     // Update stats
     updateStats();
@@ -207,7 +213,7 @@ void GfxContextImplementation::swapBuffers()
 
 void GfxContextImplementation::clear(uint16_t flags, uint16_t width, uint16_t height)
 {
-    auto renderStateImpl = STATIC_IMPL_CAST(RenderState, mRenderStates.at(mCurrentRenderState.idx));
+    auto renderStateImpl = STATIC_IMPL_CAST(RenderState, mRenderStates.at(mActiveRenderState.idx));
 
     if (width + height > 0)
     {
@@ -237,12 +243,12 @@ void GfxContextImplementation::reloadShaders()
 
 void GfxContextImplementation::setActiveRenderState(RenderStateHandle renderState)
 {
-    mCurrentRenderState = renderState;
+    mActiveRenderState = renderState;
 }
 
 void GfxContextImplementation::setActiveFramebuffer(FramebufferHandle framebuffer)
 {
-    auto renderStateImpl = STATIC_IMPL_CAST(RenderState, mRenderStates.at(mCurrentRenderState.idx));
+    auto renderStateImpl = STATIC_IMPL_CAST(RenderState, mRenderStates.at(mActiveRenderState.idx));
     auto framebufferImpl = STATIC_IMPL_CAST(Framebuffer, mFramebuffers.at(framebuffer.idx));
 
     bgfx::setViewFrameBuffer(renderStateImpl->mId, framebufferImpl->mHandle);
@@ -250,14 +256,27 @@ void GfxContextImplementation::setActiveFramebuffer(FramebufferHandle framebuffe
 
 void GfxContextImplementation::setActiveRenderable(RenderableHandle renderable)
 {
-    mCurrentRenderables.push_back(renderable);
+    mActiveRenderables.push_back(renderable);
 }
 
-void GfxContextImplementation::setActiveRenderables(std::vector<RenderableHandle> renderables)
+void GfxContextImplementation::setActiveRenderables(RenderableList renderables)
 {
     for (auto& renderable : renderables)
     {
-        mCurrentRenderables.push_back(renderable);
+        mActiveRenderables.push_back(renderable);
+    }
+}
+
+void GfxContextImplementation::setActiveLight(LightHandle light)
+{
+    mActiveLights.push_back(light);
+}
+
+void GfxContextImplementation::setActiveLights(LightList lights)
+{
+    for (auto& light : lights)
+    {
+        mActiveLights.push_back(light);
     }
 }
 
@@ -328,14 +347,14 @@ void GfxContextImplementation::submitDebugCube(float* transform, Color color)
         colorValues = { 1.0f, 1.0f, 1.0f, 1.0f };
         break;
     }
-    setRenderableTransform(mDebugRenderCube,transform);
-    setUniform(mDebugDrawShader, "u_debugColor", colorValues.data());
-    submit(mDebugRenderCube, mDebugDrawShader, getActiveCamera());
+   // setRenderableTransform(mDebugRenderCube,transform);
+   // setUniform(mDebugDrawShader, "u_debugColor", colorValues.data());
+   // submit(mDebugRenderCube, mDebugDrawShader, getActiveCamera());
 }
 
 void GfxContextImplementation::submit(GeometryHandle geometry, ShaderHandle shader, CameraHandle camera)
 {
-    auto renderStateImpl = STATIC_IMPL_CAST(RenderState, mRenderStates.at(mCurrentRenderState.idx));
+    auto renderStateImpl = STATIC_IMPL_CAST(RenderState, mRenderStates.at(mActiveRenderState.idx));
     auto geometryImpl = STATIC_IMPL_CAST(Geometry, mGeometries.at(geometry.idx));
     auto shaderImpl = STATIC_IMPL_CAST(Shader, mShaders.at(shader.idx));
     auto cameraImpl = isValid(camera) ? STATIC_IMPL_CAST(Camera, mCameras.at(camera.idx)) : nullptr;
@@ -488,6 +507,21 @@ void GfxContextImplementation::submit(RenderableList renderables, ShaderHandle s
     }
 }
 
+void GfxContextImplementation::submit(ShaderHandle shader, uint64_t flags)
+{
+    auto renderStateImpl = STATIC_IMPL_CAST(RenderState, mRenderStates.at(mActiveRenderState.idx));
+    auto shaderImpl = STATIC_IMPL_CAST(Shader, mShaders.at(shader.idx));
+    if (flags == 0)
+    {
+        bgfx::setState(renderStateImpl->mFlags);
+    }
+    else
+    {
+        bgfx::setState(flags);
+    }
+    bgfx::submit(renderStateImpl->mId, shaderImpl->mHandle);
+}
+
 void GfxContextImplementation::setTexture(ShaderHandle shader, const std::string& uniform, TextureHandle texture, uint8_t unit)
 {
     auto shaderImpl = STATIC_IMPL_CAST(Shader, mShaders.at(shader.idx));
@@ -637,6 +671,18 @@ float* GfxContextImplementation::getRenderableTransform(RenderableHandle rendera
     return renderableImpl->getTransform();
 }
 
+LightSettings GfxContextImplementation::getLightSettings(LightHandle light)
+{
+    std::shared_ptr<LightImplementation> lightImpl = STATIC_IMPL_CAST(Light, mLights.at(light.idx));
+    return lightImpl->getSettings();
+}
+
+void GfxContextImplementation::setLightSettings(LightHandle light, const LightSettings& settings)
+{
+    std::shared_ptr<LightImplementation> lightImpl = STATIC_IMPL_CAST(Light, mLights.at(light.idx));
+    lightImpl->setSettings(settings);
+}
+
 void GfxContextImplementation::setSettings(const RenderSettings& settings)
 {
     const bool rebuildRenderer = (mSettings.mRendererName != settings.mRendererName || mRenderer == nullptr);
@@ -687,6 +733,7 @@ void GfxContextImplementation::updateStats()
     mStats.mNumShaders = static_cast<uint32_t>(mShaders.size());
     mStats.mNumGeometries = static_cast<uint32_t>(mGeometries.size());
     mStats.mNumRenderables = static_cast<uint32_t>(mRenderables.size());
+    mStats.mNumLights = static_cast<uint32_t>(mLights.size());
 }
 
 uint8_t GfxContextImplementation::colorToAnsi(const Color& color)

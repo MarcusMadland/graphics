@@ -19,7 +19,9 @@ ShadowMapping::~ShadowMapping()
 bool ShadowMapping::init(mrender::GfxContext* context)
 { 
 	// Shader
-	mShader = context->createShader("shadow", "C:/Users/marcu/Dev/mengine/mrender/shaders/shadow");
+	mShader = context->createShader(
+		"C:/Users/marcu/Dev/mengine/mrender/shaders/build/shadow-vert.bin",
+		"C:/Users/marcu/Dev/mengine/mrender/shaders/build/shadow-frag.bin");
 
 	// Render State
 	mState = context->createRenderState("Shadow Mapping", 0
