@@ -28,6 +28,11 @@ private:
     ShaderHandle mSpotLightShader;
     ShaderHandle mDirectionalLightShader;
 
+    RenderStateHandle mCombineState;
+    FramebufferHandle mCombineFramebuffer;
+    BufferList mCombineBuffers;
+    ShaderHandle mCombineShader;
+
     GeometryHandle mScreenQuad;
     struct VertexData
     {

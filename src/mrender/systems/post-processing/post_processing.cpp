@@ -44,11 +44,11 @@ void PostProcessing::render(GfxContext* context)
 
     // Set current renderpass id
     context->setActiveRenderState(mState);
-    context->clear(BGFX_CLEAR_COLOR);
+    context->clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
 
     // Set shader uniforms
-    TextureHandle diffuseBuffer = context->getSharedBuffers().at("Light");
-    context->setTexture(mShader, "u_color", diffuseBuffer, 1);
+    TextureHandle diffuseBuffer = context->getSharedBuffers().at("Combine");
+    context->setTexture(mShader, "u_buffer", diffuseBuffer, 1);
 
     // Submit quad
     context->submit(mScreenQuad, mShader, INVALID_HANDLE);

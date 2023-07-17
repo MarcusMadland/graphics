@@ -46,6 +46,7 @@ public:
 	virtual void destroy(ShaderHandle handle) override;
 	virtual void destroy(GeometryHandle handle) override;
 	virtual void destroy(RenderableHandle handle) override;
+	virtual void destroy(LightHandle handle) override;
 
 	virtual void render(CameraHandle camera) override;
 	virtual void swapBuffers() override;
@@ -97,9 +98,10 @@ public:
 	virtual [[nodiscard]] const TextureDataList& getMaterialTextureData(MaterialHandle material) override;
 	virtual [[nodiscard]] const ShaderHandle getMaterialShader(MaterialHandle material) override;
 
-	virtual [[nodiscard]] TextureRef getTextureData(TextureHandle texture) override;
+	virtual [[nodiscard]] TextureRef getTextureData(TextureHandle texture) override; // @todo make private and rename to get textureref
 	virtual [[nodiscard]] uint16_t getTextureID(TextureHandle texture) override;
 	virtual [[nodiscard]] TextureFormat getTextureFormat(TextureHandle texture) override;
+	virtual [[nodiscard]] std::vector<uint8_t> readTexture(TextureHandle texture) override; // rename to get texture data @todo
 
 	virtual [[nodiscard]] std::string getShaderName(ShaderHandle shader) override;
 

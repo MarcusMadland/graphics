@@ -185,6 +185,11 @@ void GfxContextImplementation::destroy(RenderableHandle handle)
     mRenderables.erase(handle.idx);
 }
 
+void GfxContextImplementation::destroy(LightHandle handle)
+{
+    mLights.erase(handle.idx);
+}
+
 void GfxContextImplementation::render(CameraHandle camera)
 {
     mActiveCamera = camera;
@@ -639,6 +644,14 @@ TextureFormat GfxContextImplementation::getTextureFormat(TextureHandle texture)
 {
     auto textureImpl = STATIC_IMPL_CAST(Texture, mTextures.at(texture.idx));
     return textureImpl->getFormat();
+}
+
+std::vector<uint8_t> GfxContextImplementation::readTexture(TextureHandle texture)
+{
+    auto textureImpl = STATIC_IMPL_CAST(Texture, mTextures.at(texture.idx));
+    std::vector<uint8_t> data;
+    bgfx::readTexture(textureImpl->mHandle, &data);
+    return data;
 }
 
 void GfxContextImplementation::setRenderableMaterial(RenderableHandle renderable, MaterialHandle material)

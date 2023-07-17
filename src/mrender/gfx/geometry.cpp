@@ -9,8 +9,9 @@ GeometryImplementation::GeometryImplementation(const BufferLayout& layout, void*
 	bgfxLayout.begin();
 	for (auto& element : layout)
 	{
+		bool isUint = element.mAttribType == BufferElement::AttribType::Uint8 || element.mAttribType == BufferElement::AttribType::Int16;
 		bgfxLayout.add(attribToBgfx(element.mAttrib), element.mNum,
-			attribTypeToBgfx(element.mAttribType), element.mAttribType == BufferElement::AttribType::Uint8 || element.mAttribType == BufferElement::AttribType::Int16, element.mAttribType == BufferElement::AttribType::Int16);
+			attribTypeToBgfx(element.mAttribType), isUint, isUint);
 					// @todo Need a better solution to "normalized" param
 	}
 	bgfxLayout.end();

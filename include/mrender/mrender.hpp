@@ -174,13 +174,13 @@ struct LightSettings
 		Point,
 		Spot,
 		Directional,
-	} mLightType = LightType::Point;
+	} mType = LightType::Point;
 
-	float mColor[3] = { 0.0f, 0.0f, 0.0f };
+	float mColor[3] = { 1.0f, 1.0f, 1.0f };
 	float mIntensity = 1.0f;
-	float mPosition[3] = { 0.0f, 0.0f, 0.0f }; // only valid for point+spot lights
+	float mPosition[3] = { 0.0f, 2.0f, 2.0f }; // only valid for point+spot lights
 	float mDirection[3] = { 0.0f, 0.0f, -1.0f }; //only valid for directional+spot lights
-	float mRange = FLT_MAX; //only valid for point+spot lights
+	float mRange = 2.0f; //only valid for point+spot lights
 	float mInnerConeAngle = 0.0f; //only valid for spot lights
 	float mOuterConeAngle = 3.1415926535897932384626433832795f / 4.0f; //only valid for spot lights
 };
@@ -342,6 +342,8 @@ public:
 	virtual void destroy(ShaderHandle handle) = 0;
 	virtual void destroy(GeometryHandle handle) = 0;
 	virtual void destroy(RenderableHandle handle) = 0;
+	virtual void destroy(LightHandle handle) = 0;
+
 
 	virtual void render(CameraHandle handle) = 0;
 	virtual void swapBuffers() = 0;
@@ -396,6 +398,7 @@ public:
 	virtual [[nodiscard]] TextureRef getTextureData(TextureHandle texture) = 0;
 	virtual [[nodiscard]] uint16_t getTextureID(TextureHandle texture) = 0;
 	virtual [[nodiscard]] TextureFormat getTextureFormat(TextureHandle texture) = 0;
+	virtual [[nodiscard]] std::vector<uint8_t> readTexture(TextureHandle texture) = 0;
 
 	virtual [[nodiscard]] std::string getShaderName(ShaderHandle shader) = 0;
 
