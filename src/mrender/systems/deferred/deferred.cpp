@@ -34,11 +34,12 @@ bool Deferred::init(GfxContext* context)
 
 	mCombineState = context->createRenderState("Color Pass #3 (1 Targets)", 0
 		| BGFX_STATE_WRITE_RGB
-		| BGFX_STATE_WRITE_A);
+		| BGFX_STATE_WRITE_A
+		| BGFX_STATE_DEPTH_TEST_LESS);
 
 	// Framebuffer
 	mGeometryFramebuffer = context->createFramebuffer(mGeometryBuffers);
-	//mLightBuffers.emplace("LightDepth", mGeometryBuffers.at("GDepth"));
+	mCombineBuffers.emplace("CombineDepth", mGeometryBuffers.at("GDepth"));
 	mLightFramebuffer = context->createFramebuffer(mLightBuffers);
 	mCombineFramebuffer = context->createFramebuffer(mCombineBuffers);
 
@@ -144,16 +145,15 @@ void Deferred::render(GfxContext* context)
 		// Submit scene
 		context->submit(sortedDeferredRenderables, context->getActiveCamera());
 	}
-	
+
 	{
 		PROFILE_SCOPE("Lights");
 
 		// Set current render pass and clear screen
 		context->setActiveRenderState(mLightState);
 		context->setActiveFramebuffer(mLightFramebuffer);
-		context->clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
+		context->clear(BGFX_CLEAR_COLOR);
 
-		TextureHandle positionBuffer = context->getSharedBuffers().at("GPosition");
 		TextureHandle normalBuffer = context->getSharedBuffers().at("GNormal");
 		TextureHandle depthBuffer = context->getSharedBuffers().at("GDepth");
 
@@ -183,7 +183,6 @@ void Deferred::render(GfxContext* context)
 			// Set shader uniforms (textures)
 			context->setTexture(lightShader, "u_gnormal", normalBuffer, 0);
 			context->setTexture(lightShader, "u_gdepth", depthBuffer, 1);
-			context->setTexture(lightShader, "u_gposition", positionBuffer, 2);
 
 			// Set shader uniforms (data)
 			float positionRange[4] = { lightSettings.mPosition[0], lightSettings.mPosition[1], lightSettings.mPosition[2], lightSettings.mRange };
@@ -192,24 +191,19 @@ void Deferred::render(GfxContext* context)
 			float colorIntensity[4] = { lightSettings.mColor[0], lightSettings.mColor[1], lightSettings.mColor[2], lightSettings.mIntensity };
 			context->setUniform(lightShader, "u_lightColorIntensity", colorIntensity);
 
+			context->setUniform(lightShader, "u_mtx", context->getCameraViewProj(context->getActiveCamera()));
+
 			// Submit quad
 			context->submit(mScreenQuad, lightShader, INVALID_HANDLE);
 		}
 	}
-
-	/*
-	{
-		PROFILE_SCOPE("Forward Pass");
-
-		context->submit(forwardRenderables, context->getActiveCamera());
-	}*/
 	
 	{
 		PROFILE_SCOPE("Combine");
 
 		context->setActiveRenderState(mCombineState);
 		context->setActiveFramebuffer(mCombineFramebuffer);
-		context->clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
+		context->clear(BGFX_CLEAR_COLOR);
 		
 		TextureHandle diffuseBuffer = context->getSharedBuffers().at("GDiffuse");
 		TextureHandle lightBuffer = context->getSharedBuffers().at("Light");
@@ -220,6 +214,12 @@ void Deferred::render(GfxContext* context)
 		// Submit quad
 		context->submit(mScreenQuad, mCombineShader, INVALID_HANDLE);
 	}
+
+	{
+		PROFILE_SCOPE("Forward Pass");
+
+		context->submit(forwardRenderables, context->getActiveCamera());
+	}
 }
 
 BufferList Deferred::getBuffers(GfxContext* context)
@@ -228,7 +228,6 @@ BufferList Deferred::getBuffers(GfxContext* context)
 	mGeometryBuffers.emplace("GDiffuse", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
 	mGeometryBuffers.emplace("GNormal", context->createTexture(TextureFormat::RGBA32F, BGFX_TEXTURE_RT));
 	mGeometryBuffers.emplace("GSpecular", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
-	mGeometryBuffers.emplace("GPosition", context->createTexture(TextureFormat::RGBA32F, BGFX_TEXTURE_RT));
 	mLightBuffers.emplace("Light", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
 	mCombineBuffers.emplace("Combine", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
 
