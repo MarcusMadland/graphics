@@ -73,14 +73,18 @@ void Deferred::render(GfxContext* context)
 {
 	PROFILE_SCOPE(mName);
 
-	// Devide into two different renderable list. One for deferred rendering and one for forward rendering
 	RenderableList deferredRenderables;
 	RenderableList forwardRenderables;
+	const CameraSettings& cameraSettings = context->getCameraSettings(context->getActiveCamera());
+
 	{
 		PROFILE_SCOPE("Seperating");
-		for (auto& renderable : context->getActiveRenderables())
+
+		for (const auto& renderable : context->getActiveRenderables())
 		{
-			if (context->getShaderName(context->getMaterialShader(context->getRenderableMaterial(renderable))) == "deferred_geo")
+			const ShaderHandle& shader = context->getMaterialShader(context->getRenderableMaterial(renderable));
+			
+			if (context->getShaderName(shader) == "deferred_geo")
 			{
 				deferredRenderables.push_back(renderable);
 			}
@@ -89,6 +93,8 @@ void Deferred::render(GfxContext* context)
 				forwardRenderables.push_back(renderable);
 			}
 		}
+
+		// @todo This should use some sort of shared stats function similar to getBuffers(). getStats()
 		for (static bool doOnce = true; doOnce; doOnce = false)
 		{
 			printf("There is %u renderables being shaded with deferred rendering\n", static_cast<int>(deferredRenderables.size()));
@@ -96,73 +102,63 @@ void Deferred::render(GfxContext* context)
 		}
 	}
 	
-	// Sorting back to front
-	RenderableList sortedDeferredRenderables;
 	{
-		PROFILE_SCOPE("FTB Sorting");
+		PROFILE_SCOPE("Sorting (ftb)");
 
-		// Calculate distances from the camera for each renderable
 		std::vector<std::pair<RenderableHandle, float>> renderableDistances;
 		renderableDistances.reserve(deferredRenderables.size());
 
-		const CameraSettings cameraSettings = context->getCameraSettings(context->getActiveCamera());
-		float cameraPos[3] = { cameraSettings.mPosition[0], cameraSettings.mPosition[1], cameraSettings.mPosition[2] };
+		const float cameraPos[3] = { cameraSettings.mPosition[0], cameraSettings.mPosition[1], cameraSettings.mPosition[2] };
 
-		for (auto& renderable : deferredRenderables)
+		for (const auto& renderable : deferredRenderables)
 		{
-			float* renderableMatrix = context->getRenderableTransform(renderable);
-			float renderablePos[3] = { renderableMatrix[12], renderableMatrix[13], renderableMatrix[14] };
+			const float* model = context->getRenderableTransform(renderable);
+			const float position[3] = { model[12], model[13], model[14] };
+			const float dx = position[0] - cameraPos[0];
+			const float dy = position[1] - cameraPos[1];
+			const float dz = position[2] - cameraPos[2];
+			const float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
 
-			float dx = renderablePos[0] - cameraPos[0];
-			float dy = renderablePos[1] - cameraPos[1];
-			float dz = renderablePos[2] - cameraPos[2];
-			float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
 			renderableDistances.emplace_back(renderable, distance);
 		}
 
-		// Sort renderables based on distance in descending order (farthest to nearest)
 		std::sort(renderableDistances.begin(), renderableDistances.end(),
 			[](const std::pair<RenderableHandle, float>& a, const std::pair<RenderableHandle, float>& b)
 			{
 				return a.second < b.second;
 			});
 
-		// Make vector from map
+		deferredRenderables.clear();
 		for (auto& renderable : renderableDistances)
 		{
-			sortedDeferredRenderables.push_back(renderable.first);
+			deferredRenderables.push_back(renderable.first);
 		}
 	}
 	
 	{
-		PROFILE_SCOPE("Rendering");
+		PROFILE_SCOPE("Deferred Render");
 
-		// Set current render pass and clear screen
 		context->setActiveRenderState(mGeometryState);
 		context->setActiveFramebuffer(mGeometryFramebuffer);
 		context->clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
 
-		// Submit scene
-		context->submit(sortedDeferredRenderables, context->getActiveCamera());
+		context->submit(deferredRenderables, context->getActiveCamera());
 	}
 
 	{
 		PROFILE_SCOPE("Lights");
 
-		// Set current render pass and clear screen
 		context->setActiveRenderState(mLightState);
 		context->setActiveFramebuffer(mLightFramebuffer);
 		context->clear(BGFX_CLEAR_COLOR);
 
-		TextureHandle normalBuffer = context->getSharedBuffers().at("GNormal");
-		TextureHandle depthBuffer = context->getSharedBuffers().at("GDepth");
+		const TextureHandle normalBuffer = context->getSharedBuffers().at("GNormal");
+		const TextureHandle depthBuffer = context->getSharedBuffers().at("GDepth");
 
-		for (auto& light : context->getActiveLights())
+		for (const auto& light : context->getActiveLights())
 		{
-			LightSettings lightSettings = context->getLightSettings(light);
-			CameraSettings cameraSettings = context->getCameraSettings(context->getActiveCamera());
-
-			// Sher correct shader based on type
+			const LightSettings& lightSettings = context->getLightSettings(light);
+			
 			ShaderHandle lightShader;
 			switch (lightSettings.mType)
 			{
@@ -176,24 +172,20 @@ void Deferred::render(GfxContext* context)
 				lightShader = mDirectionalLightShader;
 				break;
 			default:
-				lightShader = mPointLightShader;
+				lightShader = INVALID_HANDLE;
 				break;
 			}
 
-			// Set shader uniforms (textures)
+			float positionRange[4] = { lightSettings.mPosition[0], lightSettings.mPosition[1], lightSettings.mPosition[2], lightSettings.mRange };
+			float colorIntensity[4] = { lightSettings.mColor[0], lightSettings.mColor[1], lightSettings.mColor[2], lightSettings.mIntensity };
+
 			context->setTexture(lightShader, "u_gnormal", normalBuffer, 0);
 			context->setTexture(lightShader, "u_gdepth", depthBuffer, 1);
 
-			// Set shader uniforms (data)
-			float positionRange[4] = { lightSettings.mPosition[0], lightSettings.mPosition[1], lightSettings.mPosition[2], lightSettings.mRange };
 			context->setUniform(lightShader, "u_lightPositionRange", positionRange);
-
-			float colorIntensity[4] = { lightSettings.mColor[0], lightSettings.mColor[1], lightSettings.mColor[2], lightSettings.mIntensity };
 			context->setUniform(lightShader, "u_lightColorIntensity", colorIntensity);
-
 			context->setUniform(lightShader, "u_mtx", context->getCameraViewProj(context->getActiveCamera()));
 
-			// Submit quad
 			context->submit(mScreenQuad, lightShader, INVALID_HANDLE);
 		}
 	}
@@ -205,18 +197,17 @@ void Deferred::render(GfxContext* context)
 		context->setActiveFramebuffer(mCombineFramebuffer);
 		context->clear(BGFX_CLEAR_COLOR);
 		
-		TextureHandle diffuseBuffer = context->getSharedBuffers().at("GDiffuse");
-		TextureHandle lightBuffer = context->getSharedBuffers().at("Light");
+		const TextureHandle diffuseBuffer = context->getSharedBuffers().at("GDiffuse");
+		const TextureHandle lightBuffer = context->getSharedBuffers().at("Light");
 
 		context->setTexture(mCombineShader, "u_gdiffuse", diffuseBuffer, 0);
 		context->setTexture(mCombineShader, "u_light", lightBuffer, 1);
 
-		// Submit quad
 		context->submit(mScreenQuad, mCombineShader, INVALID_HANDLE);
 	}
 
 	{
-		PROFILE_SCOPE("Forward Pass");
+		PROFILE_SCOPE("Forward Render");
 
 		context->submit(forwardRenderables, context->getActiveCamera());
 	}
