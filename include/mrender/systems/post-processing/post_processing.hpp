@@ -7,14 +7,11 @@ namespace mrender {
 class PostProcessing : public RenderSystem
 {
 public:
-    PostProcessing();
+    PostProcessing(GfxContext* context);
     ~PostProcessing();
 
     bool init(GfxContext* context) override;
     void render(GfxContext* context) override;
-
-    BufferList getBuffers(GfxContext* context) override;
-    UniformDataList getUniformData(GfxContext* context) override;
 
 private:
     ShaderHandle mShader;

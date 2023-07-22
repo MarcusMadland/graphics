@@ -9,11 +9,12 @@ namespace mrender {
 		friend class GfxContextImplementation;
 
 	public:
-		RenderStateImplementation(GfxContext* context, std::string_view name, uint64_t flags);
+		RenderStateImplementation(GfxContext* context, std::string_view name, uint64_t flags, RenderOrder order);
 
 	private:
 		uint16_t mId;
 		uint64_t mFlags;
+		RenderOrder mOrder;
 	};
 
 }	// namespace mrender

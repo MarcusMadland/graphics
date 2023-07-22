@@ -13,6 +13,7 @@ public:
 
     std::vector<std::shared_ptr<RenderSystem>> setupRenderSystems(
         mrender::GfxContext* context) override;
+
 };
 
 }   // namespace mrender

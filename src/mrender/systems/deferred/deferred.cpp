@@ -4,13 +4,28 @@
 
 namespace mrender {
 
-Deferred::Deferred()
+Deferred::Deferred(GfxContext* context)
 	: RenderSystem("Deferred")
 	, mGeometryState(INVALID_HANDLE)
 	, mGeometryFramebuffer(INVALID_HANDLE)
 	, mLightState(INVALID_HANDLE)
 	, mLightFramebuffer(INVALID_HANDLE)
+	, mPointLightShader(INVALID_HANDLE)
+	, mSpotLightShader(INVALID_HANDLE)
+	, mDirectionalLightShader(INVALID_HANDLE)
+	, mCombineState(INVALID_HANDLE)
+	, mCombineFramebuffer(INVALID_HANDLE)
+	, mCombineShader(INVALID_HANDLE)
+	, mScreenQuad(INVALID_HANDLE)
 {
+	context->addSharedBuffer("GDepth", context->createTexture(TextureFormat::D32F, BGFX_TEXTURE_RT));
+	context->addSharedBuffer("GDiffuse", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
+	context->addSharedBuffer("GNormal", context->createTexture(TextureFormat::RGBA32F, BGFX_TEXTURE_RT));
+	context->addSharedBuffer("GSpecular", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
+	context->addSharedBuffer("Light", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
+	context->addSharedBuffer("Combine", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
+
+	context->addSystemOption("SkipForwardPass", { false });
 }
 
 Deferred::~Deferred()
@@ -25,7 +40,8 @@ bool Deferred::init(GfxContext* context)
 		| BGFX_STATE_WRITE_A
 		| BGFX_STATE_WRITE_Z
 		| BGFX_STATE_DEPTH_TEST_LESS
-		| BGFX_STATE_MSAA);
+		| BGFX_STATE_MSAA
+		, RenderOrder::DepthAscending);
 
 	mLightState = context->createRenderState("Color Pass #2 (1 Targets)", 0
 		| BGFX_STATE_WRITE_RGB
@@ -38,10 +54,21 @@ bool Deferred::init(GfxContext* context)
 		| BGFX_STATE_DEPTH_TEST_LESS);
 
 	// Framebuffer
-	mGeometryFramebuffer = context->createFramebuffer(mGeometryBuffers);
-	mCombineBuffers.emplace("CombineDepth", mGeometryBuffers.at("GDepth"));
-	mLightFramebuffer = context->createFramebuffer(mLightBuffers);
-	mCombineFramebuffer = context->createFramebuffer(mCombineBuffers);
+	mGeometryFramebuffer = context->createFramebuffer({
+		{ "GDepth", context->getSharedBuffers().at("GDepth") },
+		{ "GDiffuse", context->getSharedBuffers().at("GDiffuse") },
+		{ "GNormal", context->getSharedBuffers().at("GNormal") },
+		{ "GSpecular", context->getSharedBuffers().at("GSpecular") },
+		});
+
+	mLightFramebuffer = context->createFramebuffer({
+		{ "Light", context->getSharedBuffers().at("Light") },
+		});
+
+	mCombineFramebuffer = context->createFramebuffer({
+		{ "GDepth", context->getSharedBuffers().at("GDepth") },
+		{ "Combine", context->getSharedBuffers().at("Combine") },
+		});
 
 	// Light Material
 	mPointLightShader = context->createShader(
@@ -73,18 +100,14 @@ void Deferred::render(GfxContext* context)
 {
 	PROFILE_SCOPE(mName);
 
+	// Devide into two different renderable list. One for deferred rendering and one for forward rendering
 	RenderableList deferredRenderables;
 	RenderableList forwardRenderables;
-	const CameraSettings& cameraSettings = context->getCameraSettings(context->getActiveCamera());
-
 	{
 		PROFILE_SCOPE("Seperating");
-
-		for (const auto& renderable : context->getActiveRenderables())
+		for (auto& renderable : context->getActiveRenderables())
 		{
-			const ShaderHandle& shader = context->getMaterialShader(context->getRenderableMaterial(renderable));
-			
-			if (context->getShaderName(shader) == "deferred_geo")
+			if (context->getShaderName(context->getMaterialShader(context->getRenderableMaterial(renderable))) == "deferred_geo")
 			{
 				deferredRenderables.push_back(renderable);
 			}
@@ -93,8 +116,6 @@ void Deferred::render(GfxContext* context)
 				forwardRenderables.push_back(renderable);
 			}
 		}
-
-		// @todo This should use some sort of shared stats function similar to getBuffers(). getStats()
 		for (static bool doOnce = true; doOnce; doOnce = false)
 		{
 			printf("There is %u renderables being shaded with deferred rendering\n", static_cast<int>(deferredRenderables.size()));
@@ -103,62 +124,35 @@ void Deferred::render(GfxContext* context)
 	}
 	
 	{
-		PROFILE_SCOPE("Sorting (ftb)");
+		PROFILE_SCOPE("Rendering");
 
-		std::vector<std::pair<RenderableHandle, float>> renderableDistances;
-		renderableDistances.reserve(deferredRenderables.size());
-
-		const float cameraPos[3] = { cameraSettings.mPosition[0], cameraSettings.mPosition[1], cameraSettings.mPosition[2] };
-
-		for (const auto& renderable : deferredRenderables)
-		{
-			const float* model = context->getRenderableTransform(renderable);
-			const float position[3] = { model[12], model[13], model[14] };
-			const float dx = position[0] - cameraPos[0];
-			const float dy = position[1] - cameraPos[1];
-			const float dz = position[2] - cameraPos[2];
-			const float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
-
-			renderableDistances.emplace_back(renderable, distance);
-		}
-
-		std::sort(renderableDistances.begin(), renderableDistances.end(),
-			[](const std::pair<RenderableHandle, float>& a, const std::pair<RenderableHandle, float>& b)
-			{
-				return a.second < b.second;
-			});
-
-		deferredRenderables.clear();
-		for (auto& renderable : renderableDistances)
-		{
-			deferredRenderables.push_back(renderable.first);
-		}
-	}
-	
-	{
-		PROFILE_SCOPE("Deferred Render");
-
+		// Set current render pass and clear screen
 		context->setActiveRenderState(mGeometryState);
 		context->setActiveFramebuffer(mGeometryFramebuffer);
 		context->clear(BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
 
+		// Submit scene
 		context->submit(deferredRenderables, context->getActiveCamera());
 	}
 
 	{
 		PROFILE_SCOPE("Lights");
 
+		// Set current render pass and clear screen
 		context->setActiveRenderState(mLightState);
 		context->setActiveFramebuffer(mLightFramebuffer);
 		context->clear(BGFX_CLEAR_COLOR);
 
-		const TextureHandle normalBuffer = context->getSharedBuffers().at("GNormal");
-		const TextureHandle depthBuffer = context->getSharedBuffers().at("GDepth");
+		TextureHandle normalBuffer = context->getSharedBuffers().at("GNormal");
+		TextureHandle depthBuffer = context->getSharedBuffers().at("GDepth");
+		TextureHandle shadowMap = context->getSharedBuffers().at("ShadowMap");
 
-		for (const auto& light : context->getActiveLights())
+		for (auto& light : context->getActiveLights())
 		{
-			const LightSettings& lightSettings = context->getLightSettings(light);
-			
+			LightSettings lightSettings = context->getLightSettings(light);
+			CameraSettings cameraSettings = context->getCameraSettings(context->getActiveCamera());
+
+			// Sher correct shader based on type
 			ShaderHandle lightShader;
 			switch (lightSettings.mType)
 			{
@@ -172,20 +166,27 @@ void Deferred::render(GfxContext* context)
 				lightShader = mDirectionalLightShader;
 				break;
 			default:
-				lightShader = INVALID_HANDLE;
+				lightShader = mPointLightShader;
 				break;
 			}
 
-			float positionRange[4] = { lightSettings.mPosition[0], lightSettings.mPosition[1], lightSettings.mPosition[2], lightSettings.mRange };
-			float colorIntensity[4] = { lightSettings.mColor[0], lightSettings.mColor[1], lightSettings.mColor[2], lightSettings.mIntensity };
-
+			// Set shader uniforms (textures)
 			context->setTexture(lightShader, "u_gnormal", normalBuffer, 0);
 			context->setTexture(lightShader, "u_gdepth", depthBuffer, 1);
+			context->setTexture(lightShader, "u_shadowMap", shadowMap, 2);
 
+			// Set shader uniforms (data)
+			float positionRange[4] = { lightSettings.mPosition[0], lightSettings.mPosition[1], lightSettings.mPosition[2], lightSettings.mRange };
 			context->setUniform(lightShader, "u_lightPositionRange", positionRange);
-			context->setUniform(lightShader, "u_lightColorIntensity", colorIntensity);
-			context->setUniform(lightShader, "u_mtx", context->getCameraViewProj(context->getActiveCamera()));
 
+			float colorIntensity[4] = { lightSettings.mColor[0], lightSettings.mColor[1], lightSettings.mColor[2], lightSettings.mIntensity };
+			context->setUniform(lightShader, "u_lightColorIntensity", colorIntensity);
+
+			context->setUniform(lightShader, "u_mtx", context->getCameraViewProj(context->getActiveCamera()));
+			if (context->getSharedUniformData().at("u_shadowViewProj").mValue == nullptr) { printf("INVALID SHARED UNIFORM DATA\n"); }
+			context->setUniform(lightShader, "u_lightMtx", context->getSharedUniformData().at("u_shadowViewProj").mValue);
+
+			// Submit quad
 			context->submit(mScreenQuad, lightShader, INVALID_HANDLE);
 		}
 	}
@@ -197,41 +198,24 @@ void Deferred::render(GfxContext* context)
 		context->setActiveFramebuffer(mCombineFramebuffer);
 		context->clear(BGFX_CLEAR_COLOR);
 		
-		const TextureHandle diffuseBuffer = context->getSharedBuffers().at("GDiffuse");
-		const TextureHandle lightBuffer = context->getSharedBuffers().at("Light");
+		TextureHandle diffuseBuffer = context->getSharedBuffers().at("GDiffuse");
+		TextureHandle lightBuffer = context->getSharedBuffers().at("Light");
 
 		context->setTexture(mCombineShader, "u_gdiffuse", diffuseBuffer, 0);
 		context->setTexture(mCombineShader, "u_light", lightBuffer, 1);
 
+		// Submit quad
 		context->submit(mScreenQuad, mCombineShader, INVALID_HANDLE);
 	}
 
 	{
-		PROFILE_SCOPE("Forward Render");
-
+		PROFILE_SCOPE("Forward Pass");
+		if (context->getOptionValue<bool>("SkipForwardPass"))
+		{
+			return;
+		}
 		context->submit(forwardRenderables, context->getActiveCamera());
 	}
-}
-
-BufferList Deferred::getBuffers(GfxContext* context)
-{
-	mGeometryBuffers.emplace("GDepth", context->createTexture(TextureFormat::D32F, BGFX_TEXTURE_RT));
-	mGeometryBuffers.emplace("GDiffuse", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
-	mGeometryBuffers.emplace("GNormal", context->createTexture(TextureFormat::RGBA32F, BGFX_TEXTURE_RT));
-	mGeometryBuffers.emplace("GSpecular", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
-	mLightBuffers.emplace("Light", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
-	mCombineBuffers.emplace("Combine", context->createTexture(TextureFormat::BGRA8, BGFX_TEXTURE_RT));
-
-	BufferList buffers;
-	buffers.insert(mGeometryBuffers.begin(), mGeometryBuffers.end());
-	buffers.insert(mLightBuffers.begin(), mLightBuffers.end());
-	buffers.insert(mCombineBuffers.begin(), mCombineBuffers.end());
-	return buffers;
-}
-
-UniformDataList Deferred::getUniformData(GfxContext* context)
-{
-	return UniformDataList();
 }
 
 }   // namespace mrender

@@ -6,8 +6,11 @@
 
 namespace mrender {
 
-PostProcessing::PostProcessing()
-    : RenderSystem("Post Processing"), mShader(INVALID_HANDLE), mState(INVALID_HANDLE), mScreenQuad(INVALID_HANDLE)
+PostProcessing::PostProcessing(GfxContext* context)
+    : RenderSystem("Post Processing")
+    , mShader(INVALID_HANDLE)
+    , mState(INVALID_HANDLE)
+    , mScreenQuad(INVALID_HANDLE)
 {
 }
 
@@ -52,17 +55,6 @@ void PostProcessing::render(GfxContext* context)
 
     // Submit quad
     context->submit(mScreenQuad, mShader, INVALID_HANDLE);
-}
-
-BufferList PostProcessing::getBuffers(GfxContext* context)
-{
-    BufferList buffers;
-    return buffers;
-}
-
-UniformDataList PostProcessing::getUniformData(GfxContext* context)
-{
-    return UniformDataList();
 }
 
 }   // namespace mrender

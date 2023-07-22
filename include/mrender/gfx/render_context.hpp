@@ -29,7 +29,7 @@ public:
 
 	virtual CameraHandle createCamera(const CameraSettings& settings) override;
 	virtual FramebufferHandle createFramebuffer(BufferList buffers) override;
-	virtual RenderStateHandle createRenderState(std::string_view name, uint64_t flags) override;
+	virtual RenderStateHandle createRenderState(std::string_view name, uint64_t flags, RenderOrder order = RenderOrder::Default) override;
 	virtual MaterialHandle createMaterial(ShaderHandle shader) override;
 	virtual TextureHandle createTexture(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0) override;
 	virtual TextureHandle createTexture(const uint8_t* data, TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height, uint16_t channels) override;
@@ -60,6 +60,10 @@ public:
 	virtual void setActiveRenderables(RenderableList renderables) override;
 	virtual void setActiveLight(LightHandle light) override;
 	virtual void setActiveLights(LightList lights) override;
+
+	virtual void addSystemOption(const std::string& name, Option option) override;
+	virtual void addSharedBuffer(const std::string& name, TextureHandle texture) override;
+	virtual void addSharedUniformData(const std::string& name, UniformData data) override;
 
 	virtual [[nodiscard]] CameraHandle getActiveCamera() override { return mActiveCamera; }
 	virtual [[nodiscard]] RenderStateHandle getActiveRenderState() override { return mActiveRenderState; }
@@ -120,6 +124,11 @@ public:
 	virtual RendererRef getRenderer() override { return mRenderer; }
 	virtual RenderSystemList getRenderSystems() override { return mRenderSystems; }
 
+	virtual OptionList getOptions() override { return mSystemOptions; };
+	virtual bool hasOption(const std::string& name) override;
+	virtual void setOption(const std::string& name, const Option::ValueType& value) override;
+	virtual const Option& getOption(const std::string& name) override;
+
 private:
 	virtual void setRenderStateCount(uint32_t stateCount);
 	virtual [[nodiscard]] const uint32_t getRenderStateCount() const { return mRenderStateCount; };
@@ -127,6 +136,7 @@ private:
 	uint8_t colorToAnsi(const Color& color);
 	bool setupRenderSystems();
 	void setupResetFlags();
+	bgfx::ViewMode::Enum toBgfx(RenderOrder order);
 
 private:
 	RenderSettings mSettings;
@@ -154,6 +164,7 @@ private:
 	RenderableList mActiveRenderables;
 	LightList mActiveLights;
 
+	OptionList mSystemOptions;
 	BufferList mSharedBuffers;
 	UniformDataList mSharedUniformData;
 

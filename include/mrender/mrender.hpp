@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include <variant>
 
 #include "utils/factory.hpp"
 #include "utils/timable.hpp"
@@ -28,6 +29,14 @@ HANDLE(RenderableHandle)
 HANDLE(LightHandle)
 
 // 
+enum class RenderOrder
+{
+	Default,         
+	Sequential,     
+	DepthAscending, 
+	DepthDescending, 
+};
+
 enum class TextureFormat
 {
 	BC1,
@@ -234,6 +243,21 @@ struct UniformData
 	void* mValue;
 };
 
+struct Option
+{
+	using ValueType = std::variant<float, 
+		std::array<float, 2>, 
+		std::array<float, 3>, 
+		std::array<float, 4>, int, 
+		std::array<int, 2>, 
+		std::array<int, 3>, 
+		std::array<int, 4>, bool>;
+	ValueType mValue;
+
+	float mMin = 0.0f;
+	float mMax = 1.0f;
+};
+
 struct Stats
 {
 	float mCpuTime;
@@ -254,7 +278,6 @@ struct Stats
 	int64_t mTextureMemoryUsed;  // in MiBs 
 };
 
-//
 class Camera {};
 using CameraRef = std::shared_ptr<Camera>;
 
@@ -282,16 +305,15 @@ using RenderableRef = std::shared_ptr<Renderable>;
 class Light {};
 using LightRef = std::shared_ptr<Light>;
 
-//
 using UniformDataList = std::unordered_map<std::string, UniformData>;
 using TextureDataList = std::unordered_map<std::string, TextureHandle>;
-using BufferList      = std::unordered_map<std::string, TextureHandle>;
-using ShaderList	  = std::unordered_map<std::string, ShaderHandle>;
-using RenderableList  = std::vector<RenderableHandle>;
-using LightList		  = std::vector<LightHandle>;
+using BufferList = std::unordered_map<std::string, TextureHandle>;
+using ShaderList = std::unordered_map<std::string, ShaderHandle>;
+using OptionList = std::unordered_map<std::string, Option>;
+using RenderableList = std::vector<RenderableHandle>;
+using LightList = std::vector<LightHandle>;
 
-//
-class RenderSystem : public Timable// @todo Simplify class
+class RenderSystem : public Timable// @todo Should we inherit timable in the renderer as well?
 {
 public:
 	RenderSystem(const std::string_view& name);
@@ -300,9 +322,6 @@ public:
 
 	virtual bool init(GfxContext* context) = 0;
 	virtual void render(GfxContext* context) = 0;
-
-	virtual BufferList getBuffers(GfxContext* context) = 0;
-	virtual UniformDataList getUniformData(GfxContext* context) = 0;
 
 protected:
 	std::string_view mName;
@@ -325,7 +344,7 @@ class GfxContext
 public:
 	virtual CameraHandle createCamera(const CameraSettings& settings) = 0;
 	virtual FramebufferHandle createFramebuffer(BufferList buffers) = 0;
-	virtual RenderStateHandle createRenderState(std::string_view name, uint64_t flags) = 0;
+	virtual RenderStateHandle createRenderState(std::string_view name, uint64_t flags, RenderOrder order = RenderOrder::Default) = 0;
 	virtual MaterialHandle createMaterial(ShaderHandle shader) = 0;
 	virtual TextureHandle createTexture(TextureFormat format, uint64_t textureFlags, uint16_t width = 0, uint16_t height = 0) = 0;
 	virtual TextureHandle createTexture(const uint8_t* data, TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height, uint16_t channels) = 0;
@@ -344,7 +363,6 @@ public:
 	virtual void destroy(RenderableHandle handle) = 0;
 	virtual void destroy(LightHandle handle) = 0;
 
-
 	virtual void render(CameraHandle handle) = 0;
 	virtual void swapBuffers() = 0;
 	virtual void clear(uint16_t flags, uint16_t width = 0, uint16_t height = 0) = 0;
@@ -357,6 +375,10 @@ public:
 	virtual void setActiveRenderables(RenderableList renderables) = 0;
 	virtual void setActiveLight(LightHandle light) = 0;
 	virtual void setActiveLights(LightList lights) = 0;
+
+	virtual void addSystemOption(const std::string& name, Option option) = 0;
+	virtual void addSharedBuffer(const std::string& name, TextureHandle texture) = 0;
+	virtual void addSharedUniformData(const std::string& name, UniformData data) = 0;
 
 	virtual [[nodiscard]] CameraHandle getActiveCamera() = 0;
 	virtual [[nodiscard]] RenderStateHandle getActiveRenderState() = 0;
@@ -416,8 +438,30 @@ public:
 	virtual Stats* getStats() = 0;
 	virtual RendererRef getRenderer() = 0;
 	virtual RenderSystemList getRenderSystems() = 0;
+
+	virtual OptionList getOptions() = 0;
+	virtual bool hasOption(const std::string& name) = 0;
+	virtual void setOption(const std::string& name, const Option::ValueType& value)= 0;
+	virtual const Option& getOption(const std::string& name) = 0;
+
+	template<typename T>
+	T getOptionValue(const std::string& name);
 };
 
 GfxContext* createGfxContext(const RenderSettings& settings);
+
+template<typename T>
+inline T GfxContext::getOptionValue(const std::string& name)
+{
+	const Option& option = getOption(name);
+	if constexpr (std::is_same_v<T, Option::ValueType>) 
+	{
+		return std::get<T>(option.mValue);
+	}
+	else 
+	{
+		return std::get<T>(option.mValue);
+	}
+}
 
 }	// namespace mrender

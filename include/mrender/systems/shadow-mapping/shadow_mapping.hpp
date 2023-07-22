@@ -7,19 +7,15 @@ namespace mrender {
 class ShadowMapping : public RenderSystem
 {
 public:
-    ShadowMapping();
+    ShadowMapping(GfxContext* context);
     ~ShadowMapping();
 
     bool init(GfxContext* context) override;
     void render(GfxContext* context) override;
 
-    BufferList getBuffers(GfxContext* context) override;
-    UniformDataList getUniformData(GfxContext* context) override;
-
 private:
     ShaderHandle mShader;
     RenderStateHandle mState;
-    BufferList mBuffers;
     FramebufferHandle mFramebuffer;
     CameraHandle mCamera;
 };

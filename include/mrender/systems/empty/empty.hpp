@@ -7,19 +7,11 @@ namespace mrender {
 class Empty : public RenderSystem
 {
 public:
-	Empty();
+	Empty(GfxContext* context);
 	~Empty();
 
 	bool init(GfxContext* context) override;
 	void render(GfxContext* context) override;
-
-	BufferList getBuffers(GfxContext* context) override;
-	UniformDataList getUniformData(GfxContext* context) override;
-
-private:
-	RenderStateHandle mEmptyRenderState;
-	FramebufferHandle mEmptyFramebuffer;
-	BufferList mBufferList;
 };
 
 }	// namespace mrender

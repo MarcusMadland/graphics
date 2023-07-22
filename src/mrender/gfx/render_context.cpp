@@ -86,10 +86,10 @@ FramebufferHandle GfxContextImplementation::createFramebuffer(BufferList buffers
     return handle;
 }
 
-RenderStateHandle GfxContextImplementation::createRenderState(std::string_view name, uint64_t flags)
+RenderStateHandle GfxContextImplementation::createRenderState(std::string_view name, uint64_t flags, RenderOrder order)
 {
     RenderStateHandle handle = { static_cast<uint16_t>(mRenderStates.size()) };
-    mRenderStates[handle.idx] = std::move(std::make_shared<RenderStateImplementation>(this, name, flags));
+    mRenderStates[handle.idx] = std::move(std::make_shared<RenderStateImplementation>(this, name, flags, order));
     return handle;
 }
 
@@ -249,6 +249,9 @@ void GfxContextImplementation::reloadShaders()
 void GfxContextImplementation::setActiveRenderState(RenderStateHandle renderState)
 {
     mActiveRenderState = renderState;
+    
+    auto renderStateImpl = STATIC_IMPL_CAST(RenderState, mRenderStates.at(mActiveRenderState.idx));
+    bgfx::setViewMode(renderStateImpl->mId, toBgfx(renderStateImpl->mOrder));
 }
 
 void GfxContextImplementation::setActiveFramebuffer(FramebufferHandle framebuffer)
@@ -283,6 +286,22 @@ void GfxContextImplementation::setActiveLights(LightList lights)
     {
         mActiveLights.push_back(light);
     }
+}
+
+void GfxContextImplementation::addSystemOption(const std::string& name, Option option)
+{
+    mSystemOptions[name] = option;
+}
+
+void GfxContextImplementation::addSharedBuffer(const std::string& name, TextureHandle texture)
+{
+    mSharedBuffers[name] = texture;
+}
+
+void GfxContextImplementation::addSharedUniformData(const std::string& name, UniformData data)
+{
+    if (data.mValue == nullptr) { printf("INVALID SHARED UNIFORM DATA\n"); }
+    mSharedUniformData[name] = data;
 }
 
 void GfxContextImplementation::submitDebugText(uint16_t x, uint16_t y, std::string_view text, ...)
@@ -721,6 +740,21 @@ void GfxContextImplementation::setSettings(const RenderSettings& settings)
     }
 }
 
+bool GfxContextImplementation::hasOption(const std::string& name)  
+{
+    return mSystemOptions.count(name) > 0;
+}
+
+const Option& GfxContextImplementation::getOption(const std::string& name)  
+{
+    return mSystemOptions.at(name);
+}
+
+void GfxContextImplementation::setOption(const std::string& name, const Option::ValueType& value)
+{
+    mSystemOptions[name].mValue = value;
+}
+
 void GfxContextImplementation::setRenderStateCount(uint32_t stateCount)
 {
     mRenderStateCount = stateCount;
@@ -794,28 +828,10 @@ bool GfxContextImplementation::setupRenderSystems()
     mRenderSystems.clear();
     mRenderSystems = std::move(mRenderer->setupRenderSystems(this));
 
-    // Clear buffers @todo is this ok?
-    /*
-    for (auto sharedBuffer : mSharedBuffers)
-    {
-        destroy(sharedBuffer.second);
-    }
-    mSharedBuffers.clear(); */
-
     // Initialize all render sub systems
     for (auto& renderSystem : mRenderSystems)
     {
-        for (auto& buffer : renderSystem->getBuffers(this))
-        {
-            mSharedBuffers[buffer.first] = buffer.second;
-        }
-
         renderSystem->init(this);
-
-        for (auto& uniformData : renderSystem->getUniformData(this))
-        {
-            mSharedUniformData[uniformData.first] = uniformData.second;
-        }
     }
 
     return true;
@@ -825,5 +841,24 @@ void GfxContextImplementation::setupResetFlags()
 {
     mResetFlags = mSettings.mVSync ? BGFX_RESET_VSYNC : BGFX_RESET_NONE;
 }
+
+bgfx::ViewMode::Enum GfxContextImplementation::toBgfx(RenderOrder order)
+{
+    switch (order)
+    {
+    case RenderOrder::Default:
+        return bgfx::ViewMode::Default;
+    case RenderOrder::Sequential:
+        return bgfx::ViewMode::Sequential;
+    case RenderOrder::DepthAscending:
+        return bgfx::ViewMode::DepthAscending;
+    case RenderOrder::DepthDescending:
+        return bgfx::ViewMode::DepthDescending;
+    default:
+        return bgfx::ViewMode::Count;
+    }
+}
+
+
 
 }	// namespace mrender
