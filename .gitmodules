@@ -1,0 +1,3 @@
+[submodule "3rdparty/bgfx"]
+	path = 3rdparty/bgfx
+	url = https://github.com/MarcusMadland/bgfx.git
