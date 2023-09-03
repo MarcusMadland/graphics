@@ -27,28 +27,28 @@ void ShaderImplementation::loadProgram(const std::string& vertexPath, const std:
     std::string vshader;
     if (!mrender::read_file(mVertexFilePath, vshader))
     {
-        std::cout << "Invalid path when loading shader" << std::endl;
+        printf("Invalid path when loading shader\n");
         return;
     }
     bgfx::ShaderHandle vsh = BGFX_INVALID_HANDLE;
     vsh = createShader(vshader, "vshader");
     if (!bgfx::isValid(vsh))
     {
-        std::cout << "Failed to create shader" << std::endl;
+        printf("Failed to create shader\n");
         return;
     }
  
     std::string fshader;
     if (!mrender::read_file(mFragmentFilePath, fshader))
     {
-        std::cout << "Invalid path when loading shader" << std::endl;
+        printf("Invalid path when loading shader\n");
         return;
     }
     bgfx::ShaderHandle fsh = BGFX_INVALID_HANDLE;
     fsh = createShader(fshader, "fshader");
     if (!bgfx::isValid(fsh))
     {
-        std::cout << "Failed to create shader" << std::endl;
+        printf("Failed to create shader\n");
         return;
     }
     

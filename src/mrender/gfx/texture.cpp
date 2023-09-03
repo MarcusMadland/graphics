@@ -31,7 +31,7 @@ TextureImplementation::TextureImplementation(const uint8_t* data, TextureFormat 
 			, textureFlags
 			, bgfx::copy(data, width * height * channels));
 
-		//delete data; @todo
+		//delete[] data; @todo
 	}
 	else
 	{

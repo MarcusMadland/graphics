@@ -1,5 +1,11 @@
 #pragma once
 
+// Undefine the max macro before including headers
+#ifdef max
+#undef max
+#endif
+
+
 #include <array>
 #include <string>
 #include <string_view>
@@ -37,7 +43,7 @@ public:
     {}
 
     constexpr explicit StaticString(char(&& other)[Size + 1]) noexcept
-        : dataArray(std::to_array(std::move(data)))
+        : dataArray(std::to_array(std::move(other)))
     {}
 
     static constexpr size_t npos = std::numeric_limits<size_t>::max();

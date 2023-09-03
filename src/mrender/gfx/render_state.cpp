@@ -7,9 +7,17 @@ namespace mrender {
 		: mFlags(flags), mOrder(order)
 	{
 		auto contextImpl = static_cast<GfxContextImplementation*>(context);
-		mId = contextImpl->getRenderStateCount() + 1;
-		contextImpl->setRenderStateCount(mId);
-		bgfx::setViewName(mId, name.data());
+		if (contextImpl)
+		{
+			mId = contextImpl->getRenderStateCount() + 1;
+			contextImpl->setRenderStateCount(mId);
+			bgfx::setViewName(mId, name.data());
+		}
+		else
+		{
+			mId = 0;
+			bgfx::setViewName(mId, "Empty");
+		}
 	}
 
 }	// namespace mrender

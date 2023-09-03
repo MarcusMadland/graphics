@@ -10,18 +10,14 @@
 #include "mrender/gfx/light.hpp"
 #include "mrender/utils/file_ops.hpp"
 
-#include "mrender/renderers/deferred/deferred.hpp"
-#include "mrender/renderers/my-renderer2/my_renderer2.hpp"
-
 #include <bgfx/bgfx.h>
-#include <bx/bx.h>
 #include <bgfx/platform.h>
 #include <bx/math.h>
+#include <bx/pixelformat.h>
 #include <string>
 #include <iostream>
 #include <cassert>
 #include <cstdlib>
-#include <bx/pixelformat.h>
 
 namespace mrender {
 
@@ -34,34 +30,45 @@ GfxContextImplementation::GfxContextImplementation(const RenderSettings& setting
         return; // @todo why does this happen
     }
 
-    bgfx::renderFrame(); // @todo This is single threaded mode, add setting for this?
+    if (!settings.mEnableMultithreading)
+    {
+        bgfx::renderFrame();
+    }
     setupResetFlags();
 
     // Setup render backend
     bgfx::Init bgfx_init;
-    bgfx_init.type = bgfx::RendererType::Count; // Auto? read about it @todo Think it uses the defines in build script
+    bgfx_init.type = getRendererType(mSettings.mGraphicsAPI); // @todo Make render setting
     bgfx_init.vendorId = BGFX_PCI_ID_NONE; // Auto
     bgfx_init.resolution.width = mSettings.mResolutionWidth;
     bgfx_init.resolution.height = mSettings.mResolutionHeight;
     bgfx_init.resolution.reset = mResetFlags;
     bgfx_init.platformData.nwh = mSettings.mNativeWindow;
     bgfx_init.platformData.ndt = mSettings.mNativeDisplay;
-    bgfx::init(bgfx_init);
+    if (!bgfx::init(bgfx_init))
+    {
+        printf("Failed to init graphics api backend\n");
+    }
 
     bgfx::setDebug(mSettings.mRenderDebugText ? BGFX_DEBUG_TEXT : BGFX_DEBUG_NONE);
     //bgfx::setDebug(BGFX_DEBUG_STATS);
 
     // Setup renderer and render sub systems
-    setupRenderSystems();
-
+    if (!setupRenderSystems())
+    {
+        printf("Failed to setup render systems\n");
+        return;
+    }
+    
     // Setup empty texture
     uint8_t* textureData = new uint8_t[1 * 1 * 4];
     std::memset(textureData, 0, 1 * 1 * 4);
     mEmptyTexture = createTexture((uint8_t*)textureData, TextureFormat::RGBA8, 0, 1, 1, 4);
 
+
     // Setup debug shapes
     mDebugRenderCube = createRenderable(createGeometry(
-        BufferLayout({ BufferElement(BufferElement::AttribType::Float, BufferElement::Attrib::Position, 3) }),
+                                                       BufferLayout({ { BufferElement::AttribType::Float, BufferElement::Attrib::Position, 3} }),
         sDebugShapeVertices.data(),
         sDebugShapeVertices.size() * sizeof(PosVertex), sDebugShapeIndices),
         INVALID_HANDLE);
@@ -218,8 +225,15 @@ void GfxContextImplementation::swapBuffers()
 
 void GfxContextImplementation::clear(uint16_t flags, uint16_t width, uint16_t height)
 {
-    auto renderStateImpl = STATIC_IMPL_CAST(RenderState, mRenderStates.at(mActiveRenderState.idx));
+    if (mRenderStates.empty())
+    {
+        bgfx::setViewRect(0, 0, 0, bgfx::BackbufferRatio::Equal);
+        bgfx::setViewClear(0, flags, mClearColor, 1.0f, 0);
 
+        return;
+    }
+
+    auto renderStateImpl = STATIC_IMPL_CAST(RenderState, mRenderStates.at(mActiveRenderState.idx));
     if (width + height > 0)
     {
         bgfx::setViewRect(renderStateImpl->mId, 0, 0, width, height);
@@ -228,7 +242,6 @@ void GfxContextImplementation::clear(uint16_t flags, uint16_t width, uint16_t he
     {
         bgfx::setViewRect(renderStateImpl->mId, 0, 0, bgfx::BackbufferRatio::Equal);
     }
-
     bgfx::setViewClear(renderStateImpl->mId, flags, mClearColor, 1.0f, 0);
 }
 
@@ -311,7 +324,7 @@ void GfxContextImplementation::submitDebugText(uint16_t x, uint16_t y, std::stri
 
     va_list args;
     va_start(args, text);
-    vsprintf_s(buffer, text.data(), args);
+    vsprintf(buffer, text.data(), args);
     va_end(args);
 
     const bgfx::Stats* stats = bgfx::getStats();
@@ -326,7 +339,7 @@ void GfxContextImplementation::submitDebugText(uint16_t x, uint16_t y, Color col
     va_list args;
     va_start(args, text);
 
-    vsprintf_s(buffer, text.data(), args);
+    vsprintf(buffer, text.data(), args);
 
     va_end(args);
 
@@ -342,7 +355,7 @@ void GfxContextImplementation::submitDebugText(uint16_t x, uint16_t y, Color col
     va_list args;
     va_start(args, text);
 
-    vsprintf_s(buffer, text.data(), args);
+    vsprintf(buffer, text.data(), args);
 
     va_end(args);
 
@@ -857,6 +870,11 @@ bgfx::ViewMode::Enum GfxContextImplementation::toBgfx(RenderOrder order)
     default:
         return bgfx::ViewMode::Count;
     }
+}
+
+bgfx::RendererType::Enum GfxContextImplementation::getRendererType(RenderSettings::GraphicsAPI api)
+{
+    return static_cast<bgfx::RendererType::Enum>(static_cast<std::underlying_type_t<RenderSettings::GraphicsAPI>>(api));
 }
 
 

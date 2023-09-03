@@ -65,14 +65,14 @@ public:
 	virtual void addSharedBuffer(const std::string& name, TextureHandle texture) override;
 	virtual void addSharedUniformData(const std::string& name, UniformData data) override;
 
-	virtual [[nodiscard]] CameraHandle getActiveCamera() override { return mActiveCamera; }
-	virtual [[nodiscard]] RenderStateHandle getActiveRenderState() override { return mActiveRenderState; }
-	virtual [[nodiscard]] ShaderList getActiveShaders() override { return mActiveShaders; }
-	virtual [[nodiscard]] RenderableList getActiveRenderables() override { return mActiveRenderables; }
-	virtual [[nodiscard]] LightList getActiveLights() override { return mActiveLights; };
+	virtual  CameraHandle getActiveCamera() override { return mActiveCamera; }
+	virtual  RenderStateHandle getActiveRenderState() override { return mActiveRenderState; }
+	virtual  ShaderList getActiveShaders() override { return mActiveShaders; }
+	virtual  RenderableList getActiveRenderables() override { return mActiveRenderables; }
+	virtual  LightList getActiveLights() override { return mActiveLights; };
 
-	virtual [[nodiscard]] BufferList getSharedBuffers() override { return mSharedBuffers; }
-	virtual [[nodiscard]] UniformDataList getSharedUniformData() override { return mSharedUniformData; }
+	virtual  BufferList getSharedBuffers() override { return mSharedBuffers; }
+	virtual  UniformDataList getSharedUniformData() override { return mSharedUniformData; }
 
 	virtual void submitDebugText(uint16_t x, uint16_t y, std::string_view text, ...) override;
 	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, std::string_view text, ...) override;
@@ -98,16 +98,16 @@ public:
 
 	virtual void setMaterialUniformData(MaterialHandle material, const std::string& name, UniformData::UniformType type, void* data) override;
 	virtual void setMaterialTextureData(MaterialHandle material, const std::string& name, TextureHandle texture) override;
-	virtual [[nodiscard]] const UniformDataList& getMaterialUniformData(MaterialHandle material) override;
-	virtual [[nodiscard]] const TextureDataList& getMaterialTextureData(MaterialHandle material) override;
-	virtual [[nodiscard]] const ShaderHandle getMaterialShader(MaterialHandle material) override;
+	virtual  const UniformDataList& getMaterialUniformData(MaterialHandle material) override;
+	virtual  const TextureDataList& getMaterialTextureData(MaterialHandle material) override;
+	virtual  const ShaderHandle getMaterialShader(MaterialHandle material) override;
 
-	virtual [[nodiscard]] TextureRef getTextureData(TextureHandle texture) override; // @todo make private and rename to get textureref
-	virtual [[nodiscard]] uint16_t getTextureID(TextureHandle texture) override;
-	virtual [[nodiscard]] TextureFormat getTextureFormat(TextureHandle texture) override;
-	virtual [[nodiscard]] std::vector<uint8_t> readTexture(TextureHandle texture) override; // rename to get texture data @todo
+	virtual  TextureRef getTextureData(TextureHandle texture) override; // @todo make private and rename to get textureref
+	virtual  uint16_t getTextureID(TextureHandle texture) override;
+	virtual  TextureFormat getTextureFormat(TextureHandle texture) override;
+	virtual  std::vector<uint8_t> readTexture(TextureHandle texture) override; // rename to get texture data @todo
 
-	virtual [[nodiscard]] std::string getShaderName(ShaderHandle shader) override;
+	virtual  std::string getShaderName(ShaderHandle shader) override;
 
 	virtual void setRenderableMaterial(RenderableHandle renderable, MaterialHandle material) override;
 	MaterialHandle getRenderableMaterial(RenderableHandle renderable) override;
@@ -131,12 +131,13 @@ public:
 
 private:
 	virtual void setRenderStateCount(uint32_t stateCount);
-	virtual [[nodiscard]] const uint32_t getRenderStateCount() const { return mRenderStateCount; };
+	virtual  const uint32_t getRenderStateCount() const { return mRenderStateCount; };
 	void updateStats();
 	uint8_t colorToAnsi(const Color& color);
 	bool setupRenderSystems();
 	void setupResetFlags();
 	bgfx::ViewMode::Enum toBgfx(RenderOrder order);
+	bgfx::RendererType::Enum getRendererType(RenderSettings::GraphicsAPI api);
 
 private:
 	RenderSettings mSettings;

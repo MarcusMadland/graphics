@@ -13,9 +13,9 @@ public:
 
 	void setUniformData(std::string name, UniformData::UniformType type, void* data);
 	void setTextureData(std::string name, TextureHandle data);
-	[[nodiscard]] const UniformDataList& getUniformDataList()  { return mUniformData; };
-	[[nodiscard]] const TextureDataList& getTextureDataList() { return mTextureData; }
-	[[nodiscard]] const ShaderHandle getShader() { return mShader; }
+	 const UniformDataList& getUniformDataList()  { return mUniformData; };
+	 const TextureDataList& getTextureDataList() { return mTextureData; }
+	 const ShaderHandle getShader() { return mShader; }
 
 private:
 	GfxContext* mContext;

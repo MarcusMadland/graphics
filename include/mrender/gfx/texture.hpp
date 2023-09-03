@@ -19,8 +19,8 @@ public:
 	TextureImplementation(const uint8_t* data, TextureFormat format, uint64_t textureFlags, uint16_t width, uint16_t height, uint16_t channels);
 	~TextureImplementation();
 
-	virtual [[nodiscard]] TextureFormat getFormat() const { return mFormat; }
-	virtual [[nodiscard]] uint16_t getTextureID() const { return mHandle.idx; }
+	virtual TextureFormat getFormat() const { return mFormat; }
+	virtual uint16_t getTextureID() const { return mHandle.idx; }
 
 private:
 	bgfx::TextureFormat::Enum toBgfx(const TextureFormat& format);

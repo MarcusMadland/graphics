@@ -11,12 +11,12 @@ public:
 
 	
 	virtual void setTransform(float matrix[16]) { for (int i = 0; i < 16; i++)  mTransform[i] = matrix[i]; }
-	[[nodiscard]] virtual float* getTransform() { return mTransform; }
+	 virtual float* getTransform() { return mTransform; }
 
-	[[nodiscard]] virtual GeometryHandle getGeometry() { return mGeometry; }
+	 virtual GeometryHandle getGeometry() { return mGeometry; }
 
 	virtual void setMaterial(MaterialHandle material) { mMaterial = material; }
-	[[nodiscard]] virtual MaterialHandle getMaterial() { return mMaterial; }
+	 virtual MaterialHandle getMaterial() { return mMaterial; }
 
 private:
 	float mTransform[16];

@@ -14,11 +14,11 @@ public:
 	virtual void recalculate() ;
 
 	virtual void setSettings(const CameraSettings& settings) ;
-	virtual [[nodiscard]] const CameraSettings getSettings() { return mSettings; }
+	virtual  const CameraSettings getSettings() { return mSettings; }
 
-	[[nodiscard]] float* getViewMatrix() { return mView; }
-	[[nodiscard]] float* getProjMatrix() { return mProj; }
-	[[nodiscard]] float* getViewProjMatrix() { return mViewProj; }
+	 float* getViewMatrix() { return mView; }
+	 float* getProjMatrix() { return mProj; }
+	 float* getViewProjMatrix() { return mViewProj; }
 
 private:
 	CameraSettings mSettings;

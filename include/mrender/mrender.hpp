@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <variant>
 
+#include "defines.hpp"
 #include "utils/factory.hpp"
 #include "utils/timable.hpp"
 
@@ -60,13 +61,21 @@ enum class TextureFormat
 	ATCE,
 	ATCI,
 	ASTC4x4,
+	ASTC5x4,
 	ASTC5x5,
+	ASTC6x5,
 	ASTC6x6,
 	ASTC8x5,
 	ASTC8x6,
+	ASTC8x8,
 	ASTC10x5,
+	ASTC10x6,
+	ASTC10x8,
+	ASTC10x10,
+	ASTC12x10,
+	ASTC12x12,
 
-	Unknown,
+	Unknown,      
 
 	R1,
 	A8,
@@ -112,13 +121,16 @@ enum class TextureFormat
 	RGBA32I,
 	RGBA32U,
 	RGBA32F,
+	B5G6R5,
 	R5G6B5,
+	BGRA4,
 	RGBA4,
+	BGR5A1,
 	RGB5A1,
 	RGB10A2,
 	RG11B10F,
 
-	UnknownDepth,
+	UnknownDepth, 
 
 	D16,
 	D24,
@@ -150,6 +162,24 @@ struct EnviormentData
 
 struct RenderSettings
 {
+	enum class GraphicsAPI
+	{
+		Noop,
+		Agc,
+		Direct3D9,
+		Direct3D11,
+		Direct3D12,
+		Gnm,
+		Metal,
+		Nvn,
+		OpenGLES,
+		OpenGL,
+		Vulkan,
+		WebGPU,
+
+		Count
+	}; GraphicsAPI mGraphicsAPI = GraphicsAPI::Noop;
+
 	std::string_view mRendererName = "none";
 	int mResolutionWidth = 0;
 	int mResolutionHeight = 0;
@@ -157,6 +187,7 @@ struct RenderSettings
 	void* mNativeDisplay = nullptr;
 	bool mVSync = false;
 	bool mRenderDebugText = true;
+    bool mEnableMultithreading = true;
 };
 
 struct CameraSettings
@@ -318,7 +349,7 @@ class RenderSystem : public Timable// @todo Should we inherit timable in the ren
 public:
 	RenderSystem(const std::string_view& name);
 
-	[[nodiscard]] std::string_view getName() const { return mName; }
+	 std::string_view getName() const { return mName; }
 
 	virtual bool init(GfxContext* context) = 0;
 	virtual void render(GfxContext* context) = 0;
@@ -380,14 +411,14 @@ public:
 	virtual void addSharedBuffer(const std::string& name, TextureHandle texture) = 0;
 	virtual void addSharedUniformData(const std::string& name, UniformData data) = 0;
 
-	virtual [[nodiscard]] CameraHandle getActiveCamera() = 0;
-	virtual [[nodiscard]] RenderStateHandle getActiveRenderState() = 0;
-	virtual [[nodiscard]] ShaderList getActiveShaders() = 0;
-	virtual [[nodiscard]] RenderableList getActiveRenderables() = 0;
-	virtual [[nodiscard]] LightList getActiveLights() = 0;
+	virtual CameraHandle getActiveCamera() = 0;
+	virtual RenderStateHandle getActiveRenderState() = 0;
+	virtual ShaderList getActiveShaders() = 0;
+	virtual RenderableList getActiveRenderables() = 0;
+	virtual LightList getActiveLights() = 0;
 
-	virtual [[nodiscard]] BufferList getSharedBuffers() = 0;
-	virtual [[nodiscard]] UniformDataList getSharedUniformData() = 0;
+	virtual BufferList getSharedBuffers() = 0;
+	virtual UniformDataList getSharedUniformData() = 0;
 
 	virtual void submitDebugText(uint16_t x, uint16_t y, std::string_view text, ...) = 0;
 	virtual void submitDebugText(uint16_t x, uint16_t y, Color color, std::string_view text, ...) = 0;
@@ -413,16 +444,16 @@ public:
 
 	virtual void setMaterialUniformData(MaterialHandle material, const std::string& name, UniformData::UniformType type, void* data) = 0;
 	virtual void setMaterialTextureData(MaterialHandle material, const std::string& name, TextureHandle texture) = 0;
-	virtual [[nodiscard]] const UniformDataList& getMaterialUniformData(MaterialHandle material) = 0;
-	virtual [[nodiscard]] const TextureDataList& getMaterialTextureData(MaterialHandle material) = 0;
-	virtual [[nodiscard]] const ShaderHandle getMaterialShader(MaterialHandle material) = 0;
+	virtual const UniformDataList& getMaterialUniformData(MaterialHandle material) = 0;
+	virtual const TextureDataList& getMaterialTextureData(MaterialHandle material) = 0;
+	virtual const ShaderHandle getMaterialShader(MaterialHandle material) = 0;
 
-	virtual [[nodiscard]] TextureRef getTextureData(TextureHandle texture) = 0;
-	virtual [[nodiscard]] uint16_t getTextureID(TextureHandle texture) = 0;
-	virtual [[nodiscard]] TextureFormat getTextureFormat(TextureHandle texture) = 0;
-	virtual [[nodiscard]] std::vector<uint8_t> readTexture(TextureHandle texture) = 0;
+	virtual TextureRef getTextureData(TextureHandle texture) = 0;
+	virtual uint16_t getTextureID(TextureHandle texture) = 0;
+	virtual TextureFormat getTextureFormat(TextureHandle texture) = 0;
+	virtual  std::vector<uint8_t> readTexture(TextureHandle texture) = 0;
 
-	virtual [[nodiscard]] std::string getShaderName(ShaderHandle shader) = 0;
+	virtual  std::string getShaderName(ShaderHandle shader) = 0;
 
 	virtual void setRenderableMaterial(RenderableHandle renderable, MaterialHandle material) = 0;
 	virtual MaterialHandle getRenderableMaterial(RenderableHandle renderable) = 0;
