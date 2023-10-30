@@ -2140,6 +2140,7 @@ namespace bgfx
 	const Memory* makeRef(
 		  const void* _data
 		, uint32_t _size
+		, bx::AllocatorI* _customAlloc = NULL
 		, ReleaseFn _releaseFn = NULL
 		, void* _userData = NULL
 		);

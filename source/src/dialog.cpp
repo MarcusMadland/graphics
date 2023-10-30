@@ -11,6 +11,13 @@
 
 #include "mrender/dialog.h"
 
+#ifdef BX_PLATFORM_WINDOWS
+#include <windows.h>
+#include <shlobj_core.h>
+#endif
+
+namespace mrender {
+
 #if BX_PLATFORM_WINDOWS
 typedef uintptr_t (__stdcall *LPOFNHOOKPROC)(void*, uint32_t, uintptr_t, uint64_t);
 
@@ -73,6 +80,103 @@ void openUrl(const bx::StringView& _url)
 	BX_UNUSED(result);
 #endif // BX_PLATFORM_*
 }
+
+#if BX_PLATFORM_WINDOWS
+
+void dragPath(const bx::FilePath& _path)
+{
+	// Initialize COM if not already done
+	CoInitialize(nullptr);
+
+	// Create an IDataObject
+	IDataObject* dataObject = nullptr;
+	HRESULT hr = OleGetClipboard(&dataObject);
+	if (SUCCEEDED(hr)) {
+		// Set text data into the data object
+		FORMATETC fmtetc = { CF_TEXT, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+		STGMEDIUM stgmed = {};
+		const char* text = _path.getCPtr();
+		size_t textLen = strlen(text);
+
+		stgmed.hGlobal = GlobalAlloc(GHND, textLen + 1);
+		if (stgmed.hGlobal) {
+			char* data = static_cast<char*>(GlobalLock(stgmed.hGlobal));
+			if (data) {
+				memcpy(data, text, textLen);
+				data[textLen] = '\0';
+				GlobalUnlock(stgmed.hGlobal);
+				stgmed.tymed = TYMED_HGLOBAL;
+
+				// Set the text data into the data object
+				dataObject->SetData(&fmtetc, &stgmed, true);
+
+				// Create a drop source
+				class YourDropSourceImplementation : public IDropSource
+				{
+				public:
+					// Constructor
+					YourDropSourceImplementation()
+					{
+					}
+
+					// IDropSource interface methods
+					STDMETHOD(QueryInterface)(REFIID riid, void** ppvObject) override
+					{
+						if (riid == IID_IDropSource || riid == IID_IUnknown)
+						{
+							*ppvObject = static_cast<IDropSource*>(this);
+							AddRef();
+							return S_OK;
+						}
+
+						*ppvObject = nullptr;
+						return E_NOINTERFACE;
+					}
+
+					STDMETHOD_(ULONG, AddRef)() override
+					{
+						return 1;
+					}
+
+					STDMETHOD_(ULONG, Release)() override
+					{
+						return 0;
+					}
+
+					STDMETHOD(GiveFeedback)(DWORD dwEffect) override
+					{
+						// Return DRAGDROP_S_USEDEFAULTCURSORS for default behavior.
+						return DRAGDROP_S_USEDEFAULTCURSORS;
+					}
+
+					STDMETHOD(QueryContinueDrag)(BOOL fEscapePressed, DWORD grfKeyState) override
+					{
+						if (fEscapePressed || !(grfKeyState & MK_LBUTTON))
+						{
+							return DRAGDROP_S_CANCEL;
+						}
+
+						return S_OK;
+					}
+				};
+				IDropSource* dropSource = new YourDropSourceImplementation;
+
+				// Initialize and perform the drag-and-drop operation
+				DWORD dwEffect = 0;
+				hr = DoDragDrop(dataObject, dropSource, DROPEFFECT_COPY | DROPEFFECT_MOVE, &dwEffect);
+
+				// Release resources
+				dataObject->Release();
+				dropSource->Release();
+			}
+		}
+	}
+
+	// Uninitialize COM
+	CoUninitialize();
+}
+
+#endif
 
 class Split
 {
@@ -179,7 +283,7 @@ bool openFileSelectionDialog(
 	ofn.initialDir = _inOutFilePath.getCPtr();
 	ofn.file       = out;
 	ofn.maxFile    = sizeof(out);
-	ofn.flags      = s_getFileNameA[_type].m_flags;
+	ofn.flags      = s_getFileNameA[_type].m_flags | OFN_FILEMUSTEXIST | OFN_EXTENSIONDIFFERENT;
 
 	char tmp[4096];
 	bx::StaticMemoryBlockWriter writer(tmp, sizeof(tmp) );
@@ -241,3 +345,39 @@ bool openFileSelectionDialog(
 	return false;
 }
 #endif // !BX_PLATFORM_OSX
+
+#if !BX_PLATFORM_OSX
+bool openDirectorySelectionDialog(
+	bx::FilePath& _inOutFilePath
+	, const bx::StringView& _title
+	)
+{
+#if BX_PLATFORM_LINUX
+#error "Implement linux function"
+#elif BX_PLATFORM_WINDOWS
+	BROWSEINFOA bi = { 0 };
+	bi.hwndOwner = NULL;
+	bi.pszDisplayName = NULL;
+	bi.lpszTitle = _title.getPtr();
+	bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+
+	LPITEMIDLIST pidl = SHBrowseForFolderA(&bi);
+	if (pidl != NULL)
+	{
+		char folderPath[MAX_PATH];
+		if (SHGetPathFromIDListA(pidl, folderPath))
+		{
+			_inOutFilePath.set(folderPath);
+			CoTaskMemFree(pidl);
+			return true;
+		}
+	}
+	return false;
+#else
+	BX_UNUSED(_inOutFilePath, _type, _title, _filter);
+#endif // BX_PLATFORM_LINUX
+
+	return false;
+}
+#endif // !BX_PLATFORM_OSX
+}

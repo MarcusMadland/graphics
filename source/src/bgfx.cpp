@@ -4101,14 +4101,27 @@ namespace bgfx
 		void* userData;
 	};
 
-	const Memory* makeRef(const void* _data, uint32_t _size, ReleaseFn _releaseFn, void* _userData)
+	const Memory* makeRef(const void* _data, uint32_t _size, bx::AllocatorI* _customAlloc, ReleaseFn _releaseFn, void* _userData)
 	{
-		MemoryRef* memRef = (MemoryRef*)bx::alloc(g_allocator, sizeof(MemoryRef) );
-		memRef->mem.size  = _size;
-		memRef->mem.data  = (uint8_t*)_data;
-		memRef->releaseFn = _releaseFn;
-		memRef->userData  = _userData;
-		return &memRef->mem;
+		if (g_allocator)
+		{
+			MemoryRef* memRef = (MemoryRef*)bx::alloc(g_allocator, sizeof(MemoryRef));
+			memRef->mem.size = _size;
+			memRef->mem.data = (uint8_t*)_data;
+			memRef->releaseFn = _releaseFn;
+			memRef->userData = _userData;
+			return &memRef->mem;
+		}
+		else
+		{
+			MemoryRef* memRef = (MemoryRef*)bx::alloc(_customAlloc, sizeof(MemoryRef));
+			memRef->mem.size = _size;
+			memRef->mem.data = (uint8_t*)_data;
+			memRef->releaseFn = _releaseFn;
+			memRef->userData = _userData;
+			return &memRef->mem;
+		}
+		
 	}
 
 	bool isMemoryRef(const Memory* _mem)
