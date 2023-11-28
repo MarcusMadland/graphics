@@ -4090,7 +4090,7 @@ namespace bgfx
 			uint32_t magic;
 			bx::read(&reader, magic, &err);
 
-			if (!err.isOk() )
+			if (!err.isOk())
 			{
 				BX_TRACE("Couldn't read shader signature!");
 				release(_mem);

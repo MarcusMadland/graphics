@@ -98,6 +98,8 @@ namespace mrender
 
 		void init()
 		{
+			FreeConsole();
+
 			m_xinputdll = bx::dlopen(XINPUT_DLL_A);
 
 			if (NULL != m_xinputdll)
@@ -1178,6 +1180,7 @@ namespace mrender
 	}
 
 } // namespace mrender
+
 
 int main(int _argc, const char* const* _argv)
 {
