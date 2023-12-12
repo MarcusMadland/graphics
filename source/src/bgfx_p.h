@@ -141,10 +141,12 @@ namespace bgfx
 #include <mapp/thread.h>
 #include <mapp/timer.h>
 #include <mapp/uint32_t.h>
+#include <mapp/file.h>
 
 #include <mrender/platform.h>
 #include <bimg/bimg.h>
 #include "shader.h"
+#include "shaderc.h"
 #include "vertexlayout.h"
 #include "version.h"
 
@@ -4237,6 +4239,11 @@ namespace bgfx
 			setDebugNameForHandle(handle);
 
 			return handle;
+		}
+
+		BGFX_API_FUNC(bool compileShader(int argc, const char* argv[]))
+		{
+			return shaderc::compileShader(argc, argv);
 		}
 
 		BGFX_API_FUNC(uint16_t getShaderUniforms(ShaderHandle _handle, UniformHandle* _uniforms, uint16_t _max) )

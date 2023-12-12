@@ -403,6 +403,18 @@ namespace bgfx
 		};
 	};
 
+	/// Shader type used for shader compiling.
+	///
+	struct ShaderType
+	{
+		enum Enum
+		{
+			Vertex   = 'v',   /// vertex
+			Fragment = 'f',   /// fragment
+			Compute  = 'c',   /// compute
+		};
+	};
+
 	static const uint16_t kInvalidHandle = UINT16_MAX;
 
 	BGFX_HANDLE(DynamicIndexBufferHandle)
@@ -2606,6 +2618,11 @@ namespace bgfx
 	/// @attention C99's equivalent binding is `bgfx_create_shader`.
 	///
 	ShaderHandle createShader(const Memory* _mem);
+
+	/// Compiles shader using shaderc.
+	///
+	/// @returns True if successfull.
+	bool compileShader(int argc, const char* argv[]);
 
 	/// Returns the number of uniforms and uniform handles used inside a shader.
 	///

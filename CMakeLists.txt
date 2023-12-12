@@ -10,14 +10,25 @@ else()
 endif()
 
 # Sources
+set(FCPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fcpp)
 file(
 	GLOB_RECURSE
 	MRENDER_SOURCES
+
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/source/src/**.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/source/src/**.mm
 	${CMAKE_CURRENT_SOURCE_DIR}/source/src/**.h
 	${CMAKE_CURRENT_SOURCE_DIR}/source/include/**.h
+##
+	${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fcpp/*.h
+	${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fcpp/cpp1.c
+	${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fcpp/cpp2.c
+	${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fcpp/cpp3.c
+	${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fcpp/cpp4.c
+	${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fcpp/cpp5.c
+	${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fcpp/cpp6.c
+	${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fcpp/cpp6.c
 )
 
 # Solution Filters
@@ -178,6 +189,9 @@ if(XCODE)
 		${CMAKE_CURRENT_SOURCE_DIR}/source/src/renderer_vk.cpp PROPERTIES LANGUAGE OBJCXX XCODE_EXPLICIT_FILE_TYPE sourcecode.cpp.objcpp
 	)
 endif()
+
+## FCPP
+target_include_directories(mrender PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fcpp/)
 
 # Dependencies
 add_subdirectory(mapp)

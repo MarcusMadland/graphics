@@ -4381,6 +4381,11 @@ namespace bgfx
 		return s_ctx->createShader(_mem);
 	}
 
+	bool compileShader(int argc, const char* argv[])
+	{
+		return s_ctx->compileShader(argc, argv);
+	}
+
 	uint16_t getShaderUniforms(ShaderHandle _handle, UniformHandle* _uniforms, uint16_t _max)
 	{
 		BX_WARN(NULL == _uniforms || 0 != _max
@@ -5718,3 +5723,5 @@ BGFX_TEXTURE_FORMAT_BIMG(Count);
 
 
 //#include "bgfx.idl.inl"
+
+
