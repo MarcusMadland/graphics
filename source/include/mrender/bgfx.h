@@ -2622,7 +2622,7 @@ namespace bgfx
 	/// Compiles shader using shaderc.
 	///
 	/// @returns True if successfull.
-	bool compileShader(int argc, const char* argv[]);
+	const bgfx::Memory* compileShader(int _argc, const char* _argv[]);
 
 	/// Returns the number of uniforms and uniform handles used inside a shader.
 	///

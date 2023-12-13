@@ -2561,7 +2561,8 @@ namespace shaderc {
 
 		return compiled;
 	}
-
+	
+	/*
 	int compileShader(int _argc, const char* _argv[])
 	{
 		bx::CommandLine cmdLine(_argc, _argv);
@@ -2811,6 +2812,220 @@ namespace shaderc {
 
 		bx::printf("Failed to build shader.\n");
 		return bx::kExitFailure;
+	}
+	*/
+
+	/// not a real FileWriter, but a hack to redirect write() to a memory block.
+	class BufferWriter : public bx::FileWriter
+	{
+	public:
+
+		BufferWriter()
+		{
+		}
+
+		~BufferWriter()
+		{
+		}
+
+		bool open(const bx::FilePath& _filePath, bool _append, bx::Error* _err) override
+		{
+			return true;
+		}
+
+		const bgfx::Memory* finalize()
+		{
+			if (_buffer.size() > 0)
+			{
+				_buffer.push_back('\0');
+
+				const bgfx::Memory* mem = bgfx::alloc(_buffer.size());
+				bx::memCopy(mem->data, _buffer.data(), _buffer.size());
+				return mem;
+			}
+
+			return nullptr;
+		}
+
+		int32_t write(const void* _data, int32_t _size, bx::Error* _err)
+		{
+			const char* data = (const char*)_data;
+			_buffer.insert(_buffer.end(), data, data + _size);
+			return _size;
+		}
+
+	private:
+		BX_ALIGN_DECL(16, uint8_t) m_internal[64];
+		typedef std::vector<uint8_t> Buffer;
+		Buffer _buffer;
+	};
+
+	const bgfx::Memory* compileShader(int _argc, const char* _argv[])
+	{
+		bx::CommandLine cmdLine(_argc, _argv);
+
+		g_verbose = cmdLine.hasArg("verbose");
+
+		const char* filePath = cmdLine.findOption('f');
+		if (NULL == filePath)
+		{
+			BX_TRACE("Shader file name must be specified.")
+			return NULL;
+		}
+
+		bool consoleOut = cmdLine.hasArg("stdout");
+
+		const char* type = cmdLine.findOption('\0', "type");
+		if (NULL == type)
+		{
+			BX_TRACE("Must specify shader type.")
+			return NULL;
+		}
+
+		Options options;
+		options.inputFilePath = filePath;
+		options.outputFilePath = "";
+		options.shaderType = bx::toLower(type[0]);
+
+		options.disasm = cmdLine.hasArg('\0', "disasm");
+
+		const char* platform = cmdLine.findOption('\0', "platform");
+		if (NULL == platform)
+		{
+			platform = "";
+		}
+
+		options.platform = platform;
+
+		options.raw = cmdLine.hasArg('\0', "raw");
+
+		const char* profile = cmdLine.findOption('p', "profile");
+
+		if (NULL != profile)
+		{
+			options.profile = profile;
+		}
+
+		{
+			options.debugInformation = cmdLine.hasArg('\0', "debug");
+			options.avoidFlowControl = cmdLine.hasArg('\0', "avoid-flow-control");
+			options.noPreshader = cmdLine.hasArg('\0', "no-preshader");
+			options.partialPrecision = cmdLine.hasArg('\0', "partial-precision");
+			options.preferFlowControl = cmdLine.hasArg('\0', "prefer-flow-control");
+			options.backwardsCompatibility = cmdLine.hasArg('\0', "backwards-compatibility");
+			options.warningsAreErrors = cmdLine.hasArg('\0', "Werror");
+			options.keepIntermediate = cmdLine.hasArg('\0', "keep-intermediate");
+
+			uint32_t optimization = 3;
+			if (cmdLine.hasArg(optimization, 'O'))
+			{
+				options.optimize = true;
+				options.optimizationLevel = optimization;
+			}
+		}
+		
+		options.depends = cmdLine.hasArg("depends");
+		options.preprocessOnly = cmdLine.hasArg("preprocess");
+		const char* includeDir = cmdLine.findOption('i');
+
+		BX_TRACE("depends: %d", options.depends);
+		BX_TRACE("preprocessOnly: %d", options.preprocessOnly);
+		BX_TRACE("includeDir: %s", includeDir);
+
+		for (int ii = 1; NULL != includeDir; ++ii)
+		{
+			options.includeDirs.push_back(includeDir);
+			includeDir = cmdLine.findOption(ii, 'i');
+		}
+
+		std::string dir;
+		{
+			bx::FilePath fp(filePath);
+			bx::StringView path(fp.getPath());
+
+			dir.assign(path.getPtr(), path.getTerm());
+			options.includeDirs.push_back(dir);
+		}
+
+		const char* defines = cmdLine.findOption("define");
+		while (NULL != defines
+			&& '\0' != *defines)
+		{
+			defines = bx::strLTrimSpace(defines).getPtr();
+			bx::StringView eol = bx::strFind(defines, ';');
+			std::string define(defines, eol.getPtr());
+			options.defines.push_back(define.c_str());
+			defines = ';' == *eol.getPtr() ? eol.getPtr() + 1 : eol.getPtr();
+		}
+
+		std::string commandLineComment = "// shaderc command line:\n//";
+		for (int32_t ii = 0, num = cmdLine.getNum(); ii < num; ++ii)
+		{
+			commandLineComment += " ";
+			commandLineComment += cmdLine.get(ii);
+		}
+		commandLineComment += "\n\n";
+
+		bool compiled = false;
+
+		bx::FileReader reader;
+		if (bx::open(&reader, filePath))
+		{
+			const char* varying = NULL;
+			File attribdef;
+
+			if ('c' != options.shaderType)
+			{
+				std::string defaultVarying = dir + "varying.def.sc";
+				const char* varyingdef = cmdLine.findOption("varyingdef", defaultVarying.c_str());
+				attribdef.load(varyingdef);
+				varying = attribdef.getData();
+				if (NULL != varying
+					&& *varying != '\0')
+				{
+					options.dependencies.push_back(varyingdef);
+				}
+				else
+				{
+					bx::printf("ERROR: Failed to parse varying def file: \"%s\" No input/output semantics will be generated in the code!\n", varyingdef);
+				}
+			}
+
+			const size_t padding = 16384;
+			uint32_t size = (uint32_t)bx::getSize(&reader);
+			char* data = new char[size + padding + 1];
+			size = (uint32_t)bx::read(&reader, data, size, bx::ErrorAssert{});
+
+			if (data[0] == '\xef'
+				&& data[1] == '\xbb'
+				&& data[2] == '\xbf')
+			{
+				bx::memMove(data, &data[3], size - 3);
+				size -= 3;
+			}
+
+			// Compiler generates "error X3000: syntax error: unexpected end of file"
+			// if input doesn't have empty line at EOF.
+			data[size] = '\n';
+			bx::memSet(&data[size + 1], 0, padding);
+			bx::close(&reader);
+
+			BufferWriter writer;
+			compiled = compileShader(varying, commandLineComment.c_str(), data, size, options, &writer, bx::getStdOut());
+
+			if (compiled)
+			{
+				return writer.finalize();
+			}
+		}
+		else
+		{
+			BX_TRACE("Failed to open shader.\n");
+			return NULL;
+		}
+
+		BX_TRACE("Failed to compile shader.\n");
+		return NULL;
 	}
 
 } // namespace shaderc

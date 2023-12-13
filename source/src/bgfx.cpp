@@ -4381,9 +4381,9 @@ namespace bgfx
 		return s_ctx->createShader(_mem);
 	}
 
-	bool compileShader(int argc, const char* argv[])
+	const bgfx::Memory* compileShader(int _argc, const char* _argv[])
 	{
-		return s_ctx->compileShader(argc, argv);
+		return s_ctx->compileShader(_argc, _argv);
 	}
 
 	uint16_t getShaderUniforms(ShaderHandle _handle, UniformHandle* _uniforms, uint16_t _max)

@@ -176,7 +176,9 @@ namespace shaderc {
 	bool compilePSSLShader(const Options& _options, uint32_t _version, const std::string& _code, bx::WriterI* _writer, bx::WriterI* _messages);
 	bool compileSPIRVShader(const Options& _options, uint32_t _version, const std::string& _code, bx::WriterI* _writer, bx::WriterI* _messages);
 
-	int compileShader(int _argc, const char* _argv[]);
+	bool compileShader(const char* _varying, const char* _comment, char* _shader, uint32_t _shaderLen, Options& _options, bx::WriterI* _shaderWriter, bx::WriterI* _messageWriter);
+	//int compileShader(int _argc, const char* _argv[]);
+	const bgfx::Memory* compileShader(int _argc, const char* _argv[]);
 
 	const char* getPsslPreamble();
 

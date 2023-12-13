@@ -4241,9 +4241,9 @@ namespace bgfx
 			return handle;
 		}
 
-		BGFX_API_FUNC(bool compileShader(int argc, const char* argv[]))
+		BGFX_API_FUNC(const bgfx::Memory* compileShader(int _argc, const char* _argv[]))
 		{
-			return shaderc::compileShader(argc, argv);
+			return shaderc::compileShader(_argc, _argv);
 		}
 
 		BGFX_API_FUNC(uint16_t getShaderUniforms(ShaderHandle _handle, UniformHandle* _uniforms, uint16_t _max) )
