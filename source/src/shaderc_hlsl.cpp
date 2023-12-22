@@ -541,7 +541,12 @@ namespace shaderc { namespace hlsl
 						un.num = 1;
 						un.regIndex = uint16_t(bindDesc.BindPoint);
 						un.regCount = uint16_t(bindDesc.BindCount);
-						_uniforms.push_back(un);
+
+						// @todo Temp fix for duplicate uniforms
+						if (_uniforms.empty() || _uniforms[_uniforms.size() - 1].name != un.name)
+						{
+							_uniforms.push_back(un);
+						}
 					}
 				}
 				else
