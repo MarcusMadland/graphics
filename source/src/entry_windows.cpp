@@ -1,22 +1,22 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
 #include "entry_p.h"
-#include "mrender/platform.h"
+#include "graphics/platform.h"
 
-#if ENTRY_CONFIG_USE_NATIVE && BX_PLATFORM_WINDOWS
+#if ENTRY_CONFIG_USE_NATIVE && BASE_PLATFORM_WINDOWS
 
-#include <mapp/platform.h>
+#include <base/platform.h>
 
-#include <mapp/mutex.h>
-#include <mapp/handlealloc.h>
-#include <mapp/os.h>
-#include <mapp/thread.h>
-#include <mapp/timer.h>
-#include <mapp/uint32_t.h>
-#include <mapp/allocator.h>
+#include <base/mutex.h>
+#include <base/handlealloc.h>
+#include <base/os.h>
+#include <base/thread.h>
+#include <base/timer.h>
+#include <base/uint32_t.h>
+#include <base/allocator.h>
 #include <string>
 #include <vector>
 
@@ -33,7 +33,7 @@
 #	define XINPUT_DLL_A "xinput.dll"
 #endif // XINPUT_DLL_A
 
-namespace mrender
+namespace entry
 {
 	typedef std::vector<WCHAR> WSTRING;
 
@@ -81,8 +81,8 @@ namespace mrender
 		XInput()
 			: m_xinputdll(NULL)
 		{
-			bx::memSet(m_connected, 0, sizeof(m_connected) );
-			bx::memSet(m_state, 0, sizeof(m_state) );
+			base::memSet(m_connected, 0, sizeof(m_connected) );
+			base::memSet(m_state, 0, sizeof(m_state) );
 
 			m_deadzone[GamepadAxis::LeftX ] =
 			m_deadzone[GamepadAxis::LeftY ] = XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE;
@@ -91,7 +91,7 @@ namespace mrender
 			m_deadzone[GamepadAxis::LeftZ ] =
 			m_deadzone[GamepadAxis::RightZ] = XINPUT_GAMEPAD_TRIGGER_THRESHOLD;
 
-			bx::memSet(m_flip, 1, sizeof(m_flip) );
+			base::memSet(m_flip, 1, sizeof(m_flip) );
 			m_flip[GamepadAxis::LeftY ] =
 			m_flip[GamepadAxis::RightY] = -1;
 		}
@@ -100,12 +100,12 @@ namespace mrender
 		{
 			FreeConsole();
 
-			m_xinputdll = bx::dlopen(XINPUT_DLL_A);
+			m_xinputdll = base::dlopen(XINPUT_DLL_A);
 
 			if (NULL != m_xinputdll)
 			{
-				XInputGetState = (PFN_XINPUT_GET_STATE)bx::dlsym(m_xinputdll, "XInputGetState");
-//				XInputEnable   = (PFN_XINPUT_ENABLE   )bx::dlsym(m_xinputdll, "XInputEnable"  );
+				XInputGetState = (PFN_XINPUT_GET_STATE)base::dlsym(m_xinputdll, "XInputGetState");
+//				XInputEnable   = (PFN_XINPUT_ENABLE   )base::dlsym(m_xinputdll, "XInputEnable"  );
 
 				if (NULL == XInputGetState)
 				{
@@ -118,7 +118,7 @@ namespace mrender
 		{
 			if (NULL != m_xinputdll)
 			{
-				bx::dlclose(m_xinputdll);
+				base::dlclose(m_xinputdll);
 				m_xinputdll = NULL;
 			}
 		}
@@ -134,7 +134,7 @@ namespace mrender
 
 		void update(EventQueue& _eventQueue)
 		{
-			int64_t now = bx::getHPCounter();
+			int64_t now = base::getHPCounter();
 			static int64_t next = now;
 
 			if (now < next)
@@ -142,7 +142,7 @@ namespace mrender
 				return;
 			}
 
-			const int64_t timerFreq = bx::getHPFrequency();
+			const int64_t timerFreq = base::getHPFrequency();
 			next = now + timerFreq/60;
 
 			if (NULL == m_xinputdll)
@@ -152,7 +152,7 @@ namespace mrender
 
 			WindowHandle defaultWindow = { 0 };
 
-			for (uint16_t ii = 0; ii < BX_COUNTOF(m_state); ++ii)
+			for (uint16_t ii = 0; ii < BASE_COUNTOF(m_state); ++ii)
 			{
 				XINPUT_STATE state;
 				DWORD result = XInputGetState(ii, &state);
@@ -175,7 +175,7 @@ namespace mrender
 					const uint16_t current = gamepad.wButtons;
 					if (0 != changed)
 					{
-						for (uint32_t jj = 0; jj < BX_COUNTOF(s_xinputRemap); ++jj)
+						for (uint32_t jj = 0; jj < BASE_COUNTOF(s_xinputRemap); ++jj)
 						{
 							uint16_t bit = s_xinputRemap[jj].m_bit;
 							if (bit & changed)
@@ -299,7 +299,7 @@ namespace mrender
 	static uint8_t translateKeyModifiers()
 	{
 		uint8_t modifiers = 0;
-		for (uint32_t ii = 0; ii < BX_COUNTOF(s_translateKeyModifiers); ++ii)
+		for (uint32_t ii = 0; ii < BASE_COUNTOF(s_translateKeyModifiers); ++ii)
 		{
 			const TranslateKeyModifiers& tkm = s_translateKeyModifiers[ii];
 			modifiers |= 0 > GetKeyState(tkm.m_vk) ? tkm.m_modifier : Modifier::None;
@@ -319,7 +319,7 @@ namespace mrender
 		int m_argc;
 		const char* const* m_argv;
 
-		static int32_t threadFunc(bx::Thread* _thread, void* _userData);
+		static int32_t threadFunc(base::Thread* _thread, void* _userData);
 	};
 
 	struct Msg
@@ -365,7 +365,7 @@ namespace mrender
 			, m_exit(false)
 		{
 			m_surrogate = 0;
-			bx::memSet(s_translateKey, 0, sizeof(s_translateKey) );
+			base::memSet(s_translateKey, 0, sizeof(s_translateKey) );
 			s_translateKey[VK_ESCAPE]     = Key::Esc;
 			s_translateKey[VK_RETURN]     = Key::Return;
 			s_translateKey[VK_TAB]        = Key::Tab;
@@ -463,22 +463,22 @@ namespace mrender
 			HINSTANCE instance = (HINSTANCE)GetModuleHandle(NULL);
 
 			WNDCLASSEXW wnd;
-			bx::memSet(&wnd, 0, sizeof(wnd) );
+			base::memSet(&wnd, 0, sizeof(wnd) );
 			wnd.cbSize = sizeof(wnd);
 			wnd.style = CS_HREDRAW | CS_VREDRAW;
 			wnd.lpfnWndProc = wndProc;
 			wnd.hInstance = instance;
 			wnd.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 			wnd.hCursor = LoadCursor(NULL, IDC_ARROW);
-			wnd.lpszClassName = L"bgfx";
+			wnd.lpszClassName = L"graphics";
 			wnd.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 			RegisterClassExW(&wnd);
 
 			m_windowAlloc.alloc();
 			m_hwnd[0] = CreateWindowExA(
 				  WS_EX_ACCEPTFILES
-				, "bgfx"
-				, "BGFX"
+				, "graphics"
+				, "GRAPHICS"
 				, WS_OVERLAPPEDWINDOW|WS_VISIBLE
 				, 0
 				, 0
@@ -507,9 +507,9 @@ namespace mrender
 			mte.m_argc = _argc;
 			mte.m_argv = _argv;
 
-			bgfx::renderFrame();
+			graphics::renderFrame();
 
-			bx::Thread thread;
+			base::Thread thread;
 			thread.init(mte.threadFunc, &mte);
 			m_init = true;
 
@@ -520,7 +520,7 @@ namespace mrender
 
 			while (!m_exit)
 			{
-				bgfx::renderFrame();
+				graphics::renderFrame();
 
 				s_xinput.update(m_eventQueue);
 				WaitForInputIdle(GetCurrentProcess(), 16);
@@ -532,7 +532,7 @@ namespace mrender
 				}
 			}
 
-			while (bgfx::RenderFrame::NoContext != bgfx::renderFrame() ) {};
+			while (graphics::RenderFrame::NoContext != graphics::renderFrame() ) {};
 
 			thread.shutdown();
 
@@ -552,7 +552,7 @@ namespace mrender
 				case WM_USER_WINDOW_CREATE:
 					{
 						Msg* msg = (Msg*)_lparam;
-						HWND hwnd = CreateWindowW(L"bgfx"
+						HWND hwnd = CreateWindowW(L"graphics"
 							, UTF8ToUTF16(msg->m_title.c_str()).data()
 							, WS_OVERLAPPEDWINDOW|WS_VISIBLE
 							, msg->m_x
@@ -680,7 +680,7 @@ namespace mrender
 							case WMSZ_RIGHT:
 								{
 									float aspectRatio = 1.0f/m_aspectRatio;
-									width  = bx::uint32_max(ENTRY_DEFAULT_WIDTH/4, width);
+									width  = base::uint32_max(ENTRY_DEFAULT_WIDTH/4, width);
 									height = uint32_t(float(width)*aspectRatio);
 								}
 								break;
@@ -688,7 +688,7 @@ namespace mrender
 							default:
 								{
 									float aspectRatio = m_aspectRatio;
-									height = bx::uint32_max(ENTRY_DEFAULT_HEIGHT/4, height);
+									height = base::uint32_max(ENTRY_DEFAULT_HEIGHT/4, height);
 									width  = uint32_t(float(height)*aspectRatio);
 								}
 								break;
@@ -869,7 +869,7 @@ namespace mrender
 												, utf16
 												, utf16_len
 												, (LPSTR)utf8
-												, BX_COUNTOF(utf8)
+												, BASE_COUNTOF(utf8)
 												, NULL
 												, NULL
 												);
@@ -885,11 +885,11 @@ namespace mrender
 				case WM_DROPFILES:
 					{
 						HDROP drop = (HDROP)_wparam;
-						char tmp[bx::kMaxFilePath];
-						WCHAR utf16[bx::kMaxFilePath];
-						uint32_t result = DragQueryFileW(drop, 0, utf16, bx::kMaxFilePath);
-						BX_UNUSED(result);
-						WideCharToMultiByte(CP_UTF8, 0, utf16, -1, tmp, bx::kMaxFilePath, NULL, NULL);
+						char tmp[base::kMaxFilePath];
+						WCHAR utf16[base::kMaxFilePath];
+						uint32_t result = DragQueryFileW(drop, 0, utf16, base::kMaxFilePath);
+						BASE_UNUSED(result);
+						WideCharToMultiByte(CP_UTF8, 0, utf16, -1, tmp, base::kMaxFilePath, NULL, NULL);
 						WindowHandle handle = findHandle(_hwnd);
 						m_eventQueue.postDropFileEvent(handle, tmp);
 					}
@@ -905,7 +905,7 @@ namespace mrender
 
 		WindowHandle findHandle(HWND _hwnd)
 		{
-			bx::MutexScope scope(m_lock);
+			base::MutexScope scope(m_lock);
 			for (uint16_t ii = 0, num = m_windowAlloc.getNumHandles(); ii < num; ++ii)
 			{
 				uint16_t idx = m_windowAlloc.getHandleAt(ii);
@@ -988,7 +988,7 @@ namespace mrender
 			if (!_windowFrame)
 			{
 				float aspectRatio = 1.0f/m_aspectRatio;
-				width  = bx::uint32_max(ENTRY_DEFAULT_WIDTH/4, width);
+				width  = base::uint32_max(ENTRY_DEFAULT_WIDTH/4, width);
 				height = uint32_t(float(width)*aspectRatio);
 
 				left   = newrect.left+(newrect.right -newrect.left-width)/2;
@@ -1043,9 +1043,9 @@ namespace mrender
 
 		EventQueue m_eventQueue;
 		WCHAR m_surrogate;
-		bx::Mutex m_lock;
+		base::Mutex m_lock;
 
-		bx::HandleAllocT<ENTRY_CONFIG_MAX_WINDOWS> m_windowAlloc;
+		base::HandleAllocT<ENTRY_CONFIG_MAX_WINDOWS> m_windowAlloc;
 
 		HWND m_hwnd[ENTRY_CONFIG_MAX_WINDOWS];
 		uint32_t m_flags[ENTRY_CONFIG_MAX_WINDOWS];
@@ -1094,7 +1094,7 @@ namespace mrender
 
 	WindowHandle createWindow(int32_t _x, int32_t _y, uint32_t _width, uint32_t _height, uint32_t _flags, const char* _title)
 	{
-		bx::MutexScope scope(s_ctx.m_lock);
+		base::MutexScope scope(s_ctx.m_lock);
 		WindowHandle handle = { s_ctx.m_windowAlloc.alloc() };
 
 		if (UINT16_MAX != handle.idx)
@@ -1118,7 +1118,7 @@ namespace mrender
 		{
 			PostMessage(s_ctx.m_hwnd[0], WM_USER_WINDOW_DESTROY, _handle.idx, 0);
 
-			bx::MutexScope scope(s_ctx.m_lock);
+			base::MutexScope scope(s_ctx.m_lock);
 			s_ctx.m_windowAlloc.free(_handle.idx);
 		}
 	}
@@ -1171,7 +1171,7 @@ namespace mrender
 		return NULL;
 	}
 
-	int32_t MainThreadEntry::threadFunc(bx::Thread* /*_thread*/, void* _userData)
+	int32_t MainThreadEntry::threadFunc(base::Thread* /*_thread*/, void* _userData)
 	{
 		MainThreadEntry* self = (MainThreadEntry*)_userData;
 		int32_t result = main(self->m_argc, self->m_argv);
@@ -1179,13 +1179,13 @@ namespace mrender
 		return result;
 	}
 
-} // namespace mrender
+} // namespace graphics
 
 
 int main(int _argc, const char* const* _argv)
 {
-	using namespace mrender;
+	using namespace entry;
 	return s_ctx.run(_argc, _argv);
 }
 
-#endif // BX_PLATFORM_WINDOWS
+#endif // BASE_PLATFORM_WINDOWS

@@ -1,18 +1,18 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include <mapp/debug.h>
-#include <mapp/hash.h>
-#include <mapp/readerwriter.h>
-#include <mapp/sort.h>
-#include <mapp/string.h>
-#include <mapp/uint32_t.h>
+#include <base/debug.h>
+#include <base/hash.h>
+#include <base/readerwriter.h>
+#include <base/sort.h>
+#include <base/string.h>
+#include <base/uint32_t.h>
 
 #include "vertexlayout.h"
 
-namespace bgfx
+namespace graphics
 {
 	static const uint8_t s_attribTypeSizeD3D9[AttribType::Count][4] =
 	{
@@ -57,7 +57,7 @@ namespace bgfx
 		&s_attribTypeSizeD3D1x, // WebGPU
 		&s_attribTypeSizeD3D9,  // Count
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_attribTypeSize) == RendererType::Count+1);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_attribTypeSize) == RendererType::Count+1);
 
 	void initAttribTypeSizeTable(RendererType::Enum _type)
 	{
@@ -76,15 +76,15 @@ namespace bgfx
 	{
 		m_hash = _renderer; // use hash to store renderer type while building VertexLayout.
 		m_stride = 0;
-		bx::memSet(m_attributes, 0xff, sizeof(m_attributes) );
-		bx::memSet(m_offset, 0, sizeof(m_offset) );
+		base::memSet(m_attributes, 0xff, sizeof(m_attributes) );
+		base::memSet(m_offset, 0, sizeof(m_offset) );
 
 		return *this;
 	}
 
 	void VertexLayout::end()
 	{
-		bx::HashMurmur2A murmur;
+		base::HashMurmur2A murmur;
 		murmur.begin();
 		murmur.add(m_attributes, sizeof(m_attributes) );
 		murmur.add(m_offset, sizeof(m_offset) );
@@ -130,7 +130,7 @@ namespace bgfx
 		true,  // Half
 		true,  // Float
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_attribTypeIsFloat) == AttribType::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_attribTypeIsFloat) == AttribType::Count);
 
 	bool isFloat(AttribType::Enum _type)
 	{
@@ -158,7 +158,7 @@ namespace bgfx
 		"T6", "Attrib::TexCoord6",
 		"T7", "Attrib::TexCoord7",
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_attrName) == Attrib::Count*2);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_attrName) == Attrib::Count*2);
 
 	const char* getAttribNameShort(Attrib::Enum _attr)
 	{
@@ -200,11 +200,11 @@ namespace bgfx
 		{ Attrib::TexCoord6, 0x0016 },
 		{ Attrib::TexCoord7, 0x0017 },
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_attribToId) == Attrib::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_attribToId) == Attrib::Count);
 
 	Attrib::Enum idToAttrib(uint16_t id)
 	{
-		for (uint32_t ii = 0; ii < BX_COUNTOF(s_attribToId); ++ii)
+		for (uint32_t ii = 0; ii < BASE_COUNTOF(s_attribToId); ++ii)
 		{
 			if (s_attribToId[ii].id == id)
 			{
@@ -238,11 +238,11 @@ namespace bgfx
 		{ AttribType::Half,   0x0003 },
 		{ AttribType::Float,  0x0004 },
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_attribTypeToId) == AttribType::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_attribTypeToId) == AttribType::Count);
 
 	AttribType::Enum idToAttribType(uint16_t id)
 	{
-		for (uint32_t ii = 0; ii < BX_COUNTOF(s_attribTypeToId); ++ii)
+		for (uint32_t ii = 0; ii < BASE_COUNTOF(s_attribTypeToId); ++ii)
 		{
 			if (s_attribTypeToId[ii].id == id)
 			{
@@ -258,9 +258,9 @@ namespace bgfx
 		return s_attribTypeToId[_attr].id;
 	}
 
-	int32_t write(bx::WriterI* _writer, const VertexLayout& _layout, bx::Error* _err)
+	int32_t write(base::WriterI* _writer, const VertexLayout& _layout, base::Error* _err)
 	{
-		BX_ERROR_SCOPE(_err);
+		BASE_ERROR_SCOPE(_err);
 
 		int32_t total = 0;
 		uint8_t numAttrs = 0;
@@ -270,8 +270,8 @@ namespace bgfx
 			numAttrs += UINT16_MAX == _layout.m_attributes[attr] ? 0 : 1;
 		}
 
-		total += bx::write(_writer, numAttrs, _err);
-		total += bx::write(_writer, _layout.m_stride, _err);
+		total += base::write(_writer, numAttrs, _err);
+		total += base::write(_writer, _layout.m_stride, _err);
 
 		for (uint32_t attr = 0; attr < Attrib::Count; ++attr)
 		{
@@ -282,29 +282,29 @@ namespace bgfx
 				bool normalized;
 				bool asInt;
 				_layout.decode(Attrib::Enum(attr), num, type, normalized, asInt);
-				total += bx::write(_writer, _layout.m_offset[attr], _err);
-				total += bx::write(_writer, s_attribToId[attr].id, _err);
-				total += bx::write(_writer, num, _err);
-				total += bx::write(_writer, s_attribTypeToId[type].id, _err);
-				total += bx::write(_writer, normalized, _err);
-				total += bx::write(_writer, asInt, _err);
+				total += base::write(_writer, _layout.m_offset[attr], _err);
+				total += base::write(_writer, s_attribToId[attr].id, _err);
+				total += base::write(_writer, num, _err);
+				total += base::write(_writer, s_attribTypeToId[type].id, _err);
+				total += base::write(_writer, normalized, _err);
+				total += base::write(_writer, asInt, _err);
 			}
 		}
 
 		return total;
 	}
 
-	int32_t read(bx::ReaderI* _reader, VertexLayout& _layout, bx::Error* _err)
+	int32_t read(base::ReaderI* _reader, VertexLayout& _layout, base::Error* _err)
 	{
-		BX_ERROR_SCOPE(_err);
+		BASE_ERROR_SCOPE(_err);
 
 		int32_t total = 0;
 
 		uint8_t numAttrs;
-		total += bx::read(_reader, numAttrs, _err);
+		total += base::read(_reader, numAttrs, _err);
 
 		uint16_t stride;
-		total += bx::read(_reader, stride, _err);
+		total += base::read(_reader, stride, _err);
 
 		if (!_err->isOk() )
 		{
@@ -316,22 +316,22 @@ namespace bgfx
 		for (uint32_t ii = 0; ii < numAttrs; ++ii)
 		{
 			uint16_t offset;
-			total += bx::read(_reader, offset, _err);
+			total += base::read(_reader, offset, _err);
 
 			uint16_t attribId = 0;
-			total += bx::read(_reader, attribId, _err);
+			total += base::read(_reader, attribId, _err);
 
 			uint8_t num;
-			total += bx::read(_reader, num, _err);
+			total += base::read(_reader, num, _err);
 
 			uint16_t attribTypeId;
-			total += bx::read(_reader, attribTypeId, _err);
+			total += base::read(_reader, attribTypeId, _err);
 
 			bool normalized;
-			total += bx::read(_reader, normalized, _err);
+			total += base::read(_reader, normalized, _err);
 
 			bool asInt;
-			total += bx::read(_reader, asInt, _err);
+			total += base::read(_reader, asInt, _err);
 
 			if (!_err->isOk() )
 			{
@@ -382,9 +382,9 @@ namespace bgfx
 					{
 						switch (num)
 						{
-						default: *packed++ = uint8_t(*_input++ * 127.0f + 128.0f); BX_FALLTHROUGH;
-						case 3:  *packed++ = uint8_t(*_input++ * 127.0f + 128.0f); BX_FALLTHROUGH;
-						case 2:  *packed++ = uint8_t(*_input++ * 127.0f + 128.0f); BX_FALLTHROUGH;
+						default: *packed++ = uint8_t(*_input++ * 127.0f + 128.0f); BASE_FALLTHROUGH;
+						case 3:  *packed++ = uint8_t(*_input++ * 127.0f + 128.0f); BASE_FALLTHROUGH;
+						case 2:  *packed++ = uint8_t(*_input++ * 127.0f + 128.0f); BASE_FALLTHROUGH;
 						case 1:  *packed++ = uint8_t(*_input++ * 127.0f + 128.0f);
 						}
 					}
@@ -392,9 +392,9 @@ namespace bgfx
 					{
 						switch (num)
 						{
-						default: *packed++ = uint8_t(*_input++ * 255.0f); BX_FALLTHROUGH;
-						case 3:  *packed++ = uint8_t(*_input++ * 255.0f); BX_FALLTHROUGH;
-						case 2:  *packed++ = uint8_t(*_input++ * 255.0f); BX_FALLTHROUGH;
+						default: *packed++ = uint8_t(*_input++ * 255.0f); BASE_FALLTHROUGH;
+						case 3:  *packed++ = uint8_t(*_input++ * 255.0f); BASE_FALLTHROUGH;
+						case 2:  *packed++ = uint8_t(*_input++ * 255.0f); BASE_FALLTHROUGH;
 						case 1:  *packed++ = uint8_t(*_input++ * 255.0f);
 						}
 					}
@@ -403,9 +403,9 @@ namespace bgfx
 				{
 					switch (num)
 					{
-					default: *packed++ = uint8_t(*_input++); BX_FALLTHROUGH;
-					case 3:  *packed++ = uint8_t(*_input++); BX_FALLTHROUGH;
-					case 2:  *packed++ = uint8_t(*_input++); BX_FALLTHROUGH;
+					default: *packed++ = uint8_t(*_input++); BASE_FALLTHROUGH;
+					case 3:  *packed++ = uint8_t(*_input++); BASE_FALLTHROUGH;
+					case 2:  *packed++ = uint8_t(*_input++); BASE_FALLTHROUGH;
 					case 1:  *packed++ = uint8_t(*_input++);
 					}
 				}
@@ -421,9 +421,9 @@ namespace bgfx
 					{
 						switch (num)
 						{
-						default: BX_FALLTHROUGH;
-						case 3:                packed |= uint32_t(*_input++ * 511.0f + 512.0f); BX_FALLTHROUGH;
-						case 2: packed <<= 10; packed |= uint32_t(*_input++ * 511.0f + 512.0f); BX_FALLTHROUGH;
+						default: BASE_FALLTHROUGH;
+						case 3:                packed |= uint32_t(*_input++ * 511.0f + 512.0f); BASE_FALLTHROUGH;
+						case 2: packed <<= 10; packed |= uint32_t(*_input++ * 511.0f + 512.0f); BASE_FALLTHROUGH;
 						case 1: packed <<= 10; packed |= uint32_t(*_input++ * 511.0f + 512.0f);
 						}
 					}
@@ -431,9 +431,9 @@ namespace bgfx
 					{
 						switch (num)
 						{
-						default: BX_FALLTHROUGH;
-						case 3:                packed |= uint32_t(*_input++ * 1023.0f); BX_FALLTHROUGH;
-						case 2: packed <<= 10; packed |= uint32_t(*_input++ * 1023.0f); BX_FALLTHROUGH;
+						default: BASE_FALLTHROUGH;
+						case 3:                packed |= uint32_t(*_input++ * 1023.0f); BASE_FALLTHROUGH;
+						case 2: packed <<= 10; packed |= uint32_t(*_input++ * 1023.0f); BASE_FALLTHROUGH;
 						case 1: packed <<= 10; packed |= uint32_t(*_input++ * 1023.0f);
 						}
 					}
@@ -442,9 +442,9 @@ namespace bgfx
 				{
 					switch (num)
 					{
-					default: BX_FALLTHROUGH;
-					case 3:                packed |= uint32_t(*_input++); BX_FALLTHROUGH;
-					case 2: packed <<= 10; packed |= uint32_t(*_input++); BX_FALLTHROUGH;
+					default: BASE_FALLTHROUGH;
+					case 3:                packed |= uint32_t(*_input++); BASE_FALLTHROUGH;
+					case 2: packed <<= 10; packed |= uint32_t(*_input++); BASE_FALLTHROUGH;
 					case 1: packed <<= 10; packed |= uint32_t(*_input++);
 					}
 				}
@@ -461,9 +461,9 @@ namespace bgfx
 					{
 						switch (num)
 						{
-						default: *packed++ = int16_t(*_input++ * 32767.0f); BX_FALLTHROUGH;
-						case 3:  *packed++ = int16_t(*_input++ * 32767.0f); BX_FALLTHROUGH;
-						case 2:  *packed++ = int16_t(*_input++ * 32767.0f); BX_FALLTHROUGH;
+						default: *packed++ = int16_t(*_input++ * 32767.0f); BASE_FALLTHROUGH;
+						case 3:  *packed++ = int16_t(*_input++ * 32767.0f); BASE_FALLTHROUGH;
+						case 2:  *packed++ = int16_t(*_input++ * 32767.0f); BASE_FALLTHROUGH;
 						case 1:  *packed++ = int16_t(*_input++ * 32767.0f);
 						}
 					}
@@ -471,9 +471,9 @@ namespace bgfx
 					{
 						switch (num)
 						{
-						default: *packed++ = int16_t(*_input++ * 65535.0f - 32768.0f); BX_FALLTHROUGH;
-						case 3:  *packed++ = int16_t(*_input++ * 65535.0f - 32768.0f); BX_FALLTHROUGH;
-						case 2:  *packed++ = int16_t(*_input++ * 65535.0f - 32768.0f); BX_FALLTHROUGH;
+						default: *packed++ = int16_t(*_input++ * 65535.0f - 32768.0f); BASE_FALLTHROUGH;
+						case 3:  *packed++ = int16_t(*_input++ * 65535.0f - 32768.0f); BASE_FALLTHROUGH;
+						case 2:  *packed++ = int16_t(*_input++ * 65535.0f - 32768.0f); BASE_FALLTHROUGH;
 						case 1:  *packed++ = int16_t(*_input++ * 65535.0f - 32768.0f);
 						}
 					}
@@ -482,9 +482,9 @@ namespace bgfx
 				{
 					switch (num)
 					{
-					default: *packed++ = int16_t(*_input++); BX_FALLTHROUGH;
-					case 3:  *packed++ = int16_t(*_input++); BX_FALLTHROUGH;
-					case 2:  *packed++ = int16_t(*_input++); BX_FALLTHROUGH;
+					default: *packed++ = int16_t(*_input++); BASE_FALLTHROUGH;
+					case 3:  *packed++ = int16_t(*_input++); BASE_FALLTHROUGH;
+					case 2:  *packed++ = int16_t(*_input++); BASE_FALLTHROUGH;
 					case 1:  *packed++ = int16_t(*_input++);
 					}
 				}
@@ -496,16 +496,16 @@ namespace bgfx
 				uint16_t* packed = (uint16_t*)data;
 				switch (num)
 				{
-				default: *packed++ = bx::halfFromFloat(*_input++); BX_FALLTHROUGH;
-				case 3:  *packed++ = bx::halfFromFloat(*_input++); BX_FALLTHROUGH;
-				case 2:  *packed++ = bx::halfFromFloat(*_input++); BX_FALLTHROUGH;
-				case 1:  *packed++ = bx::halfFromFloat(*_input++);
+				default: *packed++ = base::halfFromFloat(*_input++); BASE_FALLTHROUGH;
+				case 3:  *packed++ = base::halfFromFloat(*_input++); BASE_FALLTHROUGH;
+				case 2:  *packed++ = base::halfFromFloat(*_input++); BASE_FALLTHROUGH;
+				case 1:  *packed++ = base::halfFromFloat(*_input++);
 				}
 			}
 			break;
 
 		case AttribType::Float:
-			bx::memCopy(data, _input, num*sizeof(float) );
+			base::memCopy(data, _input, num*sizeof(float) );
 			break;
 		}
 	}
@@ -514,7 +514,7 @@ namespace bgfx
 	{
 		if (!_layout.has(_attr) )
 		{
-			bx::memSet(_output, 0, 4*sizeof(float) );
+			base::memSet(_output, 0, 4*sizeof(float) );
 			return;
 		}
 
@@ -537,9 +537,9 @@ namespace bgfx
 				{
 					switch (num)
 					{
-					default: *_output++ = (float(*packed++) - 128.0f)*1.0f/127.0f; BX_FALLTHROUGH;
-					case 3:  *_output++ = (float(*packed++) - 128.0f)*1.0f/127.0f; BX_FALLTHROUGH;
-					case 2:  *_output++ = (float(*packed++) - 128.0f)*1.0f/127.0f; BX_FALLTHROUGH;
+					default: *_output++ = (float(*packed++) - 128.0f)*1.0f/127.0f; BASE_FALLTHROUGH;
+					case 3:  *_output++ = (float(*packed++) - 128.0f)*1.0f/127.0f; BASE_FALLTHROUGH;
+					case 2:  *_output++ = (float(*packed++) - 128.0f)*1.0f/127.0f; BASE_FALLTHROUGH;
 					case 1:  *_output++ = (float(*packed++) - 128.0f)*1.0f/127.0f;
 					}
 				}
@@ -547,9 +547,9 @@ namespace bgfx
 				{
 					switch (num)
 					{
-					default: *_output++ = float(*packed++)*1.0f/255.0f; BX_FALLTHROUGH;
-					case 3:  *_output++ = float(*packed++)*1.0f/255.0f; BX_FALLTHROUGH;
-					case 2:  *_output++ = float(*packed++)*1.0f/255.0f; BX_FALLTHROUGH;
+					default: *_output++ = float(*packed++)*1.0f/255.0f; BASE_FALLTHROUGH;
+					case 3:  *_output++ = float(*packed++)*1.0f/255.0f; BASE_FALLTHROUGH;
+					case 2:  *_output++ = float(*packed++)*1.0f/255.0f; BASE_FALLTHROUGH;
 					case 1:  *_output++ = float(*packed++)*1.0f/255.0f;
 					}
 				}
@@ -563,9 +563,9 @@ namespace bgfx
 				{
 					switch (num)
 					{
-					default: BX_FALLTHROUGH;
-					case 3: *_output++ = (float(packed & 0x3ff) - 512.0f)*1.0f/511.0f; packed >>= 10; BX_FALLTHROUGH;
-					case 2: *_output++ = (float(packed & 0x3ff) - 512.0f)*1.0f/511.0f; packed >>= 10; BX_FALLTHROUGH;
+					default: BASE_FALLTHROUGH;
+					case 3: *_output++ = (float(packed & 0x3ff) - 512.0f)*1.0f/511.0f; packed >>= 10; BASE_FALLTHROUGH;
+					case 2: *_output++ = (float(packed & 0x3ff) - 512.0f)*1.0f/511.0f; packed >>= 10; BASE_FALLTHROUGH;
 					case 1: *_output++ = (float(packed & 0x3ff) - 512.0f)*1.0f/511.0f;
 					}
 				}
@@ -573,9 +573,9 @@ namespace bgfx
 				{
 					switch (num)
 					{
-					default: BX_FALLTHROUGH;
-					case 3: *_output++ = float(packed & 0x3ff)*1.0f/1023.0f; packed >>= 10; BX_FALLTHROUGH;
-					case 2: *_output++ = float(packed & 0x3ff)*1.0f/1023.0f; packed >>= 10; BX_FALLTHROUGH;
+					default: BASE_FALLTHROUGH;
+					case 3: *_output++ = float(packed & 0x3ff)*1.0f/1023.0f; packed >>= 10; BASE_FALLTHROUGH;
+					case 2: *_output++ = float(packed & 0x3ff)*1.0f/1023.0f; packed >>= 10; BASE_FALLTHROUGH;
 					case 1: *_output++ = float(packed & 0x3ff)*1.0f/1023.0f;
 					}
 				}
@@ -589,9 +589,9 @@ namespace bgfx
 				{
 					switch (num)
 					{
-					default: *_output++ = float(*packed++)*1.0f/32767.0f; BX_FALLTHROUGH;
-					case 3:  *_output++ = float(*packed++)*1.0f/32767.0f; BX_FALLTHROUGH;
-					case 2:  *_output++ = float(*packed++)*1.0f/32767.0f; BX_FALLTHROUGH;
+					default: *_output++ = float(*packed++)*1.0f/32767.0f; BASE_FALLTHROUGH;
+					case 3:  *_output++ = float(*packed++)*1.0f/32767.0f; BASE_FALLTHROUGH;
+					case 2:  *_output++ = float(*packed++)*1.0f/32767.0f; BASE_FALLTHROUGH;
 					case 1:  *_output++ = float(*packed++)*1.0f/32767.0f;
 					}
 				}
@@ -599,9 +599,9 @@ namespace bgfx
 				{
 					switch (num)
 					{
-					default: *_output++ = (float(*packed++) + 32768.0f)*1.0f/65535.0f; BX_FALLTHROUGH;
-					case 3:  *_output++ = (float(*packed++) + 32768.0f)*1.0f/65535.0f; BX_FALLTHROUGH;
-					case 2:  *_output++ = (float(*packed++) + 32768.0f)*1.0f/65535.0f; BX_FALLTHROUGH;
+					default: *_output++ = (float(*packed++) + 32768.0f)*1.0f/65535.0f; BASE_FALLTHROUGH;
+					case 3:  *_output++ = (float(*packed++) + 32768.0f)*1.0f/65535.0f; BASE_FALLTHROUGH;
+					case 2:  *_output++ = (float(*packed++) + 32768.0f)*1.0f/65535.0f; BASE_FALLTHROUGH;
 					case 1:  *_output++ = (float(*packed++) + 32768.0f)*1.0f/65535.0f;
 					}
 				}
@@ -613,25 +613,25 @@ namespace bgfx
 				uint16_t* packed = (uint16_t*)data;
 				switch (num)
 				{
-				default: *_output++ = bx::halfToFloat(*packed++); BX_FALLTHROUGH;
-				case 3:  *_output++ = bx::halfToFloat(*packed++); BX_FALLTHROUGH;
-				case 2:  *_output++ = bx::halfToFloat(*packed++); BX_FALLTHROUGH;
-				case 1:  *_output++ = bx::halfToFloat(*packed++);
+				default: *_output++ = base::halfToFloat(*packed++); BASE_FALLTHROUGH;
+				case 3:  *_output++ = base::halfToFloat(*packed++); BASE_FALLTHROUGH;
+				case 2:  *_output++ = base::halfToFloat(*packed++); BASE_FALLTHROUGH;
+				case 1:  *_output++ = base::halfToFloat(*packed++);
 				}
 			}
 			break;
 
 		case AttribType::Float:
-			bx::memCopy(_output, data, num*sizeof(float) );
+			base::memCopy(_output, data, num*sizeof(float) );
 			_output += num;
 			break;
 		}
 
 		switch (num)
 		{
-		case 1: *_output++ = 0.0f; BX_FALLTHROUGH;
-		case 2: *_output++ = 0.0f; BX_FALLTHROUGH;
-		case 3: *_output++ = 0.0f; BX_FALLTHROUGH;
+		case 1: *_output++ = 0.0f; BASE_FALLTHROUGH;
+		case 2: *_output++ = 0.0f; BASE_FALLTHROUGH;
+		case 3: *_output++ = 0.0f; BASE_FALLTHROUGH;
 		default: break;
 		}
 	}
@@ -640,7 +640,7 @@ namespace bgfx
 	{
 		if (_destLayout.m_hash == _srcLayout.m_hash)
 		{
-			bx::memCopy(_destData, _srcData, _srcLayout.getSize(_num) );
+			base::memCopy(_destData, _srcData, _srcLayout.getSize(_num) );
 			return;
 		}
 
@@ -684,7 +684,7 @@ namespace bgfx
 
 					if (_destLayout.m_attributes[attr] == _srcLayout.m_attributes[attr])
 					{
-						bx::memCopy(dest + cop.dest, destStride, src + cop.src, srcStride, cop.size, _num);
+						base::memCopy(dest + cop.dest, destStride, src + cop.src, srcStride, cop.size, _num);
 					}
 					else
 					{
@@ -693,7 +693,7 @@ namespace bgfx
 				}
 				else
 				{
-					bx::memSet(dest + cop.dest, destStride, 0, cop.size, _num);
+					base::memSet(dest + cop.dest, destStride, 0, cop.size, _num);
 				}
 			}
 		}
@@ -732,7 +732,7 @@ namespace bgfx
 		const float epsilonSq = _epsilon*_epsilon;
 
 		uint32_t numVertices = 0;
-		bx::memSet(_output, 0xff, _num*sizeof(IndexT) );
+		base::memSet(_output, 0xff, _num*sizeof(IndexT) );
 
 		for (uint32_t ii = 0; ii < _num; ++ii)
 		{
@@ -768,17 +768,17 @@ namespace bgfx
 	}
 
 	template<typename IndexT>
-	static IndexT weldVertices(IndexT* _output, const VertexLayout& _layout, const void* _data, uint32_t _num, float _epsilon, bx::AllocatorI* _allocator)
+	static IndexT weldVertices(IndexT* _output, const VertexLayout& _layout, const void* _data, uint32_t _num, float _epsilon, base::AllocatorI* _allocator)
 	{
-		const uint32_t hashSize = bx::uint32_nextpow2(_num);
+		const uint32_t hashSize = base::uint32_nextpow2(_num);
 		const uint32_t hashMask = hashSize-1;
 		const float epsilonSq = _epsilon*_epsilon;
 
 		uint32_t numVertices = 0;
 
 		const uint32_t size = sizeof(IndexT)*(hashSize + _num);
-		IndexT* hashTable = (IndexT*)bx::alloc(_allocator, size);
-		bx::memSet(hashTable, 0xff, size);
+		IndexT* hashTable = (IndexT*)base::alloc(_allocator, size);
+		base::memSet(hashTable, 0xff, size);
 
 		IndexT* next = hashTable + hashSize;
 
@@ -786,7 +786,7 @@ namespace bgfx
 		{
 			float pos[4];
 			vertexUnpack(pos, Attrib::Position, _layout, _data, ii);
-			uint32_t hashValue = bx::hash<bx::HashMurmur2A>(pos, 3*sizeof(float) ) & hashMask;
+			uint32_t hashValue = base::hash<base::HashMurmur2A>(pos, 3*sizeof(float) ) & hashMask;
 
 			IndexT offset = hashTable[hashValue];
 			for (; IndexT(-1) != offset; offset = next[offset])
@@ -810,12 +810,12 @@ namespace bgfx
 			}
 		}
 
-		bx::free(_allocator, hashTable);
+		base::free(_allocator, hashTable);
 
 		return IndexT(numVertices);
 	}
 
-	uint32_t weldVertices(void* _output, const VertexLayout& _layout, const void* _data, uint32_t _num, bool _index32, float _epsilon, bx::AllocatorI* _allocator)
+	uint32_t weldVertices(void* _output, const VertexLayout& _layout, const void* _data, uint32_t _num, bool _index32, float _epsilon, base::AllocatorI* _allocator)
 	{
 		if (_index32)
 		{
@@ -825,4 +825,4 @@ namespace bgfx
 		return weldVertices( (uint16_t*)_output, _layout, _data, _num, _epsilon, _allocator);
 	}
 
-} // namespace bgfx
+} // namespace graphics

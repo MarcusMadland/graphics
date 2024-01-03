@@ -1,10 +1,10 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_NVAPI_H_HEADER_GUARD
-#define BGFX_NVAPI_H_HEADER_GUARD
+#ifndef GRAPHICS_NVAPI_H_HEADER_GUARD
+#define GRAPHICS_NVAPI_H_HEADER_GUARD
 
 struct ID3D11Device;
 struct ID3D11DeviceContext;
@@ -12,7 +12,7 @@ struct ID3D11Buffer;
 struct ID3D12Device;
 struct ID3D12CommandList;
 
-namespace bgfx
+namespace graphics
 {
 	struct NvPhysicalGpuHandle;
 	struct NvAftermathContextHandle;
@@ -66,7 +66,7 @@ namespace bgfx
 		void shutdownAftermath();
 
 		///
-		void setMarker(const bx::StringView& _marker);
+		void setMarker(const base::StringView& _marker);
 
 		///
 		void* m_nvApiDll;
@@ -79,6 +79,6 @@ namespace bgfx
 		PFN_NVAPI_MULTIDRAWINDIRECT nvApiD3D11MultiDrawIndexedInstancedIndirect;
 	};
 
-} // namespace bgfx
+} // namespace graphics
 
-#endif // BGFX_NVAPI_H_HEADER_GUARD
+#endif // GRAPHICS_NVAPI_H_HEADER_GUARD

@@ -1,11 +1,11 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
 #include "entry_p.h"
 
-#if ENTRY_CONFIG_USE_NATIVE && (BX_PLATFORM_BSD || BX_PLATFORM_LINUX || BX_PLATFORM_RPI)
+#if ENTRY_CONFIG_USE_NATIVE && (BASE_PLATFORM_BSD || BASE_PLATFORM_LINUX || BASE_PLATFORM_RPI)
 
 #define XK_MISCELLANY
 #define XK_LATIN1
@@ -15,19 +15,19 @@
 #include <unistd.h> // syscall
 
 #undef None
-#include <mapp/thread.h>
-#include <mapp/os.h>
-#include <mapp/handlealloc.h>
-#include <mapp/mutex.h>
+#include <base/thread.h>
+#include <base/os.h>
+#include <base/handlealloc.h>
+#include <base/mutex.h>
 
 #include <string>
 
 #include <fcntl.h>
 
-namespace mrender
+namespace graphics
 {
-	static const char* s_applicationName  = "BGFX";
-	static const char* s_applicationClass = "bgfx";
+	static const char* s_applicationName  = "GRAPHICS";
+	static const char* s_applicationClass = "graphics";
 
 #define JS_EVENT_BUTTON 0x01 /* button pressed/released */
 #define JS_EVENT_AXIS   0x02 /* joystick moved */
@@ -81,7 +81,7 @@ namespace mrender
 		{ Key::GamepadUp,   Key::GamepadDown  },
 		{ Key::None,        Key::None         },
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_translateAxis) == BX_COUNTOF(s_axisDpad) );
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_translateAxis) == BASE_COUNTOF(s_axisDpad) );
 
 	struct Joystick
 	{
@@ -94,7 +94,7 @@ namespace mrender
 		{
 			m_fd = open("/dev/input/js0", O_RDONLY | O_NONBLOCK);
 
-			bx::memSet(m_value, 0, sizeof(m_value) );
+			base::memSet(m_value, 0, sizeof(m_value) );
 
 			// Deadzone values from xinput.h
 			m_deadzone[GamepadAxis::LeftX ] =
@@ -143,14 +143,14 @@ namespace mrender
 
 			if (event.type & JS_EVENT_BUTTON)
 			{
-				if (event.number < BX_COUNTOF(s_translateButton) )
+				if (event.number < BASE_COUNTOF(s_translateButton) )
 				{
 					_eventQueue.postKeyEvent(defaultWindow, s_translateButton[event.number], 0, 0 != event.value);
 				}
 			}
 			else if (event.type & JS_EVENT_AXIS)
 			{
-				if (event.number < BX_COUNTOF(s_translateAxis) )
+				if (event.number < BASE_COUNTOF(s_translateAxis) )
 				{
 					GamepadAxis::Enum axis = s_translateAxis[event.number];
 					int32_t value = event.value;
@@ -194,7 +194,7 @@ namespace mrender
 	static void initTranslateKey(uint16_t _xk, Key::Enum _key)
 	{
 		_xk += 256;
-		BX_ASSERT(_xk < BX_COUNTOF(s_translateKey), "Out of bounds %d.", _xk);
+		BASE_ASSERT(_xk < BASE_COUNTOF(s_translateKey), "Out of bounds %d.", _xk);
 		s_translateKey[_xk&0x1ff] = (uint8_t)_key;
 	}
 
@@ -209,7 +209,7 @@ namespace mrender
 		int32_t m_argc;
 		const char* const* m_argv;
 
-		static int32_t threadFunc(bx::Thread* _thread, void* _userData);
+		static int32_t threadFunc(base::Thread* _thread, void* _userData);
 	};
 
 	struct Msg
@@ -237,7 +237,7 @@ namespace mrender
 			: m_modifiers(Modifier::None)
 			, m_exit(false)
 		{
-			bx::memSet(s_translateKey, 0, sizeof(s_translateKey) );
+			base::memSet(s_translateKey, 0, sizeof(s_translateKey) );
 			initTranslateKey(XK_Escape,       Key::Esc);
 			initTranslateKey(XK_Return,       Key::Return);
 			initTranslateKey(XK_Tab,          Key::Tab);
@@ -336,8 +336,8 @@ namespace mrender
 			m_display = XOpenDisplay(NULL);
 			if (NULL == m_display)
 			{
-				bx::printf("XOpenDisplay failed: DISPLAY environment variable must be set.\n\n");
-				return bx::kExitFailure;
+				base::printf("XOpenDisplay failed: DISPLAY environment variable must be set.\n\n");
+				return base::kExitFailure;
 			}
 
 			int32_t screen = DefaultScreen(m_display);
@@ -345,7 +345,7 @@ namespace mrender
 			m_visual = DefaultVisual(m_display, screen);
 			m_root   = RootWindow(m_display, screen);
 
-			bx::memSet(&m_windowAttrs, 0, sizeof(m_windowAttrs) );
+			base::memSet(&m_windowAttrs, 0, sizeof(m_windowAttrs) );
 			m_windowAttrs.background_pixel = 0;
 			m_windowAttrs.border_pixel     = 0;
 			m_windowAttrs.bit_gravity = StaticGravity;
@@ -404,7 +404,7 @@ namespace mrender
 			mte.m_argc = _argc;
 			mte.m_argv = _argv;
 
-			bx::Thread thread;
+			base::Thread thread;
 			thread.init(mte.threadFunc, &mte);
 
 			WindowHandle defaultWindow = { 0 };
@@ -419,7 +419,7 @@ namespace mrender
 
 				if (!xpending)
 				{
-					bx::sleep(joystick ? 8 : 16);
+					base::sleep(joystick ? 8 : 16);
 				}
 				else
 				{
@@ -625,7 +625,7 @@ namespace mrender
 
 		WindowHandle findHandle(Window _window)
 		{
-			bx::MutexScope scope(m_lock);
+			base::MutexScope scope(m_lock);
 			for (uint32_t ii = 0, num = m_windowAlloc.getNumHandles(); ii < num; ++ii)
 			{
 				uint16_t idx = m_windowAlloc.getHandleAt(ii);
@@ -648,8 +648,8 @@ namespace mrender
 		int32_t m_mz;
 
 		EventQueue m_eventQueue;
-		bx::Mutex m_lock;
-		bx::HandleAllocT<ENTRY_CONFIG_MAX_WINDOWS> m_windowAlloc;
+		base::Mutex m_lock;
+		base::HandleAllocT<ENTRY_CONFIG_MAX_WINDOWS> m_windowAlloc;
 
 		int32_t m_depth;
 		Visual* m_visual;
@@ -664,9 +664,9 @@ namespace mrender
 
 	static Context s_ctx;
 
-	int32_t MainThreadEntry::threadFunc(bx::Thread* _thread, void* _userData)
+	int32_t MainThreadEntry::threadFunc(base::Thread* _thread, void* _userData)
 	{
-		BX_UNUSED(_thread);
+		BASE_UNUSED(_thread);
 
 		MainThreadEntry* self = (MainThreadEntry*)_userData;
 		int32_t result = main(self->m_argc, self->m_argv);
@@ -691,7 +691,7 @@ namespace mrender
 
 	WindowHandle createWindow(int32_t _x, int32_t _y, uint32_t _width, uint32_t _height, uint32_t _flags, const char* _title)
 	{
-		bx::MutexScope scope(s_ctx.m_lock);
+		base::MutexScope scope(s_ctx.m_lock);
 		WindowHandle handle = { s_ctx.m_windowAlloc.alloc() };
 
 		if (isValid(handle) )
@@ -717,7 +717,7 @@ namespace mrender
 			XUnmapWindow(s_ctx.m_display, s_ctx.m_window[_handle.idx]);
 			XDestroyWindow(s_ctx.m_display, s_ctx.m_window[_handle.idx]);
 
-			bx::MutexScope scope(s_ctx.m_lock);
+			base::MutexScope scope(s_ctx.m_lock);
 			s_ctx.m_windowAlloc.free(_handle.idx);
 		}
 	}
@@ -748,17 +748,17 @@ namespace mrender
 
 	void setWindowFlags(WindowHandle _handle, uint32_t _flags, bool _enabled)
 	{
-		BX_UNUSED(_handle, _flags, _enabled);
+		BASE_UNUSED(_handle, _flags, _enabled);
 	}
 
 	void toggleFullscreen(WindowHandle _handle)
 	{
-		BX_UNUSED(_handle);
+		BASE_UNUSED(_handle);
 	}
 
 	void setMouseLock(WindowHandle _handle, bool _lock)
 	{
-		BX_UNUSED(_handle, _lock);
+		BASE_UNUSED(_handle, _lock);
 	}
 
 	void* getNativeWindowHandle(WindowHandle _handle)
@@ -771,12 +771,12 @@ namespace mrender
 		return s_ctx.m_display;
 	}
 
-} // namespace mrender
+} // namespace graphics
 
 int main(int _argc, const char* const* _argv)
 {
-	using namespace mrender;
+	using namespace graphics;
 	return s_ctx.run(_argc, _argv);
 }
 
-#endif // ENTRY_CONFIG_USE_NATIVE && (BX_PLATFORM_BSD || BX_PLATFORM_LINUX || BX_PLATFORM_RPI)
+#endif // ENTRY_CONFIG_USE_NATIVE && (BASE_PLATFORM_BSD || BASE_PLATFORM_LINUX || BASE_PLATFORM_RPI)

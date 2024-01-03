@@ -1,18 +1,18 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include <mapp/allocator.h>
-#include <mapp/debug.h>
-#include <mapp/math.h>
-#include <mapp/sort.h>
-#include <mapp/uint32_t.h>
+#include <base/allocator.h>
+#include <base/debug.h>
+#include <base/math.h>
+#include <base/sort.h>
+#include <base/uint32_t.h>
 
 #include "config.h"
 #include "topology.h"
 
-namespace bgfx
+namespace graphics
 {
 	template<typename IndexT>
 	static uint32_t topologyConvertTriListFlipWinding(void* _dst, uint32_t _dstSize, const IndexT* _indices, uint32_t _numIndices)
@@ -78,10 +78,10 @@ namespace bgfx
 			const IndexT* tri = &_indices[ii];
 			IndexT i0 = tri[0], i1 = tri[1], i2 = tri[2];
 
-			if (i0 > i1) { bx::swap(i0, i1); }
-			if (i1 > i2) { bx::swap(i1, i2); }
-			if (i0 > i1) { bx::swap(i0, i1); }
-			BX_ASSERT(i0 < i1 && i1 < i2, "");
+			if (i0 > i1) { base::swap(i0, i1); }
+			if (i1 > i2) { base::swap(i1, i2); }
+			if (i0 > i1) { base::swap(i0, i1); }
+			BASE_ASSERT(i0 < i1 && i1 < i2, "");
 
 			dst[1] = i0; dst[0] = i1;
 			dst[3] = i1; dst[2] = i2;
@@ -91,7 +91,7 @@ namespace bgfx
 
 		// Sort all line pairs.
 		SortT* sorted = (SortT*)_temp;
-		bx::radixSort(sorted, _tempSort, _numIndices);
+		base::radixSort(sorted, _tempSort, _numIndices);
 
 		uint32_t num = 0;
 
@@ -141,12 +141,12 @@ namespace bgfx
 	}
 
 	template<typename IndexT, typename SortT>
-	static uint32_t topologyConvertTriListToLineList(void* _dst, uint32_t _dstSize, const IndexT* _indices, uint32_t _numIndices, bx::AllocatorI* _allocator)
+	static uint32_t topologyConvertTriListToLineList(void* _dst, uint32_t _dstSize, const IndexT* _indices, uint32_t _numIndices, base::AllocatorI* _allocator)
 	{
-		IndexT* temp     = (IndexT*)bx::alloc(_allocator, _numIndices*2*sizeof(IndexT)*2);
+		IndexT* temp     = (IndexT*)base::alloc(_allocator, _numIndices*2*sizeof(IndexT)*2);
 		SortT*  tempSort = (SortT*)&temp[_numIndices*2];
 		uint32_t num = topologyConvertTriListToLineList(_dst, _dstSize, _indices, _numIndices, temp, tempSort);
-		bx::free(_allocator, temp);
+		base::free(_allocator, temp);
 		return num;
 	}
 
@@ -205,7 +205,7 @@ namespace bgfx
 		, const void* _indices
 		, uint32_t _numIndices
 		, bool _index32
-		, bx::AllocatorI* _allocator
+		, base::AllocatorI* _allocator
 		)
 	{
 		switch (_conversion)
@@ -264,12 +264,12 @@ namespace bgfx
 
 	inline float fmin3(float _a, float _b, float _c)
 	{
-		return bx::min(_a, _b, _c);
+		return base::min(_a, _b, _c);
 	}
 
 	inline float fmax3(float _a, float _b, float _c)
 	{
-		return bx::max(_a, _b, _c);
+		return base::max(_a, _b, _c);
 	}
 
 	inline float favg3(float _a, float _b, float _c)
@@ -277,21 +277,21 @@ namespace bgfx
 		return (_a + _b + _c) * 1.0f/3.0f;
 	}
 
-	const bx::Vec3 vertexPos(const void* _vertices, uint32_t _stride, uint32_t _index)
+	const base::Vec3 vertexPos(const void* _vertices, uint32_t _stride, uint32_t _index)
 	{
 		const uint8_t* vertices = (const uint8_t*)_vertices;
-		return bx::load<bx::Vec3>(&vertices[_index*_stride]);
+		return base::load<base::Vec3>(&vertices[_index*_stride]);
 	}
 
 	inline float distanceDir(const float* _dir, const void* _vertices, uint32_t _stride, uint32_t _index)
 	{
-		return bx::dot(vertexPos(_vertices, _stride, _index), bx::load<bx::Vec3>(_dir) );
+		return base::dot(vertexPos(_vertices, _stride, _index), base::load<base::Vec3>(_dir) );
 	}
 
 	inline float distancePos(const float* _pos, const void* _vertices, uint32_t _stride, uint32_t _index)
 	{
-		const bx::Vec3 tmp = bx::sub(bx::load<bx::Vec3>(_pos), vertexPos(_vertices, _stride, _index) );
-		return bx::sqrt(bx::dot(tmp, tmp) );
+		const base::Vec3 tmp = base::sub(base::load<base::Vec3>(_pos), vertexPos(_vertices, _stride, _index) );
+		return base::sqrt(base::dot(tmp, tmp) );
 	}
 
 	typedef float (*KeyFn)(float, float, float);
@@ -319,8 +319,8 @@ namespace bgfx
 			float distance1 = dfn(_dirOrPos, _vertices, _stride, idx1);
 			float distance2 = dfn(_dirOrPos, _vertices, _stride, idx2);
 
-			uint32_t ui = bx::floatToBits(kfn(distance0, distance1, distance2) );
-			_keys[ii]   = bx::floatFlip(ui) ^ xorBits;
+			uint32_t ui = base::floatToBits(kfn(distance0, distance1, distance2) );
+			_keys[ii]   = base::floatFlip(ui) ^ xorBits;
 			_values[ii] = ii;
 		}
 	}
@@ -341,7 +341,7 @@ namespace bgfx
 		, const IndexT* _indices
 		)
 	{
-		using namespace bx;
+		using namespace base;
 
 		switch (_sort)
 		{
@@ -389,15 +389,15 @@ namespace bgfx
 		, const void* _indices
 		, uint32_t    _numIndices
 		, bool        _index32
-		, bx::AllocatorI* _allocator
+		, base::AllocatorI* _allocator
 		)
 	{
 		uint32_t indexSize = _index32
 			? sizeof(uint32_t)
 			: sizeof(uint16_t)
 			;
-		uint32_t  num  = bx::uint32_min(_numIndices*indexSize, _dstSize)/(indexSize*3);
-		uint32_t* temp = (uint32_t*)bx::alloc(_allocator, sizeof(uint32_t)*num*4);
+		uint32_t  num  = base::uint32_min(_numIndices*indexSize, _dstSize)/(indexSize*3);
+		uint32_t* temp = (uint32_t*)base::alloc(_allocator, sizeof(uint32_t)*num*4);
 
 		uint32_t* keys       = &temp[num*0];
 		uint32_t* values     = &temp[num*1];
@@ -439,7 +439,7 @@ namespace bgfx
 					);
 		}
 
-		bx::free(_allocator, temp);
+		base::free(_allocator, temp);
 	}
 
-} //namespace bgfx
+} //namespace graphics

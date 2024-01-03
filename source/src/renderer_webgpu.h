@@ -1,40 +1,40 @@
 /*
  * Copyright 2011-2019 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_RENDERER_WEBGPU_H_HEADER_GUARD
-#define BGFX_RENDERER_WEBGPU_H_HEADER_GUARD
+#ifndef GRAPHICS_RENDERER_WEBGPU_H_HEADER_GUARD
+#define GRAPHICS_RENDERER_WEBGPU_H_HEADER_GUARD
 
-#include "bgfx_p.h"
+#include "graphics_p.h"
 
-#if BGFX_CONFIG_RENDERER_WEBGPU
+#if GRAPHICS_CONFIG_RENDERER_WEBGPU
 
-#if !BX_PLATFORM_EMSCRIPTEN
+#if !BASE_PLATFORM_EMSCRIPTEN
 #	include <dawn/webgpu_cpp.h>
 #	include <dawn/dawn_wsi.h>
 #else
 #	include <webgpu/webgpu_cpp.h>
-#endif // !BX_PLATFORM_EMSCRIPTEN
+#endif // !BASE_PLATFORM_EMSCRIPTEN
 
-#define BGFX_WEBGPU_PROFILER_BEGIN(_view, _abgr)      \
-	BX_MACRO_BLOCK_BEGIN                              \
-		BGFX_PROFILER_BEGIN(s_viewName[view], _abgr); \
-	BX_MACRO_BLOCK_END
+#define GRAPHICS_WEBGPU_PROFILER_BEGIN(_view, _abgr)      \
+	BASE_MACRO_BLOCK_BEGIN                              \
+		GRAPHICS_PROFILER_BEGIN(s_viewName[view], _abgr); \
+	BASE_MACRO_BLOCK_END
 
-#define BGFX_WEBGPU_PROFILER_BEGIN_LITERAL(_name, _abgr) \
-	BX_MACRO_BLOCK_BEGIN                                 \
-		BGFX_PROFILER_BEGIN_LITERAL("" # _name, _abgr);  \
-	BX_MACRO_BLOCK_END
+#define GRAPHICS_WEBGPU_PROFILER_BEGIN_LITERAL(_name, _abgr) \
+	BASE_MACRO_BLOCK_BEGIN                                 \
+		GRAPHICS_PROFILER_BEGIN_LITERAL("" # _name, _abgr);  \
+	BASE_MACRO_BLOCK_END
 
-#define BGFX_WEBGPU_PROFILER_END() \
-	BX_MACRO_BLOCK_BEGIN           \
-		BGFX_PROFILER_END();       \
-	BX_MACRO_BLOCK_END
+#define GRAPHICS_WEBGPU_PROFILER_END() \
+	BASE_MACRO_BLOCK_BEGIN           \
+		GRAPHICS_PROFILER_END();       \
+	BASE_MACRO_BLOCK_END
 
 #define WEBGPU_NUM_UNIFORM_BUFFERS  8
 
-namespace bgfx { namespace webgpu
+namespace graphics { namespace webgpu
 {
 	template <typename Ty>
 	class StateCacheT
@@ -98,13 +98,13 @@ namespace bgfx { namespace webgpu
 
 			if(NULL != m_dynamic)
 			{
-				bx::deleteObject(g_allocator, m_dynamic);
+				base::deleteObject(g_allocator, m_dynamic);
 				m_dynamic = NULL;
 			}
 		}
 
 		uint32_t m_size;
-		uint16_t m_flags = BGFX_BUFFER_NONE;
+		uint16_t m_flags = GRAPHICS_BUFFER_NONE;
 		bool     m_vertex;
 
 		String       m_label;
@@ -130,7 +130,7 @@ namespace bgfx { namespace webgpu
 	{
 		uint32_t      m_index = UINT32_MAX;
 		uint32_t      m_binding = UINT32_MAX;
-		UniformHandle m_uniform = BGFX_INVALID_HANDLE;
+		UniformHandle m_uniform = GRAPHICS_INVALID_HANDLE;
 	};
 
 	struct ShaderWgpu
@@ -171,11 +171,11 @@ namespace bgfx { namespace webgpu
 		uint8_t  m_numPredefined = 0;
 		uint8_t  m_numAttrs = 0;
 
-		BindInfo                   m_bindInfo[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
-		wgpu::BindGroupLayoutEntry m_samplers[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
-		wgpu::BindGroupLayoutEntry m_textures[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
+		BindInfo                   m_bindInfo[GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS];
+		wgpu::BindGroupLayoutEntry m_samplers[GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS];
+		wgpu::BindGroupLayoutEntry m_textures[GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS];
 		uint8_t                    m_numSamplers = 0;
-		wgpu::BindGroupLayoutEntry m_buffers[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
+		wgpu::BindGroupLayoutEntry m_buffers[GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS];
 		uint32_t                   m_numBuffers = 0;
 	};
 
@@ -199,17 +199,17 @@ namespace bgfx { namespace webgpu
 		uint32_t              m_numUniforms;
 		uint32_t              m_bindGroupLayoutHash;
 
-		BindInfo                   m_bindInfo[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
-		wgpu::BindGroupLayoutEntry m_samplers[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
-		wgpu::BindGroupLayoutEntry m_textures[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
+		BindInfo                   m_bindInfo[GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS];
+		wgpu::BindGroupLayoutEntry m_samplers[GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS];
+		wgpu::BindGroupLayoutEntry m_textures[GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS];
 		uint32_t                   m_numSamplers = 0;
-		wgpu::BindGroupLayoutEntry m_buffers[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
+		wgpu::BindGroupLayoutEntry m_buffers[GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS];
 		uint32_t                   m_numBuffers = 0;
 	};
 
 	constexpr size_t kMaxVertexInputs = 16;
 	constexpr size_t kMaxVertexAttributes = 16;
-	constexpr size_t kMaxColorAttachments = BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS;
+	constexpr size_t kMaxColorAttachments = GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS;
 
 	constexpr uint32_t kMinBufferOffsetAlignment = 256;
 
@@ -249,7 +249,7 @@ namespace bgfx { namespace webgpu
 	struct BindingsWgpu
 	{
 		uint32_t numEntries = 0;
-		wgpu::BindGroupEntry m_entries[2 + BGFX_CONFIG_MAX_TEXTURE_SAMPLERS*3];
+		wgpu::BindGroupEntry m_entries[2 + GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS*3];
 	};
 
 	struct BindStateWgpu
@@ -278,12 +278,12 @@ namespace bgfx { namespace webgpu
 
 	void release(RenderPassStateWgpu* _ptr)
 	{
-		bx::deleteObject(g_allocator, _ptr);
+		base::deleteObject(g_allocator, _ptr);
 	}
 
 	void release(PipelineStateWgpu* _ptr)
 	{
-		bx::deleteObject(g_allocator, _ptr);
+		base::deleteObject(g_allocator, _ptr);
 	}
 
 	class StagingBufferWgpu
@@ -342,7 +342,7 @@ namespace bgfx { namespace webgpu
 
 		void readback(void const* data)
 		{
-			bx::memCopy(m_data, data, m_size);
+			base::memCopy(m_data, data, m_size);
 			m_buffer.Unmap();
 			m_mapped = false;
 		}
@@ -413,7 +413,7 @@ namespace bgfx { namespace webgpu
 
 	void release(SamplerStateWgpu* _ptr)
 	{
-		bx::deleteObject(g_allocator, _ptr);
+		base::deleteObject(g_allocator, _ptr);
 	}
 
 	struct FrameBufferWgpu;
@@ -427,7 +427,7 @@ namespace bgfx { namespace webgpu
 
 		wgpu::TextureView current();
 
-#if !BX_PLATFORM_EMSCRIPTEN
+#if !BASE_PLATFORM_EMSCRIPTEN
 		DawnSwapChainImplementation m_impl;
 #endif
 
@@ -467,9 +467,9 @@ namespace bgfx { namespace webgpu
 
 		uint32_t m_pixelFormatHash = 0;
 
-		TextureHandle m_colorHandle[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS - 1];
+		TextureHandle m_colorHandle[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS - 1];
 		TextureHandle m_depthHandle = { kInvalidHandle };
-		Attachment m_colorAttachment[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS - 1];
+		Attachment m_colorAttachment[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS - 1];
 		Attachment m_depthAttachment;
 		uint8_t m_num = 0; // number of color handles
 	};
@@ -485,8 +485,8 @@ namespace bgfx { namespace webgpu
 		void release(wgpu::Buffer _buffer);
 		void consume();
 
-#if BGFX_CONFIG_MULTITHREADED
-		//bx::Semaphore 		 m_framesSemaphore;
+#if GRAPHICS_CONFIG_MULTITHREADED
+		//base::Semaphore 		 m_framesSemaphore;
 #endif
 
 		wgpu::Queue		     m_queue;
@@ -497,7 +497,7 @@ namespace bgfx { namespace webgpu
 		int m_releaseReadIndex = 0;
 
 		typedef stl::vector<wgpu::Buffer> ResourceArray;
-		ResourceArray m_release[BGFX_CONFIG_MAX_FRAME_LATENCY];
+		ResourceArray m_release[GRAPHICS_CONFIG_MAX_FRAME_LATENCY];
 	};
 
 	struct TimerQueryWgpu
@@ -536,13 +536,13 @@ namespace bgfx { namespace webgpu
 		uint64_t m_frequency;
 
 		Result m_result[4 * 2];
-		bx::RingBufferControl m_control;
+		base::RingBufferControl m_control;
 	};
 
 	struct OcclusionQueryWgpu
 	{
 		OcclusionQueryWgpu()
-			: m_control(BX_COUNTOF(m_query))
+			: m_control(BASE_COUNTOF(m_query))
 		{
 		}
 
@@ -559,12 +559,12 @@ namespace bgfx { namespace webgpu
 		};
 
 		wgpu::Buffer m_buffer;
-		Query m_query[BGFX_CONFIG_MAX_OCCLUSION_QUERIES];
-		bx::RingBufferControl m_control;
+		Query m_query[GRAPHICS_CONFIG_MAX_OCCLUSION_QUERIES];
+		base::RingBufferControl m_control;
 	};
 
-} /* namespace webgpu */ } // namespace bgfx
+} /* namespace webgpu */ } // namespace graphics
 
-#endif // BGFX_CONFIG_RENDERER_WEBGPU
+#endif // GRAPHICS_CONFIG_RENDERER_WEBGPU
 
-#endif // BGFX_RENDERER_WEBGPU_H_HEADER_GUARD
+#endif // GRAPHICS_RENDERER_WEBGPU_H_HEADER_GUARD

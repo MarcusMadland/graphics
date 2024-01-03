@@ -1,12 +1,12 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include "bgfx_p.h"
+#include "graphics_p.h"
 #include "nvapi.h"
 
-namespace bgfx
+namespace graphics
 {
 	/*
 	 * NVAPI
@@ -20,11 +20,11 @@ namespace bgfx
 
 #define NVAPI_MAX_PHYSICAL_GPUS 64
 
-#if BX_PLATFORM_WINDOWS
+#if BASE_PLATFORM_WINDOWS
 #	define NVAPICALL __cdecl
 #else
 #	define NVAPICALL
-#endif // BX_PLATFORM_WINDOWS
+#endif // BASE_PLATFORM_WINDOWS
 
 	enum NvApiStatus
 	{
@@ -107,17 +107,17 @@ namespace bgfx
 	void NvApi::init()
 	{
 		m_nvGpu = NULL;
-		m_nvApiDll = bx::dlopen(
+		m_nvApiDll = base::dlopen(
 			"nvapi"
-#if BX_ARCH_64BIT
+#if BASE_ARCH_64BIT
 			"64"
-#endif // BX_ARCH_32BIT
+#endif // BASE_ARCH_32BIT
 			".dll"
 			);
 
 		if (NULL != m_nvApiDll)
 		{
-			nvApiQueryInterface = (PFN_NVAPI_QUERYINTERFACE)bx::dlsym(m_nvApiDll, "nvapi_QueryInterface");
+			nvApiQueryInterface = (PFN_NVAPI_QUERYINTERFACE)base::dlsym(m_nvApiDll, "nvapi_QueryInterface");
 
 			bool initialized = NULL != nvApiQueryInterface;
 
@@ -157,7 +157,7 @@ namespace bgfx
 						{
 							char name[64];
 							nvApiGpuGetFullName(m_nvGpu, name);
-							BX_TRACE("%s", name);
+							BASE_TRACE("%s", name);
 						}
 						else
 						{
@@ -169,11 +169,11 @@ namespace bgfx
 
 			if (!initialized)
 			{
-				bx::dlclose(m_nvApiDll);
+				base::dlclose(m_nvApiDll);
 				m_nvApiDll = NULL;
 			}
 
-			BX_WARN(!initialized, "NVAPI supported.");
+			BASE_WARN(!initialized, "NVAPI supported.");
 		}
 	}
 
@@ -187,7 +187,7 @@ namespace bgfx
 
 		if (NULL != m_nvApiDll)
 		{
-			bx::dlclose(m_nvApiDll);
+			base::dlclose(m_nvApiDll);
 			m_nvApiDll = NULL;
 		}
 
@@ -204,11 +204,11 @@ namespace bgfx
 			{
 				_gpuMemoryMax  = 1024 * int64_t(memInfo.availableDedicatedVideoMemory);
 				_gpuMemoryUsed = 1024 * int64_t(memInfo.availableDedicatedVideoMemory - memInfo.curAvailableDedicatedVideoMemory);
-//				BX_TRACE("            dedicatedVideoMemory: %d KiB", memInfo.dedicatedVideoMemory);
-//				BX_TRACE("   availableDedicatedVideoMemory: %d KiB", memInfo.availableDedicatedVideoMemory);
-//				BX_TRACE("               systemVideoMemory: %d KiB", memInfo.systemVideoMemory);
-//				BX_TRACE("              sharedSystemMemory: %d KiB", memInfo.sharedSystemMemory);
-//				BX_TRACE("curAvailableDedicatedVideoMemory: %d KiB", memInfo.curAvailableDedicatedVideoMemory);
+//				BASE_TRACE("            dedicatedVideoMemory: %d KiB", memInfo.dedicatedVideoMemory);
+//				BASE_TRACE("   availableDedicatedVideoMemory: %d KiB", memInfo.availableDedicatedVideoMemory);
+//				BASE_TRACE("               systemVideoMemory: %d KiB", memInfo.systemVideoMemory);
+//				BASE_TRACE("              sharedSystemMemory: %d KiB", memInfo.sharedSystemMemory);
+//				BASE_TRACE("curAvailableDedicatedVideoMemory: %d KiB", memInfo.curAvailableDedicatedVideoMemory);
 			}
 		}
 		else
@@ -220,27 +220,27 @@ namespace bgfx
 
 	bool NvApi::loadAftermath()
 	{
-		m_nvAftermathDll = bx::dlopen(
+		m_nvAftermathDll = base::dlopen(
 			"GFSDK_Aftermath_Lib."
-#if BX_ARCH_32BIT
+#if BASE_ARCH_32BIT
 			"x86"
 #else
 			"x64"
-#endif // BX_ARCH_32BIT
+#endif // BASE_ARCH_32BIT
 			".dll"
 			);
 
 		if (NULL != m_nvAftermathDll)
 		{
-			nvAftermathDx11Initialize          = (PFN_NVAFTERMATH_DX11_INITIALIZE         )bx::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_DX11_Initialize");
-			nvAftermathDx11CreateContextHandle = (PFN_NVAFTERMATH_DX11_CREATECONTEXTHANDLE)bx::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_DX11_CreateContextHandle");
-			nvAftermathDx12Initialize          = (PFN_NVAFTERMATH_DX12_INITIALIZE         )bx::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_DX12_Initialize");
-			nvAftermathDx12CreateContextHandle = (PFN_NVAFTERMATH_DX12_CREATECONTEXTHANDLE)bx::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_DX12_CreateContextHandle");
-			nvAftermathReleaseContextHandle	   = (PFN_NVAFTERMATH_RELEASECONTEXTHANDLE    )bx::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_ReleaseContextHandle");
-			nvAftermathSetEventMarker          = (PFN_NVAFTERMATH_SETEVENTMARKER          )bx::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_SetEventMarker");
-			nvAftermathGetData                 = (PFN_NVAFTERMATH_GETDATA                 )bx::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_GetData");
-			nvAftermathGetDeviceStatus         = (PFN_NVAFTERMATH_GETDEVICESTATUS         )bx::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_GetDeviceStatus");
-			nvAftermathGetPageFaultInformation = (PFN_NVAFTERMATH_GETPAGEFAULTINFORMATION )bx::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_GetPageFaultInformation");
+			nvAftermathDx11Initialize          = (PFN_NVAFTERMATH_DX11_INITIALIZE         )base::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_DX11_Initialize");
+			nvAftermathDx11CreateContextHandle = (PFN_NVAFTERMATH_DX11_CREATECONTEXTHANDLE)base::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_DX11_CreateContextHandle");
+			nvAftermathDx12Initialize          = (PFN_NVAFTERMATH_DX12_INITIALIZE         )base::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_DX12_Initialize");
+			nvAftermathDx12CreateContextHandle = (PFN_NVAFTERMATH_DX12_CREATECONTEXTHANDLE)base::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_DX12_CreateContextHandle");
+			nvAftermathReleaseContextHandle	   = (PFN_NVAFTERMATH_RELEASECONTEXTHANDLE    )base::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_ReleaseContextHandle");
+			nvAftermathSetEventMarker          = (PFN_NVAFTERMATH_SETEVENTMARKER          )base::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_SetEventMarker");
+			nvAftermathGetData                 = (PFN_NVAFTERMATH_GETDATA                 )base::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_GetData");
+			nvAftermathGetDeviceStatus         = (PFN_NVAFTERMATH_GETDEVICESTATUS         )base::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_GetDeviceStatus");
+			nvAftermathGetPageFaultInformation = (PFN_NVAFTERMATH_GETPAGEFAULTINFORMATION )base::dlsym(m_nvAftermathDll, "GFSDK_Aftermath_GetPageFaultInformation");
 
 			bool initialized = true
 				&& NULL != nvAftermathDx11Initialize
@@ -274,7 +274,7 @@ namespace bgfx
 			if (1 == result)
 			{
 				result = nvAftermathDx11CreateContextHandle(_deviceCtx, &m_aftermathHandle);
-				BX_WARN(1 == result, "NV Aftermath: nvAftermathDx12CreateContextHandle failed %x", result);
+				BASE_WARN(1 == result, "NV Aftermath: nvAftermathDx12CreateContextHandle failed %x", result);
 
 				if (1 == result)
 				{
@@ -285,8 +285,8 @@ namespace bgfx
 			{
 				switch (result)
 				{
-				case int32_t(0xbad0000a): BX_TRACE("NV Aftermath: Debug layer not compatible with Aftermath."); break;
-				default:                  BX_TRACE("NV Aftermath: Failed to initialize."); break;
+				case int32_t(0xbad0000a): BASE_TRACE("NV Aftermath: Debug layer not compatible with Aftermath."); break;
+				default:                  BASE_TRACE("NV Aftermath: Failed to initialize."); break;
 				}
 			}
 
@@ -305,7 +305,7 @@ namespace bgfx
 			if (1 == result)
 			{
 				result = nvAftermathDx12CreateContextHandle(_commandList, &m_aftermathHandle);
-				BX_WARN(1 == result, "NV Aftermath: nvAftermathDx12CreateContextHandle failed %x", result);
+				BASE_WARN(1 == result, "NV Aftermath: nvAftermathDx12CreateContextHandle failed %x", result);
 
 				if (1 == result)
 				{
@@ -316,8 +316,8 @@ namespace bgfx
 			{
 				switch (result)
 				{
-				case int32_t(0xbad0000a): BX_TRACE("NV Aftermath: Debug layer not compatible with Aftermath."); break;
-				default:                  BX_TRACE("NV Aftermath: Failed to initialize."); break;
+				case int32_t(0xbad0000a): BASE_TRACE("NV Aftermath: Debug layer not compatible with Aftermath."); break;
+				default:                  BASE_TRACE("NV Aftermath: Failed to initialize."); break;
 				}
 			}
 
@@ -350,19 +350,19 @@ namespace bgfx
 				m_aftermathHandle = NULL;
 			}
 
-			bx::dlclose(m_nvAftermathDll);
+			base::dlclose(m_nvAftermathDll);
 			m_nvAftermathDll = NULL;
 		}
 	}
 
 #define NVA_CHECK(_call)                                                          \
-			BX_MACRO_BLOCK_BEGIN                                                  \
+			BASE_MACRO_BLOCK_BEGIN                                                  \
 				int32_t __result__ = _call;                                       \
-				BX_ASSERT(1 == __result__, #_call " FAILED 0x%08x\n", __result__); \
-				BX_UNUSED(__result__);                                            \
-			BX_MACRO_BLOCK_END
+				BASE_ASSERT(1 == __result__, #_call " FAILED 0x%08x\n", __result__); \
+				BASE_UNUSED(__result__);                                            \
+			BASE_MACRO_BLOCK_END
 
-	void NvApi::setMarker(const bx::StringView& _marker)
+	void NvApi::setMarker(const base::StringView& _marker)
 	{
 		if (NULL != m_aftermathHandle)
 		{
@@ -370,4 +370,4 @@ namespace bgfx
 		}
 	}
 
-} // namespace bgfx
+} // namespace graphics

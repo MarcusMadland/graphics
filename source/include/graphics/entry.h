@@ -1,17 +1,17 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
 #ifndef ENTRY_H_HEADER_GUARD
 #define ENTRY_H_HEADER_GUARD
 
 #include "dbg.h"
-#include <mapp/bx.h>
-#include <mapp/filepath.h>
-#include <mapp/string.h>
+#include <base/base.h>
+#include <base/filepath.h>
+#include <base/string.h>
 
-namespace bx { struct FileReaderI; struct FileWriterI; struct AllocatorI; }
+namespace base { struct FileReaderI; struct FileWriterI; struct AllocatorI; }
 
 extern "C" int _main_(int _argc, char** _argv);
 
@@ -28,7 +28,7 @@ extern "C" int _main_(int _argc, char** _argv);
 	int _main_(int _argc, char** _argv)                 \
 	{                                                   \
 			_app app(__VA_ARGS__);                      \
-			return mrender::runApp(&app, _argc, _argv);   \
+			return entry::runApp(&app, _argc, _argv);   \
 	}
 #else
 #define ENTRY_IMPLEMENT_MAIN(_app, ...) \
@@ -40,7 +40,7 @@ extern "C" int _main_(int _argc, char** _argv);
 	struct _name { uint16_t idx; };                                        \
 	inline bool isValid(_name _handle) { return UINT16_MAX != _handle.idx; }
 
-namespace mrender
+namespace entry
 {
 	ENTRY_HANDLE(WindowHandle);
 	ENTRY_HANDLE(GamepadHandle);
@@ -232,16 +232,16 @@ namespace mrender
 			, m_my(0)
 			, m_mz(0)
 		{
-			for (uint32_t ii = 0; ii < mrender::MouseButton::Count; ++ii)
+			for (uint32_t ii = 0; ii < entry::MouseButton::Count; ++ii)
 			{
-				m_buttons[ii] = mrender::MouseButton::None;
+				m_buttons[ii] = entry::MouseButton::None;
 			}
 		}
 
 		int32_t m_mx;
 		int32_t m_my;
 		int32_t m_mz;
-		uint8_t m_buttons[mrender::MouseButton::Count];
+		uint8_t m_buttons[entry::MouseButton::Count];
 	};
 
 	///
@@ -249,23 +249,23 @@ namespace mrender
 	{
 		GamepadState()
 		{
-			bx::memSet(m_axis, 0, sizeof(m_axis) );
+			base::memSet(m_axis, 0, sizeof(m_axis) );
 		}
 
-		int32_t m_axis[mrender::GamepadAxis::Count];
+		int32_t m_axis[entry::GamepadAxis::Count];
 	};
 
 	///
 	bool processEvents(uint32_t& _width, uint32_t& _height, uint32_t& _debug, uint32_t& _reset, MouseState* _mouse = NULL);
 
 	///
-	bx::FileReaderI* getFileReader();
+	base::FileReaderI* getFileReader();
 
 	///
-	bx::FileWriterI* getFileWriter();
+	base::FileWriterI* getFileWriter();
 
 	///
-	bx::AllocatorI*  getAllocator();
+	base::AllocatorI*  getAllocator();
 
 	///
 	WindowHandle createWindow(int32_t _x, int32_t _y, uint32_t _width, uint32_t _height, uint32_t _flags = ENTRY_WINDOW_FLAG_NONE, const char* _title = "");
@@ -316,14 +316,14 @@ namespace mrender
 		uint32_t     m_height;
 		MouseState   m_mouse;
 		void*        m_nwh;
-		bx::FilePath m_dropFile;
+		base::FilePath m_dropFile;
 	};
 
 	///
 	bool processWindowEvents(WindowState& _state, uint32_t& _debug, uint32_t& _reset);
 
 	///
-	class BX_NO_VTABLE AppI
+	class BASE_NO_VTABLE AppI
 	{
 	public:
 		///
@@ -351,7 +351,7 @@ namespace mrender
 		AppI* getNext();
 
 	private:
-		BX_ALIGN_DECL(16, uintptr_t) m_internal[4];
+		BASE_ALIGN_DECL(16, uintptr_t) m_internal[4];
 	};
 
 	///
@@ -363,6 +363,6 @@ namespace mrender
 	///
 	int runApp(AppI* _app, int _argc, const char* const* _argv);
 
-} // namespace mrender
+} // namespace graphics
 
 #endif // ENTRY_H_HEADER_GUARD

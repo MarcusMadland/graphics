@@ -1,14 +1,14 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_TOPOLOGY_H_HEADER_GUARD
-#define BGFX_TOPOLOGY_H_HEADER_GUARD
+#ifndef GRAPHICS_TOPOLOGY_H_HEADER_GUARD
+#define GRAPHICS_TOPOLOGY_H_HEADER_GUARD
 
-#include <mrender/bgfx.h>
+#include <graphics/graphics.h>
 
-namespace bgfx
+namespace graphics
 {
 	/// Convert index buffer for use with different primitive topologies.
 	///
@@ -24,7 +24,7 @@ namespace bgfx
 	///
 	/// @returns Number of output indices after conversion.
 	///
-	/// @attention C99 equivalent is `bgfx_topology_convert`.
+	/// @attention C99 equivalent is `graphics_topology_convert`.
 	///
 	uint32_t topologyConvert(
 		  TopologyConvert::Enum _conversion
@@ -33,7 +33,7 @@ namespace bgfx
 		, const void* _indices
 		, uint32_t _numIndices
 		, bool _index32
-		, bx::AllocatorI* _allocator
+		, base::AllocatorI* _allocator
 		);
 
 	///
@@ -48,9 +48,9 @@ namespace bgfx
 		, const void* _indices
 		, uint32_t _numIndices
 		, bool _index32
-		, bx::AllocatorI* _allocator
+		, base::AllocatorI* _allocator
 		);
 
-} // namespace bgfx
+} // namespace graphics
 
-#endif // BGFX_TOPOLOGY_H_HEADER_GUARD
+#endif // GRAPHICS_TOPOLOGY_H_HEADER_GUARD

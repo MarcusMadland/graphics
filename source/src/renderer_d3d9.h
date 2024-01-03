@@ -1,12 +1,12 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_RENDERER_D3D9_H_HEADER_GUARD
-#define BGFX_RENDERER_D3D9_H_HEADER_GUARD
+#ifndef GRAPHICS_RENDERER_D3D9_H_HEADER_GUARD
+#define GRAPHICS_RENDERER_D3D9_H_HEADER_GUARD
 
-#define BGFX_CONFIG_RENDERER_DIRECT3D9EX (BX_PLATFORM_LINUX || BX_PLATFORM_WINDOWS)
+#define GRAPHICS_CONFIG_RENDERER_DIRECT3D9EX (BASE_PLATFORM_LINUX || BASE_PLATFORM_WINDOWS)
 
 #include <sal.h>
 #include <unknwn.h>
@@ -24,25 +24,25 @@
 #include "renderer_d3d.h"
 #include "nvapi.h"
 
-#define BGFX_D3D9_PROFILER_BEGIN(_view, _abgr)         \
-	BX_MACRO_BLOCK_BEGIN                               \
+#define GRAPHICS_D3D9_PROFILER_BEGIN(_view, _abgr)         \
+	BASE_MACRO_BLOCK_BEGIN                               \
 		PIX_BEGINEVENT(_abgr, s_viewNameW[_view]);     \
-		BGFX_PROFILER_BEGIN(s_viewName[view], _abgr);  \
-	BX_MACRO_BLOCK_END
+		GRAPHICS_PROFILER_BEGIN(s_viewName[view], _abgr);  \
+	BASE_MACRO_BLOCK_END
 
-#define BGFX_D3D9_PROFILER_BEGIN_LITERAL(_name, _abgr) \
-	BX_MACRO_BLOCK_BEGIN                               \
+#define GRAPHICS_D3D9_PROFILER_BEGIN_LITERAL(_name, _abgr) \
+	BASE_MACRO_BLOCK_BEGIN                               \
 		PIX_BEGINEVENT(_abgr, L"" _name);              \
-		BGFX_PROFILER_BEGIN_LITERAL("" _name, _abgr);  \
-	BX_MACRO_BLOCK_END
+		GRAPHICS_PROFILER_BEGIN_LITERAL("" _name, _abgr);  \
+	BASE_MACRO_BLOCK_END
 
-#define BGFX_D3D9_PROFILER_END()                       \
-	BX_MACRO_BLOCK_BEGIN                               \
-		BGFX_PROFILER_END();                           \
+#define GRAPHICS_D3D9_PROFILER_END()                       \
+	BASE_MACRO_BLOCK_BEGIN                               \
+		GRAPHICS_PROFILER_END();                           \
 		PIX_ENDEVENT();                                \
-	BX_MACRO_BLOCK_END
+	BASE_MACRO_BLOCK_END
 
-namespace bgfx { namespace d3d9
+namespace graphics { namespace d3d9
 {
 #	if defined(D3D_DISABLE_9EX)
 #		define D3DFMT_S8_LOCKABLE D3DFORMAT( 85)
@@ -50,43 +50,43 @@ namespace bgfx { namespace d3d9
 #	endif // defined(D3D_DISABLE_9EX)
 
 #	ifndef D3DFMT_ATI1
-#		define D3DFMT_ATI1 ( (D3DFORMAT)BX_MAKEFOURCC('A', 'T', 'I', '1') )
+#		define D3DFMT_ATI1 ( (D3DFORMAT)BASE_MAKEFOURCC('A', 'T', 'I', '1') )
 #	endif // D3DFMT_ATI1
 
 #	ifndef D3DFMT_ATI2
-#		define D3DFMT_ATI2 ( (D3DFORMAT)BX_MAKEFOURCC('A', 'T', 'I', '2') )
+#		define D3DFMT_ATI2 ( (D3DFORMAT)BASE_MAKEFOURCC('A', 'T', 'I', '2') )
 #	endif // D3DFMT_ATI2
 
 #	ifndef D3DFMT_ATOC
-#		define D3DFMT_ATOC ( (D3DFORMAT)BX_MAKEFOURCC('A', 'T', 'O', 'C') )
+#		define D3DFMT_ATOC ( (D3DFORMAT)BASE_MAKEFOURCC('A', 'T', 'O', 'C') )
 #	endif // D3DFMT_ATOC
 
 #	ifndef D3DFMT_DF16
-#		define D3DFMT_DF16 ( (D3DFORMAT)BX_MAKEFOURCC('D', 'F', '1', '6') )
+#		define D3DFMT_DF16 ( (D3DFORMAT)BASE_MAKEFOURCC('D', 'F', '1', '6') )
 #	endif // D3DFMT_DF16
 
 #	ifndef D3DFMT_DF24
-#		define D3DFMT_DF24 ( (D3DFORMAT)BX_MAKEFOURCC('D', 'F', '2', '4') )
+#		define D3DFMT_DF24 ( (D3DFORMAT)BASE_MAKEFOURCC('D', 'F', '2', '4') )
 #	endif // D3DFMT_DF24
 
 #	ifndef D3DFMT_INST
-#		define D3DFMT_INST ( (D3DFORMAT)BX_MAKEFOURCC('I', 'N', 'S', 'T') )
+#		define D3DFMT_INST ( (D3DFORMAT)BASE_MAKEFOURCC('I', 'N', 'S', 'T') )
 #	endif // D3DFMT_INST
 
 #	ifndef D3DFMT_INTZ
-#		define D3DFMT_INTZ ( (D3DFORMAT)BX_MAKEFOURCC('I', 'N', 'T', 'Z') )
+#		define D3DFMT_INTZ ( (D3DFORMAT)BASE_MAKEFOURCC('I', 'N', 'T', 'Z') )
 #	endif // D3DFMT_INTZ
 
 #	ifndef D3DFMT_NULL
-#		define D3DFMT_NULL ( (D3DFORMAT)BX_MAKEFOURCC('N', 'U', 'L', 'L') )
+#		define D3DFMT_NULL ( (D3DFORMAT)BASE_MAKEFOURCC('N', 'U', 'L', 'L') )
 #	endif // D3DFMT_NULL
 
 #	ifndef D3DFMT_RESZ
-#		define D3DFMT_RESZ ( (D3DFORMAT)BX_MAKEFOURCC('R', 'E', 'S', 'Z') )
+#		define D3DFMT_RESZ ( (D3DFORMAT)BASE_MAKEFOURCC('R', 'E', 'S', 'Z') )
 #	endif // D3DFMT_RESZ
 
 #	ifndef D3DFMT_RAWZ
-#		define D3DFMT_RAWZ ( (D3DFORMAT)BX_MAKEFOURCC('R', 'A', 'W', 'Z') )
+#		define D3DFMT_RAWZ ( (D3DFORMAT)BASE_MAKEFOURCC('R', 'A', 'W', 'Z') )
 #	endif // D3DFMT_RAWZ
 
 #	ifndef D3DFMT_S8_LOCKABLE
@@ -133,7 +133,7 @@ namespace bgfx { namespace d3d9
 			: m_ptr(NULL)
 			, m_dynamic(NULL)
 			, m_size(0)
-			, m_flags(BGFX_BUFFER_NONE)
+			, m_flags(GRAPHICS_BUFFER_NONE)
 		{
 		}
 
@@ -143,7 +143,7 @@ namespace bgfx { namespace d3d9
 			if (NULL  != m_dynamic
 			&&  _data != m_dynamic)
 			{
-				bx::memCopy(&m_dynamic[_offset], _data, _size);
+				base::memCopy(&m_dynamic[_offset], _data, _size);
 			}
 
 			void* buffer;
@@ -153,7 +153,7 @@ namespace bgfx { namespace d3d9
 				, _discard || (m_dynamic && 0 == _offset && m_size == _size) ? D3DLOCK_DISCARD : 0
 				) );
 
-			bx::memCopy(buffer, _data, _size);
+			base::memCopy(buffer, _data, _size);
 
 			DX_CHECK(m_ptr->Unlock() );
 		}
@@ -166,7 +166,7 @@ namespace bgfx { namespace d3d9
 
 				if (NULL != m_dynamic)
 				{
-					bx::free(g_allocator, m_dynamic);
+					base::free(g_allocator, m_dynamic);
 					m_dynamic = NULL;
 				}
 			}
@@ -196,7 +196,7 @@ namespace bgfx { namespace d3d9
 			if (NULL  != m_dynamic
 			&&  _data != m_dynamic)
 			{
-				bx::memCopy(&m_dynamic[_offset], _data, _size);
+				base::memCopy(&m_dynamic[_offset], _data, _size);
 			}
 
 			void* buffer;
@@ -206,7 +206,7 @@ namespace bgfx { namespace d3d9
 				, _discard || (m_dynamic && 0 == _offset && m_size == _size) ? D3DLOCK_DISCARD : 0
 				) );
 
-			bx::memCopy(buffer, _data, _size);
+			base::memCopy(buffer, _data, _size);
 
 			DX_CHECK(m_ptr->Unlock() );
 		}
@@ -219,7 +219,7 @@ namespace bgfx { namespace d3d9
 
 				if (NULL != m_dynamic)
 				{
-					bx::free(g_allocator, m_dynamic);
+					base::free(g_allocator, m_dynamic);
 					m_dynamic = NULL;
 				}
 			}
@@ -257,7 +257,7 @@ namespace bgfx { namespace d3d9
 
 			switch (m_type)
 			{
-			case 0:  DX_RELEASE(m_vertexShader, 0); BX_FALLTHROUGH;
+			case 0:  DX_RELEASE(m_vertexShader, 0); BASE_FALLTHROUGH;
 			default: DX_RELEASE(m_pixelShader,  0);
 			}
 		}
@@ -281,12 +281,12 @@ namespace bgfx { namespace d3d9
 			m_vsh = _vsh;
 			m_fsh = _fsh;
 
-			bx::memCopy(&m_predefined[0], _vsh->m_predefined, _vsh->m_numPredefined*sizeof(PredefinedUniform) );
+			base::memCopy(&m_predefined[0], _vsh->m_predefined, _vsh->m_numPredefined*sizeof(PredefinedUniform) );
 			m_numPredefined = _vsh->m_numPredefined;
 
 			if (NULL != _fsh)
 			{
-				bx::memCopy(&m_predefined[_vsh->m_numPredefined], _fsh->m_predefined, _fsh->m_numPredefined*sizeof(PredefinedUniform) );
+				base::memCopy(&m_predefined[_vsh->m_numPredefined], _fsh->m_predefined, _fsh->m_numPredefined*sizeof(PredefinedUniform) );
 				m_numPredefined += _fsh->m_numPredefined;
 			}
 		}
@@ -335,7 +335,7 @@ namespace bgfx { namespace d3d9
 
 		void destroy(bool _resize = false)
 		{
-			if (0 == (m_flags & BGFX_SAMPLER_INTERNAL_SHARED) )
+			if (0 == (m_flags & GRAPHICS_SAMPLER_INTERNAL_SHARED) )
 			{
 				if (_resize)
 				{
@@ -357,7 +357,7 @@ namespace bgfx { namespace d3d9
 		void overrideInternal(uintptr_t _ptr)
 		{
 			destroy();
-			m_flags |= BGFX_SAMPLER_INTERNAL_SHARED;
+			m_flags |= GRAPHICS_SAMPLER_INTERNAL_SHARED;
 			m_ptr = (IDirect3DBaseTexture9*)_ptr;
 		}
 
@@ -421,13 +421,13 @@ namespace bgfx { namespace d3d9
 		void createNullColorRT();
 		void set();
 
-		IDirect3DSurface9* m_surface[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
+		IDirect3DSurface9* m_surface[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
 		IDirect3DSwapChain9* m_swapChain;
 		HWND m_hwnd;
 		uint32_t m_width;
 		uint32_t m_height;
 
-		Attachment m_attachment[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
+		Attachment m_attachment[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
 		uint16_t m_denseIdx;
 		uint8_t m_num;
 		uint8_t m_numTh;
@@ -439,7 +439,7 @@ namespace bgfx { namespace d3d9
 	struct TimerQueryD3D9
 	{
 		TimerQueryD3D9()
-			: m_control(BX_COUNTOF(m_query) )
+			: m_control(BASE_COUNTOF(m_query) )
 		{
 		}
 
@@ -478,16 +478,16 @@ namespace bgfx { namespace d3d9
 			uint32_t m_frameNum;
 		};
 
-		Result m_result[BGFX_CONFIG_MAX_VIEWS+1];
+		Result m_result[GRAPHICS_CONFIG_MAX_VIEWS+1];
 
-		Query m_query[BGFX_CONFIG_MAX_VIEWS*4];
-		bx::RingBufferControl m_control;
+		Query m_query[GRAPHICS_CONFIG_MAX_VIEWS*4];
+		base::RingBufferControl m_control;
 	};
 
 	struct OcclusionQueryD3D9
 	{
 		OcclusionQueryD3D9()
-			: m_control(BX_COUNTOF(m_query) )
+			: m_control(BASE_COUNTOF(m_query) )
 		{
 		}
 
@@ -504,10 +504,10 @@ namespace bgfx { namespace d3d9
 			OcclusionQueryHandle m_handle;
 		};
 
-		Query m_query[BGFX_CONFIG_MAX_OCCLUSION_QUERIES];
-		bx::RingBufferControl m_control;
+		Query m_query[GRAPHICS_CONFIG_MAX_OCCLUSION_QUERIES];
+		base::RingBufferControl m_control;
 	};
 
-} /* namespace d3d9 */ } // namespace bgfx
+} /* namespace d3d9 */ } // namespace graphics
 
-#endif // BGFX_RENDERER_D3D9_H_HEADER_GUARD
+#endif // GRAPHICS_RENDERER_D3D9_H_HEADER_GUARD

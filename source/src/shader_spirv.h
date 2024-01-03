@@ -1,19 +1,19 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_SHADER_SPIRV_H
-#define BGFX_SHADER_SPIRV_H
+#ifndef GRAPHICS_SHADER_SPIRV_H
+#define GRAPHICS_SHADER_SPIRV_H
 
-#include <mapp/readerwriter.h>
+#include <base/readerwriter.h>
 
-BX_ERROR_RESULT(BGFX_SHADER_SPIRV_INVALID_HEADER,      BX_MAKEFOURCC('S', 'H', 0, 1) );
-BX_ERROR_RESULT(BGFX_SHADER_SPIRV_INVALID_INSTRUCTION, BX_MAKEFOURCC('S', 'H', 0, 2) );
+BASE_ERROR_RESULT(GRAPHICS_SHADER_SPIRV_INVALID_HEADER,      BASE_MAKEFOURCC('S', 'H', 0, 1) );
+BASE_ERROR_RESULT(GRAPHICS_SHADER_SPIRV_INVALID_INSTRUCTION, BASE_MAKEFOURCC('S', 'H', 0, 2) );
 
-#define SPV_CHUNK_HEADER BX_MAKEFOURCC(0x03, 0x02, 0x23, 0x07)
+#define SPV_CHUNK_HEADER BASE_MAKEFOURCC(0x03, 0x02, 0x23, 0x07)
 
-namespace bgfx
+namespace graphics
 {
 	constexpr uint8_t kSpirvVertexBinding   = 0;
 	constexpr uint8_t kSpirvFragmentBinding = 1;
@@ -617,8 +617,8 @@ namespace bgfx
 		SpvOperand operand[32];
 	};
 
-	int32_t read(bx::ReaderI* _reader, SpvInstruction& _instruction, bx::Error* _err);
-	int32_t write(bx::WriterI* _writer, const SpvInstruction& _instruction, bx::Error* _err);
+	int32_t read(base::ReaderI* _reader, SpvInstruction& _instruction, base::Error* _err);
+	int32_t write(base::WriterI* _writer, const SpvInstruction& _instruction, base::Error* _err);
 	int32_t toString(char* _out, int32_t _size, const SpvInstruction& _instruction);
 
 	struct SpvShader
@@ -628,14 +628,14 @@ namespace bgfx
 		stl::vector<uint8_t> byteCode;
 	};
 
-	int32_t read(bx::ReaderSeekerI* _reader, SpvShader& _shader, bx::Error* _err);
-	int32_t write(bx::WriterI* _writer, const SpvShader& _shader, bx::Error* _err);
+	int32_t read(base::ReaderSeekerI* _reader, SpvShader& _shader, base::Error* _err);
+	int32_t write(base::WriterI* _writer, const SpvShader& _shader, base::Error* _err);
 
 	typedef bool (*SpvParseFn)(uint32_t _offset, const SpvInstruction& _instruction, void* _userData);
-	void parse(const SpvShader& _src, SpvParseFn _fn, void* _userData, bx::Error* _err = NULL);
+	void parse(const SpvShader& _src, SpvParseFn _fn, void* _userData, base::Error* _err = NULL);
 
 	typedef void (*SpvFilterFn)(SpvInstruction& _instruction, void* _userData);
-	void filter(SpvShader& _dst, const SpvShader& _src, SpvFilterFn _fn, void* _userData, bx::Error* _err = NULL);
+	void filter(SpvShader& _dst, const SpvShader& _src, SpvFilterFn _fn, void* _userData, base::Error* _err = NULL);
 
 	struct SpirV
 	{
@@ -654,9 +654,9 @@ namespace bgfx
 		SpvShader shader;
 	};
 
-	int32_t read(bx::ReaderSeekerI* _reader, SpirV& _spirv, bx::Error* _err);
-	int32_t write(bx::WriterSeekerI* _writer, const SpirV& _spirv, bx::Error* _err);
+	int32_t read(base::ReaderSeekerI* _reader, SpirV& _spirv, base::Error* _err);
+	int32_t write(base::WriterSeekerI* _writer, const SpirV& _spirv, base::Error* _err);
 
-} // namespace bgfx
+} // namespace graphics
 
-#endif // BGFX_SHADER_SPIRV_H
+#endif // GRAPHICS_SHADER_SPIRV_H

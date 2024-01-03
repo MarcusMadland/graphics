@@ -1,6 +1,6 @@
 /*
  * Copyright 2010-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
 #ifndef INPUT_H_HEADER_GUARD
@@ -12,7 +12,7 @@ typedef void (*InputBindingFn)(const void* _userData);
 
 struct InputBinding
 {
-	void set(mrender::Key::Enum _key, uint8_t _modifiers, uint8_t _flags, InputBindingFn _fn, const void* _userData = NULL)
+	void set(entry::Key::Enum _key, uint8_t _modifiers, uint8_t _flags, InputBindingFn _fn, const void* _userData = NULL)
 	{
 		m_key = _key;
 		m_modifiers = _modifiers;
@@ -23,21 +23,21 @@ struct InputBinding
 
 	void end()
 	{
-		m_key = mrender::Key::None;
-		m_modifiers = mrender::Modifier::None;
+		m_key = entry::Key::None;
+		m_modifiers = entry::Modifier::None;
 		m_flags     = 0;
 		m_fn        = NULL;
 		m_userData  = NULL;
 	}
 
-	mrender::Key::Enum m_key;
+	entry::Key::Enum m_key;
 	uint8_t m_modifiers;
 	uint8_t m_flags;
 	InputBindingFn m_fn;
 	const void* m_userData;
 };
 
-#define INPUT_BINDING_END { mrender::Key::None, mrender::Modifier::None, 0, NULL, NULL }
+#define INPUT_BINDING_END { entry::Key::None, entry::Modifier::None, 0, NULL, NULL }
 
 ///
 void inputInit();
@@ -55,10 +55,10 @@ void inputRemoveBindings(const char* _name);
 void inputProcess();
 
 ///
-void inputSetKeyState(mrender::Key::Enum  _key, uint8_t _modifiers, bool _down);
+void inputSetKeyState(entry::Key::Enum  _key, uint8_t _modifiers, bool _down);
 
 ///
-bool inputGetKeyState(mrender::Key::Enum _key, uint8_t* _modifiers = NULL);
+bool inputGetKeyState(entry::Key::Enum _key, uint8_t* _modifiers = NULL);
 
 ///
 uint8_t inputGetModifiersState();
@@ -79,7 +79,7 @@ void inputSetMouseResolution(uint16_t _width, uint16_t _height);
 void inputSetMousePos(int32_t _mx, int32_t _my, int32_t _mz);
 
 ///
-void inputSetMouseButtonState(mrender::MouseButton::Enum _button, uint8_t _state);
+void inputSetMouseButtonState(entry::MouseButton::Enum _button, uint8_t _state);
 
 ///
 void inputSetMouseLock(bool _lock);
@@ -91,9 +91,9 @@ void inputGetMouse(float _mouse[3]);
 bool inputIsMouseLocked();
 
 ///
-void inputSetGamepadAxis(mrender::GamepadHandle _handle, mrender::GamepadAxis::Enum _axis, int32_t _value);
+void inputSetGamepadAxis(entry::GamepadHandle _handle, entry::GamepadAxis::Enum _axis, int32_t _value);
 
 ///
-int32_t inputGetGamepadAxis(mrender::GamepadHandle _handle, mrender::GamepadAxis::Enum _axis);
+int32_t inputGetGamepadAxis(entry::GamepadHandle _handle, entry::GamepadAxis::Enum _axis);
 
 #endif // INPUT_H_HEADER_GUARD

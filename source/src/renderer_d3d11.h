@@ -1,40 +1,40 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_RENDERER_D3D11_H_HEADER_GUARD
-#define BGFX_RENDERER_D3D11_H_HEADER_GUARD
+#ifndef GRAPHICS_RENDERER_D3D11_H_HEADER_GUARD
+#define GRAPHICS_RENDERER_D3D11_H_HEADER_GUARD
 
-#define USE_D3D11_DYNAMIC_LIB    (BX_PLATFORM_LINUX || BX_PLATFORM_WINDOWS)
+#define USE_D3D11_DYNAMIC_LIB    (BASE_PLATFORM_LINUX || BASE_PLATFORM_WINDOWS)
 #define USE_D3D11_STAGING_BUFFER 0
 
 #if !USE_D3D11_DYNAMIC_LIB
-#   undef  BGFX_CONFIG_DEBUG_ANNOTATION
-#   define BGFX_CONFIG_DEBUG_ANNOTATION 0
+#   undef  GRAPHICS_CONFIG_DEBUG_ANNOTATION
+#   define GRAPHICS_CONFIG_DEBUG_ANNOTATION 0
 #endif // !USE_D3D11_DYNAMIC_LIB
 
-BX_PRAGMA_DIAGNOSTIC_PUSH();
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG("-Wunknown-pragmas" );
-BX_PRAGMA_DIAGNOSTIC_IGNORED_GCC("-Wpragmas");
-BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4005) // warning C4005: '' : macro redefinition
+BASE_PRAGMA_DIAGNOSTIC_PUSH();
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_CLANG("-Wunknown-pragmas" );
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_GCC("-Wpragmas");
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4005) // warning C4005: '' : macro redefinition
 
 #include <sal.h>
 #include <unknwn.h>
 
 #define D3D11_NO_HELPERS
-#if BX_PLATFORM_LINUX || BX_PLATFORM_WINDOWS
+#if BASE_PLATFORM_LINUX || BASE_PLATFORM_WINDOWS
 #   include <d3d11_3.h>
-#elif BX_PLATFORM_WINRT
+#elif BASE_PLATFORM_WINRT
 #   define __D3D10_1SHADER_H__ // BK - not used keep quiet!
 #   include <d3d11_3.h>
 #else
-#   if !BGFX_CONFIG_DEBUG
+#   if !GRAPHICS_CONFIG_DEBUG
 #      define D3DCOMPILE_NO_DEBUG_AND_ALL_FAST_SEMANTICS 1
-#   endif // !BGFX_CONFIG_DEBUG
+#   endif // !GRAPHICS_CONFIG_DEBUG
 #   include <d3d11_x.h>
-#endif // BX_PLATFORM_*
-BX_PRAGMA_DIAGNOSTIC_POP()
+#endif // BASE_PLATFORM_*
+BASE_PRAGMA_DIAGNOSTIC_POP()
 
 #include "renderer.h"
 #include "renderer_d3d.h"
@@ -43,39 +43,39 @@ BX_PRAGMA_DIAGNOSTIC_POP()
 #include "nvapi.h"
 #include "dxgi.h"
 
-#define BGFX_D3D11_BLEND_STATE_MASK (0   \
-	| BGFX_STATE_BLEND_MASK              \
-	| BGFX_STATE_BLEND_EQUATION_MASK     \
-	| BGFX_STATE_BLEND_INDEPENDENT       \
-	| BGFX_STATE_BLEND_ALPHA_TO_COVERAGE \
-	| BGFX_STATE_WRITE_A                 \
-	| BGFX_STATE_WRITE_RGB               \
+#define GRAPHICS_D3D11_BLEND_STATE_MASK (0   \
+	| GRAPHICS_STATE_BLEND_MASK              \
+	| GRAPHICS_STATE_BLEND_EQUATION_MASK     \
+	| GRAPHICS_STATE_BLEND_INDEPENDENT       \
+	| GRAPHICS_STATE_BLEND_ALPHA_TO_COVERAGE \
+	| GRAPHICS_STATE_WRITE_A                 \
+	| GRAPHICS_STATE_WRITE_RGB               \
 	)
 
-#define BGFX_D3D11_DEPTH_STENCIL_MASK (0 \
-	| BGFX_STATE_WRITE_Z                 \
-	| BGFX_STATE_DEPTH_TEST_MASK         \
+#define GRAPHICS_D3D11_DEPTH_STENCIL_MASK (0 \
+	| GRAPHICS_STATE_WRITE_Z                 \
+	| GRAPHICS_STATE_DEPTH_TEST_MASK         \
 	)
 
-#define BGFX_D3D11_PROFILER_BEGIN(_view, _abgr)         \
-	BX_MACRO_BLOCK_BEGIN                                \
+#define GRAPHICS_D3D11_PROFILER_BEGIN(_view, _abgr)         \
+	BASE_MACRO_BLOCK_BEGIN                                \
 		PIX_BEGINEVENT(_abgr, s_viewNameW[_view]);      \
-		BGFX_PROFILER_BEGIN(s_viewName[view], _abgr);   \
-	BX_MACRO_BLOCK_END
+		GRAPHICS_PROFILER_BEGIN(s_viewName[view], _abgr);   \
+	BASE_MACRO_BLOCK_END
 
-#define BGFX_D3D11_PROFILER_BEGIN_LITERAL(_name, _abgr) \
-	BX_MACRO_BLOCK_BEGIN                                \
+#define GRAPHICS_D3D11_PROFILER_BEGIN_LITERAL(_name, _abgr) \
+	BASE_MACRO_BLOCK_BEGIN                                \
 		PIX_BEGINEVENT(_abgr, L"" _name);               \
-		BGFX_PROFILER_BEGIN_LITERAL("" _name, _abgr);   \
-	BX_MACRO_BLOCK_END
+		GRAPHICS_PROFILER_BEGIN_LITERAL("" _name, _abgr);   \
+	BASE_MACRO_BLOCK_END
 
-#define BGFX_D3D11_PROFILER_END()                       \
-	BX_MACRO_BLOCK_BEGIN                                \
-		BGFX_PROFILER_END();                            \
+#define GRAPHICS_D3D11_PROFILER_END()                       \
+	BASE_MACRO_BLOCK_BEGIN                                \
+		GRAPHICS_PROFILER_END();                            \
 		PIX_ENDEVENT();                                 \
-	BX_MACRO_BLOCK_END
+	BASE_MACRO_BLOCK_END
 
-namespace bgfx { namespace d3d11
+namespace graphics { namespace d3d11
 {
 	struct BufferD3D11
 	{
@@ -86,7 +86,7 @@ namespace bgfx { namespace d3d11
 #endif // USE_D3D11_STAGING_BUFFER
 			, m_srv(NULL)
 			, m_uav(NULL)
-			, m_flags(BGFX_BUFFER_NONE)
+			, m_flags(GRAPHICS_BUFFER_NONE)
 			, m_dynamic(false)
 		{
 		}
@@ -207,16 +207,16 @@ namespace bgfx { namespace d3d11
 
 		void create(const ShaderD3D11* _vsh, const ShaderD3D11* _fsh)
 		{
-			BX_ASSERT(NULL != _vsh->m_ptr, "Vertex shader doesn't exist.");
+			BASE_ASSERT(NULL != _vsh->m_ptr, "Vertex shader doesn't exist.");
 			m_vsh = _vsh;
-			bx::memCopy(&m_predefined[0], _vsh->m_predefined, _vsh->m_numPredefined*sizeof(PredefinedUniform) );
+			base::memCopy(&m_predefined[0], _vsh->m_predefined, _vsh->m_numPredefined*sizeof(PredefinedUniform) );
 			m_numPredefined = _vsh->m_numPredefined;
 
 			if (NULL != _fsh)
 			{
-				BX_ASSERT(NULL != _fsh->m_ptr, "Fragment shader doesn't exist.");
+				BASE_ASSERT(NULL != _fsh->m_ptr, "Fragment shader doesn't exist.");
 				m_fsh = _fsh;
-				bx::memCopy(&m_predefined[m_numPredefined], _fsh->m_predefined, _fsh->m_numPredefined*sizeof(PredefinedUniform) );
+				base::memCopy(&m_predefined[m_numPredefined], _fsh->m_predefined, _fsh->m_numPredefined*sizeof(PredefinedUniform) );
 				m_numPredefined += _fsh->m_numPredefined;
 			}
 		}
@@ -348,16 +348,16 @@ namespace bgfx { namespace d3d11
 		void set();
 		HRESULT present(uint32_t _syncInterval);
 
-		ID3D11RenderTargetView*    m_rtv[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
-		ID3D11UnorderedAccessView* m_uav[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
-		ID3D11ShaderResourceView*  m_srv[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
+		ID3D11RenderTargetView*    m_rtv[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
+		ID3D11UnorderedAccessView* m_uav[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
+		ID3D11ShaderResourceView*  m_srv[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
 		ID3D11DepthStencilView*    m_dsv;
 		Dxgi::SwapChainI* m_swapChain;
 		void* m_nwh;
 		uint32_t m_width;
 		uint32_t m_height;
 
-		Attachment m_attachment[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
+		Attachment m_attachment[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
 		uint16_t m_denseIdx;
 		uint8_t m_num;
 		uint8_t m_numTh;
@@ -368,7 +368,7 @@ namespace bgfx { namespace d3d11
 	struct TimerQueryD3D11
 	{
 		TimerQueryD3D11()
-			: m_control(BX_COUNTOF(m_query) )
+			: m_control(BASE_COUNTOF(m_query) )
 		{
 		}
 
@@ -406,16 +406,16 @@ namespace bgfx { namespace d3d11
 			uint32_t m_frameNum;
 		};
 
-		Result m_result[BGFX_CONFIG_MAX_VIEWS+1];
+		Result m_result[GRAPHICS_CONFIG_MAX_VIEWS+1];
 
-		Query m_query[BGFX_CONFIG_MAX_VIEWS*4];
-		bx::RingBufferControl m_control;
+		Query m_query[GRAPHICS_CONFIG_MAX_VIEWS*4];
+		base::RingBufferControl m_control;
 	};
 
 	struct OcclusionQueryD3D11
 	{
 		OcclusionQueryD3D11()
-			: m_control(BX_COUNTOF(m_query) )
+			: m_control(BASE_COUNTOF(m_query) )
 		{
 		}
 
@@ -432,10 +432,10 @@ namespace bgfx { namespace d3d11
 			OcclusionQueryHandle m_handle;
 		};
 
-		Query m_query[BGFX_CONFIG_MAX_OCCLUSION_QUERIES];
-		bx::RingBufferControl m_control;
+		Query m_query[GRAPHICS_CONFIG_MAX_OCCLUSION_QUERIES];
+		base::RingBufferControl m_control;
 	};
 
-} /*  namespace d3d11 */ } // namespace bgfx
+} /*  namespace d3d11 */ } // namespace graphics
 
-#endif // BGFX_RENDERER_D3D11_H_HEADER_GUARD
+#endif // GRAPHICS_RENDERER_D3D11_H_HEADER_GUARD

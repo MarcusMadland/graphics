@@ -1,12 +1,12 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include "bgfx_p.h"
+#include "graphics_p.h"
 #include "shader_dxbc.h"
 
-namespace bgfx
+namespace graphics
 {
 	struct DxbcOpcodeInfo
 	{
@@ -238,7 +238,7 @@ namespace bgfx
 		{ 0, 0 }, // ITOD
 		{ 0, 0 }, // UTOD
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_dxbcOpcodeInfo) == DxbcOpcode::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_dxbcOpcodeInfo) == DxbcOpcode::Count);
 
 	static const char* s_dxbcOpcode[] =
 	{
@@ -464,11 +464,11 @@ namespace bgfx
 		"itod",
 		"utod",
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_dxbcOpcode) == DxbcOpcode::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_dxbcOpcode) == DxbcOpcode::Count);
 
 	const char* getName(DxbcOpcode::Enum _opcode)
 	{
-		BX_ASSERT(_opcode < DxbcOpcode::Count, "Unknown opcode id %d.", _opcode);
+		BASE_ASSERT(_opcode < DxbcOpcode::Count, "Unknown opcode id %d.", _opcode);
 		return s_dxbcOpcode[_opcode];
 	}
 
@@ -488,7 +488,7 @@ namespace bgfx
 		"RawBuffer",        // RawBuffer
 		"StructuredBuffer", // StructuredBuffer
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_dxbcSrvType) == DxbcResourceDim::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_dxbcSrvType) == DxbcResourceDim::Count);
 
 	const char* s_dxbcInterpolationName[] =
 	{
@@ -501,7 +501,7 @@ namespace bgfx
 		"linear sample",
 		"linear noperspective sample",
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_dxbcInterpolationName) == DxbcInterpolation::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_dxbcInterpolationName) == DxbcInterpolation::Count);
 
 	const char *s_dxbcPrimitiveTopologyName[] =
 	{
@@ -520,7 +520,7 @@ namespace bgfx
 		"TriangleListAdj",
 		"TriangleStripAdj",
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_dxbcPrimitiveTopologyName) == DxbcPrimitiveTopology::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_dxbcPrimitiveTopologyName) == DxbcPrimitiveTopology::Count);
 
 	const char *s_dxbcPrimitiveName[] = {
 		"",
@@ -564,7 +564,7 @@ namespace bgfx
 		"_31ControlPointPatch",
 		"_32ControlPointPatch",
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_dxbcPrimitiveName) == DxbcPrimitive::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_dxbcPrimitiveName) == DxbcPrimitive::Count);
 
 	// mesa/src/gallium/state_trackers/d3d1x/d3d1xshader/defs/shortfiles.txt
 	static const char* s_dxbcOperandType[] =
@@ -611,7 +611,7 @@ namespace bgfx
 		"oDepthLE",                  // OutputDepthLessEqual
 		"vCycleCounter",             // CycleCounter
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_dxbcOperandType) == DxbcOperandType::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_dxbcOperandType) == DxbcOperandType::Count);
 
 	static const char* s_dxbcCustomDataClass[] =
 	{
@@ -622,21 +622,21 @@ namespace bgfx
 		"ShaderMessage",
 		"ClipPlaneConstantMappingsForDx9",
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_dxbcCustomDataClass) == DxbcCustomDataClass::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_dxbcCustomDataClass) == DxbcCustomDataClass::Count);
 
 #define DXBC_MAX_NAME_STRING 512
 
-	int32_t readString(bx::ReaderSeekerI* _reader, int64_t _offset, char* _out, uint32_t _max, bx::Error* _err)
+	int32_t readString(base::ReaderSeekerI* _reader, int64_t _offset, char* _out, uint32_t _max, base::Error* _err)
 	{
-		int64_t oldOffset = bx::seek(_reader);
-		bx::seek(_reader, _offset, bx::Whence::Begin);
+		int64_t oldOffset = base::seek(_reader);
+		base::seek(_reader, _offset, base::Whence::Begin);
 
 		int32_t size = 0;
 
 		for (uint32_t ii = 0; ii < _max-1; ++ii)
 		{
 			char ch;
-			size += bx::read(_reader, ch, _err);
+			size += base::read(_reader, ch, _err);
 			*_out++ = ch;
 
 			if ('\0' == ch)
@@ -646,16 +646,16 @@ namespace bgfx
 		}
 		*_out = '\0';
 
-		bx::seek(_reader, oldOffset, bx::Whence::Begin);
+		base::seek(_reader, oldOffset, base::Whence::Begin);
 
 		return size;
 	}
 
 	inline uint32_t dxbcMixF(uint32_t _b, uint32_t _c, uint32_t _d)
 	{
-		const uint32_t tmp0   = bx::uint32_xor(_c, _d);
-		const uint32_t tmp1   = bx::uint32_and(_b, tmp0);
-		const uint32_t result = bx::uint32_xor(_d, tmp1);
+		const uint32_t tmp0   = base::uint32_xor(_c, _d);
+		const uint32_t tmp1   = base::uint32_and(_b, tmp0);
+		const uint32_t result = base::uint32_xor(_d, tmp1);
 
 		return result;
 	}
@@ -667,16 +667,16 @@ namespace bgfx
 
 	inline uint32_t dxbcMixH(uint32_t _b, uint32_t _c, uint32_t _d)
 	{
-		const uint32_t tmp0   = bx::uint32_xor(_b, _c);
-		const uint32_t result = bx::uint32_xor(_d, tmp0);
+		const uint32_t tmp0   = base::uint32_xor(_b, _c);
+		const uint32_t result = base::uint32_xor(_d, tmp0);
 
 		return result;
 	}
 
 	inline uint32_t dxbcMixI(uint32_t _b, uint32_t _c, uint32_t _d)
 	{
-		const uint32_t tmp0   = bx::uint32_orc(_b, _d);
-		const uint32_t result = bx::uint32_xor(_c, tmp0);
+		const uint32_t tmp0   = base::uint32_orc(_b, _d);
+		const uint32_t result = base::uint32_xor(_c, tmp0);
 
 		return result;
 	}
@@ -705,73 +705,73 @@ namespace bgfx
 		uint32_t cc = hash[2];
 		uint32_t dd = hash[3];
 
-		aa = bb + bx::uint32_rol(aa + dxbcMixF(bb, cc, dd) + d0  + 0xd76aa478,  7);
-		dd = aa + bx::uint32_rol(dd + dxbcMixF(aa, bb, cc) + d1  + 0xe8c7b756, 12);
-		cc = dd + bx::uint32_ror(cc + dxbcMixF(dd, aa, bb) + d2  + 0x242070db, 15);
-		bb = cc + bx::uint32_ror(bb + dxbcMixF(cc, dd, aa) + d3  + 0xc1bdceee, 10);
-		aa = bb + bx::uint32_rol(aa + dxbcMixF(bb, cc, dd) + d4  + 0xf57c0faf,  7);
-		dd = aa + bx::uint32_rol(dd + dxbcMixF(aa, bb, cc) + d5  + 0x4787c62a, 12);
-		cc = dd + bx::uint32_ror(cc + dxbcMixF(dd, aa, bb) + d6  + 0xa8304613, 15);
-		bb = cc + bx::uint32_ror(bb + dxbcMixF(cc, dd, aa) + d7  + 0xfd469501, 10);
-		aa = bb + bx::uint32_rol(aa + dxbcMixF(bb, cc, dd) + d8  + 0x698098d8,  7);
-		dd = aa + bx::uint32_rol(dd + dxbcMixF(aa, bb, cc) + d9  + 0x8b44f7af, 12);
-		cc = dd + bx::uint32_ror(cc + dxbcMixF(dd, aa, bb) + d10 + 0xffff5bb1, 15);
-		bb = cc + bx::uint32_ror(bb + dxbcMixF(cc, dd, aa) + d11 + 0x895cd7be, 10);
-		aa = bb + bx::uint32_rol(aa + dxbcMixF(bb, cc, dd) + d12 + 0x6b901122,  7);
-		dd = aa + bx::uint32_rol(dd + dxbcMixF(aa, bb, cc) + d13 + 0xfd987193, 12);
-		cc = dd + bx::uint32_ror(cc + dxbcMixF(dd, aa, bb) + d14 + 0xa679438e, 15);
-		bb = cc + bx::uint32_ror(bb + dxbcMixF(cc, dd, aa) + d15 + 0x49b40821, 10);
+		aa = bb + base::uint32_rol(aa + dxbcMixF(bb, cc, dd) + d0  + 0xd76aa478,  7);
+		dd = aa + base::uint32_rol(dd + dxbcMixF(aa, bb, cc) + d1  + 0xe8c7b756, 12);
+		cc = dd + base::uint32_ror(cc + dxbcMixF(dd, aa, bb) + d2  + 0x242070db, 15);
+		bb = cc + base::uint32_ror(bb + dxbcMixF(cc, dd, aa) + d3  + 0xc1bdceee, 10);
+		aa = bb + base::uint32_rol(aa + dxbcMixF(bb, cc, dd) + d4  + 0xf57c0faf,  7);
+		dd = aa + base::uint32_rol(dd + dxbcMixF(aa, bb, cc) + d5  + 0x4787c62a, 12);
+		cc = dd + base::uint32_ror(cc + dxbcMixF(dd, aa, bb) + d6  + 0xa8304613, 15);
+		bb = cc + base::uint32_ror(bb + dxbcMixF(cc, dd, aa) + d7  + 0xfd469501, 10);
+		aa = bb + base::uint32_rol(aa + dxbcMixF(bb, cc, dd) + d8  + 0x698098d8,  7);
+		dd = aa + base::uint32_rol(dd + dxbcMixF(aa, bb, cc) + d9  + 0x8b44f7af, 12);
+		cc = dd + base::uint32_ror(cc + dxbcMixF(dd, aa, bb) + d10 + 0xffff5bb1, 15);
+		bb = cc + base::uint32_ror(bb + dxbcMixF(cc, dd, aa) + d11 + 0x895cd7be, 10);
+		aa = bb + base::uint32_rol(aa + dxbcMixF(bb, cc, dd) + d12 + 0x6b901122,  7);
+		dd = aa + base::uint32_rol(dd + dxbcMixF(aa, bb, cc) + d13 + 0xfd987193, 12);
+		cc = dd + base::uint32_ror(cc + dxbcMixF(dd, aa, bb) + d14 + 0xa679438e, 15);
+		bb = cc + base::uint32_ror(bb + dxbcMixF(cc, dd, aa) + d15 + 0x49b40821, 10);
 
-		aa = bb + bx::uint32_rol(aa + dxbcMixG(bb, cc, dd) + d1  + 0xf61e2562,  5);
-		dd = aa + bx::uint32_rol(dd + dxbcMixG(aa, bb, cc) + d6  + 0xc040b340,  9);
-		cc = dd + bx::uint32_rol(cc + dxbcMixG(dd, aa, bb) + d11 + 0x265e5a51, 14);
-		bb = cc + bx::uint32_ror(bb + dxbcMixG(cc, dd, aa) + d0  + 0xe9b6c7aa, 12);
-		aa = bb + bx::uint32_rol(aa + dxbcMixG(bb, cc, dd) + d5  + 0xd62f105d,  5);
-		dd = aa + bx::uint32_rol(dd + dxbcMixG(aa, bb, cc) + d10 + 0x02441453,  9);
-		cc = dd + bx::uint32_rol(cc + dxbcMixG(dd, aa, bb) + d15 + 0xd8a1e681, 14);
-		bb = cc + bx::uint32_ror(bb + dxbcMixG(cc, dd, aa) + d4  + 0xe7d3fbc8, 12);
-		aa = bb + bx::uint32_rol(aa + dxbcMixG(bb, cc, dd) + d9  + 0x21e1cde6,  5);
-		dd = aa + bx::uint32_rol(dd + dxbcMixG(aa, bb, cc) + d14 + 0xc33707d6,  9);
-		cc = dd + bx::uint32_rol(cc + dxbcMixG(dd, aa, bb) + d3  + 0xf4d50d87, 14);
-		bb = cc + bx::uint32_ror(bb + dxbcMixG(cc, dd, aa) + d8  + 0x455a14ed, 12);
-		aa = bb + bx::uint32_rol(aa + dxbcMixG(bb, cc, dd) + d13 + 0xa9e3e905,  5);
-		dd = aa + bx::uint32_rol(dd + dxbcMixG(aa, bb, cc) + d2  + 0xfcefa3f8,  9);
-		cc = dd + bx::uint32_rol(cc + dxbcMixG(dd, aa, bb) + d7  + 0x676f02d9, 14);
-		bb = cc + bx::uint32_ror(bb + dxbcMixG(cc, dd, aa) + d12 + 0x8d2a4c8a, 12);
+		aa = bb + base::uint32_rol(aa + dxbcMixG(bb, cc, dd) + d1  + 0xf61e2562,  5);
+		dd = aa + base::uint32_rol(dd + dxbcMixG(aa, bb, cc) + d6  + 0xc040b340,  9);
+		cc = dd + base::uint32_rol(cc + dxbcMixG(dd, aa, bb) + d11 + 0x265e5a51, 14);
+		bb = cc + base::uint32_ror(bb + dxbcMixG(cc, dd, aa) + d0  + 0xe9b6c7aa, 12);
+		aa = bb + base::uint32_rol(aa + dxbcMixG(bb, cc, dd) + d5  + 0xd62f105d,  5);
+		dd = aa + base::uint32_rol(dd + dxbcMixG(aa, bb, cc) + d10 + 0x02441453,  9);
+		cc = dd + base::uint32_rol(cc + dxbcMixG(dd, aa, bb) + d15 + 0xd8a1e681, 14);
+		bb = cc + base::uint32_ror(bb + dxbcMixG(cc, dd, aa) + d4  + 0xe7d3fbc8, 12);
+		aa = bb + base::uint32_rol(aa + dxbcMixG(bb, cc, dd) + d9  + 0x21e1cde6,  5);
+		dd = aa + base::uint32_rol(dd + dxbcMixG(aa, bb, cc) + d14 + 0xc33707d6,  9);
+		cc = dd + base::uint32_rol(cc + dxbcMixG(dd, aa, bb) + d3  + 0xf4d50d87, 14);
+		bb = cc + base::uint32_ror(bb + dxbcMixG(cc, dd, aa) + d8  + 0x455a14ed, 12);
+		aa = bb + base::uint32_rol(aa + dxbcMixG(bb, cc, dd) + d13 + 0xa9e3e905,  5);
+		dd = aa + base::uint32_rol(dd + dxbcMixG(aa, bb, cc) + d2  + 0xfcefa3f8,  9);
+		cc = dd + base::uint32_rol(cc + dxbcMixG(dd, aa, bb) + d7  + 0x676f02d9, 14);
+		bb = cc + base::uint32_ror(bb + dxbcMixG(cc, dd, aa) + d12 + 0x8d2a4c8a, 12);
 
-		aa = bb + bx::uint32_rol(aa + dxbcMixH(bb, cc, dd) + d5  + 0xfffa3942,  4);
-		dd = aa + bx::uint32_rol(dd + dxbcMixH(aa, bb, cc) + d8  + 0x8771f681, 11);
-		cc = dd + bx::uint32_rol(cc + dxbcMixH(dd, aa, bb) + d11 + 0x6d9d6122, 16);
-		bb = cc + bx::uint32_ror(bb + dxbcMixH(cc, dd, aa) + d14 + 0xfde5380c,  9);
-		aa = bb + bx::uint32_rol(aa + dxbcMixH(bb, cc, dd) + d1  + 0xa4beea44,  4);
-		dd = aa + bx::uint32_rol(dd + dxbcMixH(aa, bb, cc) + d4  + 0x4bdecfa9, 11);
-		cc = dd + bx::uint32_rol(cc + dxbcMixH(dd, aa, bb) + d7  + 0xf6bb4b60, 16);
-		bb = cc + bx::uint32_ror(bb + dxbcMixH(cc, dd, aa) + d10 + 0xbebfbc70,  9);
-		aa = bb + bx::uint32_rol(aa + dxbcMixH(bb, cc, dd) + d13 + 0x289b7ec6,  4);
-		dd = aa + bx::uint32_rol(dd + dxbcMixH(aa, bb, cc) + d0  + 0xeaa127fa, 11);
-		cc = dd + bx::uint32_rol(cc + dxbcMixH(dd, aa, bb) + d3  + 0xd4ef3085, 16);
-		bb = cc + bx::uint32_ror(bb + dxbcMixH(cc, dd, aa) + d6  + 0x04881d05,  9);
-		aa = bb + bx::uint32_rol(aa + dxbcMixH(bb, cc, dd) + d9  + 0xd9d4d039,  4);
-		dd = aa + bx::uint32_rol(dd + dxbcMixH(aa, bb, cc) + d12 + 0xe6db99e5, 11);
-		cc = dd + bx::uint32_rol(cc + dxbcMixH(dd, aa, bb) + d15 + 0x1fa27cf8, 16);
-		bb = cc + bx::uint32_ror(bb + dxbcMixH(cc, dd, aa) + d2  + 0xc4ac5665,  9);
+		aa = bb + base::uint32_rol(aa + dxbcMixH(bb, cc, dd) + d5  + 0xfffa3942,  4);
+		dd = aa + base::uint32_rol(dd + dxbcMixH(aa, bb, cc) + d8  + 0x8771f681, 11);
+		cc = dd + base::uint32_rol(cc + dxbcMixH(dd, aa, bb) + d11 + 0x6d9d6122, 16);
+		bb = cc + base::uint32_ror(bb + dxbcMixH(cc, dd, aa) + d14 + 0xfde5380c,  9);
+		aa = bb + base::uint32_rol(aa + dxbcMixH(bb, cc, dd) + d1  + 0xa4beea44,  4);
+		dd = aa + base::uint32_rol(dd + dxbcMixH(aa, bb, cc) + d4  + 0x4bdecfa9, 11);
+		cc = dd + base::uint32_rol(cc + dxbcMixH(dd, aa, bb) + d7  + 0xf6bb4b60, 16);
+		bb = cc + base::uint32_ror(bb + dxbcMixH(cc, dd, aa) + d10 + 0xbebfbc70,  9);
+		aa = bb + base::uint32_rol(aa + dxbcMixH(bb, cc, dd) + d13 + 0x289b7ec6,  4);
+		dd = aa + base::uint32_rol(dd + dxbcMixH(aa, bb, cc) + d0  + 0xeaa127fa, 11);
+		cc = dd + base::uint32_rol(cc + dxbcMixH(dd, aa, bb) + d3  + 0xd4ef3085, 16);
+		bb = cc + base::uint32_ror(bb + dxbcMixH(cc, dd, aa) + d6  + 0x04881d05,  9);
+		aa = bb + base::uint32_rol(aa + dxbcMixH(bb, cc, dd) + d9  + 0xd9d4d039,  4);
+		dd = aa + base::uint32_rol(dd + dxbcMixH(aa, bb, cc) + d12 + 0xe6db99e5, 11);
+		cc = dd + base::uint32_rol(cc + dxbcMixH(dd, aa, bb) + d15 + 0x1fa27cf8, 16);
+		bb = cc + base::uint32_ror(bb + dxbcMixH(cc, dd, aa) + d2  + 0xc4ac5665,  9);
 
-		aa = bb + bx::uint32_rol(aa + dxbcMixI(bb, cc, dd) + d0  + 0xf4292244,  6);
-		dd = aa + bx::uint32_rol(dd + dxbcMixI(aa, bb, cc) + d7  + 0x432aff97, 10);
-		cc = dd + bx::uint32_rol(cc + dxbcMixI(dd, aa, bb) + d14 + 0xab9423a7, 15);
-		bb = cc + bx::uint32_ror(bb + dxbcMixI(cc, dd, aa) + d5  + 0xfc93a039, 11);
-		aa = bb + bx::uint32_rol(aa + dxbcMixI(bb, cc, dd) + d12 + 0x655b59c3,  6);
-		dd = aa + bx::uint32_rol(dd + dxbcMixI(aa, bb, cc) + d3  + 0x8f0ccc92, 10);
-		cc = dd + bx::uint32_rol(cc + dxbcMixI(dd, aa, bb) + d10 + 0xffeff47d, 15);
-		bb = cc + bx::uint32_ror(bb + dxbcMixI(cc, dd, aa) + d1  + 0x85845dd1, 11);
-		aa = bb + bx::uint32_rol(aa + dxbcMixI(bb, cc, dd) + d8  + 0x6fa87e4f,  6);
-		dd = aa + bx::uint32_rol(dd + dxbcMixI(aa, bb, cc) + d15 + 0xfe2ce6e0, 10);
-		cc = dd + bx::uint32_rol(cc + dxbcMixI(dd, aa, bb) + d6  + 0xa3014314, 15);
-		bb = cc + bx::uint32_ror(bb + dxbcMixI(cc, dd, aa) + d13 + 0x4e0811a1, 11);
-		aa = bb + bx::uint32_rol(aa + dxbcMixI(bb, cc, dd) + d4  + 0xf7537e82,  6);
-		dd = aa + bx::uint32_rol(dd + dxbcMixI(aa, bb, cc) + d11 + 0xbd3af235, 10);
-		cc = dd + bx::uint32_rol(cc + dxbcMixI(dd, aa, bb) + d2  + 0x2ad7d2bb, 15);
-		bb = cc + bx::uint32_ror(bb + dxbcMixI(cc, dd, aa) + d9  + 0xeb86d391, 11);
+		aa = bb + base::uint32_rol(aa + dxbcMixI(bb, cc, dd) + d0  + 0xf4292244,  6);
+		dd = aa + base::uint32_rol(dd + dxbcMixI(aa, bb, cc) + d7  + 0x432aff97, 10);
+		cc = dd + base::uint32_rol(cc + dxbcMixI(dd, aa, bb) + d14 + 0xab9423a7, 15);
+		bb = cc + base::uint32_ror(bb + dxbcMixI(cc, dd, aa) + d5  + 0xfc93a039, 11);
+		aa = bb + base::uint32_rol(aa + dxbcMixI(bb, cc, dd) + d12 + 0x655b59c3,  6);
+		dd = aa + base::uint32_rol(dd + dxbcMixI(aa, bb, cc) + d3  + 0x8f0ccc92, 10);
+		cc = dd + base::uint32_rol(cc + dxbcMixI(dd, aa, bb) + d10 + 0xffeff47d, 15);
+		bb = cc + base::uint32_ror(bb + dxbcMixI(cc, dd, aa) + d1  + 0x85845dd1, 11);
+		aa = bb + base::uint32_rol(aa + dxbcMixI(bb, cc, dd) + d8  + 0x6fa87e4f,  6);
+		dd = aa + base::uint32_rol(dd + dxbcMixI(aa, bb, cc) + d15 + 0xfe2ce6e0, 10);
+		cc = dd + base::uint32_rol(cc + dxbcMixI(dd, aa, bb) + d6  + 0xa3014314, 15);
+		bb = cc + base::uint32_ror(bb + dxbcMixI(cc, dd, aa) + d13 + 0x4e0811a1, 11);
+		aa = bb + base::uint32_rol(aa + dxbcMixI(bb, cc, dd) + d4  + 0xf7537e82,  6);
+		dd = aa + base::uint32_rol(dd + dxbcMixI(aa, bb, cc) + d11 + 0xbd3af235, 10);
+		cc = dd + base::uint32_rol(cc + dxbcMixI(dd, aa, bb) + d2  + 0x2ad7d2bb, 15);
+		bb = cc + base::uint32_ror(bb + dxbcMixI(cc, dd, aa) + d9  + 0xeb86d391, 11);
 
 		hash[0] += aa;
 		hash[1] += bb;
@@ -804,21 +804,21 @@ namespace bgfx
 		}
 
 		uint32_t last[16];
-		bx::memSet(last, 0, sizeof(last) );
+		base::memSet(last, 0, sizeof(last) );
 
 		const uint32_t remaining = _size & 0x3f;
 
 		if (remaining >= 56)
 		{
-			bx::memCopy(&last[0], data, remaining);
+			base::memCopy(&last[0], data, remaining);
 			last[remaining/4] = 0x80;
 			dxbcHashBlock(last, hash);
 
-			bx::memSet(&last[1], 0, 56);
+			base::memSet(&last[1], 0, 56);
 		}
 		else
 		{
-			bx::memCopy(&last[1], data, remaining);
+			base::memCopy(&last[1], data, remaining);
 			last[1 + remaining/4] = 0x80;
 		}
 
@@ -826,10 +826,10 @@ namespace bgfx
 		last[15] = _size * 2 + 1;
 		dxbcHashBlock(last, hash);
 
-		bx::memCopy(_digest, hash, 16);
+		base::memCopy(_digest, hash, 16);
 	}
 
-	int32_t read(bx::ReaderI* _reader, DxbcSubOperand& _subOperand, bx::Error* _err)
+	int32_t read(base::ReaderI* _reader, DxbcSubOperand& _subOperand, base::Error* _err)
 	{
 		uint32_t token;
 		int32_t size = 0;
@@ -847,7 +847,7 @@ namespace bgfx
 		// |+------------------------------- addressing mode 2
 		// +-------------------------------- extended
 
-		size += bx::read(_reader, token, _err);
+		size += base::read(_reader, token, _err);
 		_subOperand.type         = DxbcOperandType::Enum( (token & UINT32_C(0x000ff000) ) >> 12);
 		_subOperand.numAddrModes =               uint8_t( (token & UINT32_C(0x00300000) ) >> 20);
 		_subOperand.addrMode     =               uint8_t( (token & UINT32_C(0x01c00000) ) >> 22);
@@ -858,7 +858,7 @@ namespace bgfx
 		switch (_subOperand.addrMode)
 		{
 		case DxbcOperandAddrMode::Imm32:
-			size += bx::read(_reader, _subOperand.regIndex, _err);
+			size += base::read(_reader, _subOperand.regIndex, _err);
 			break;
 
 		case DxbcOperandAddrMode::Reg:
@@ -870,7 +870,7 @@ namespace bgfx
 
 		case DxbcOperandAddrMode::RegImm32:
 			{
-				size += bx::read(_reader, _subOperand.regIndex, _err);
+				size += base::read(_reader, _subOperand.regIndex, _err);
 
 				DxbcSubOperand subOperand;
 				size += read(_reader, subOperand, _err);
@@ -879,8 +879,8 @@ namespace bgfx
 
 		case DxbcOperandAddrMode::RegImm64:
 			{
-				size += bx::read(_reader, _subOperand.regIndex, _err);
-				size += bx::read(_reader, _subOperand.regIndex, _err);
+				size += base::read(_reader, _subOperand.regIndex, _err);
+				size += base::read(_reader, _subOperand.regIndex, _err);
 
 				DxbcSubOperand subOperand;
 				size += read(_reader, subOperand, _err);
@@ -888,14 +888,14 @@ namespace bgfx
 			break;
 
 		default:
-			BX_ASSERT(false, "sub operand addressing mode %d", _subOperand.addrMode);
+			BASE_ASSERT(false, "sub operand addressing mode %d", _subOperand.addrMode);
 			break;
 		}
 
 		return size;
 	}
 
-	int32_t write(bx::WriterI* _writer, const DxbcSubOperand& _subOperand, bx::Error* _err)
+	int32_t write(base::WriterI* _writer, const DxbcSubOperand& _subOperand, base::Error* _err)
 	{
 		int32_t size = 0;
 
@@ -906,12 +906,12 @@ namespace bgfx
 		token |= (_subOperand.mode         <<  2) & UINT32_C(0x0000000c);
 		token |= (_subOperand.modeBits     <<  4) & UINT32_C(0x00000ff0);
 		token |=  _subOperand.num                 & UINT32_C(0x00000003);
-		size += bx::write(_writer, token, _err);
+		size += base::write(_writer, token, _err);
 
 		switch (_subOperand.addrMode)
 		{
 		case DxbcOperandAddrMode::Imm32:
-			size += bx::write(_writer, _subOperand.regIndex, _err);
+			size += base::write(_writer, _subOperand.regIndex, _err);
 			break;
 
 		case DxbcOperandAddrMode::Reg:
@@ -923,7 +923,7 @@ namespace bgfx
 
 		case DxbcOperandAddrMode::RegImm32:
 			{
-				size += bx::write(_writer, _subOperand.regIndex, _err);
+				size += base::write(_writer, _subOperand.regIndex, _err);
 
 				DxbcSubOperand subOperand;
 				size += write(_writer, subOperand, _err);
@@ -932,8 +932,8 @@ namespace bgfx
 
 		case DxbcOperandAddrMode::RegImm64:
 			{
-				size += bx::write(_writer, _subOperand.regIndex, _err);
-				size += bx::write(_writer, _subOperand.regIndex, _err);
+				size += base::write(_writer, _subOperand.regIndex, _err);
+				size += base::write(_writer, _subOperand.regIndex, _err);
 
 				DxbcSubOperand subOperand;
 				size += write(_writer, subOperand, _err);
@@ -941,19 +941,19 @@ namespace bgfx
 			break;
 
 		default:
-			BX_ASSERT(false, "sub operand addressing mode %d", _subOperand.addrMode);
+			BASE_ASSERT(false, "sub operand addressing mode %d", _subOperand.addrMode);
 			break;
 		}
 
 		return size;
 	}
 
-	int32_t read(bx::ReaderI* _reader, DxbcOperand& _operand, bx::Error* _err)
+	int32_t read(base::ReaderI* _reader, DxbcOperand& _operand, base::Error* _err)
 	{
 		int32_t size = 0;
 
 		uint32_t token;
-		size += bx::read(_reader, token, _err);
+		size += base::read(_reader, token, _err);
 
 		// 0       1       2       3
 		// 76543210765432107654321076543210
@@ -981,7 +981,7 @@ namespace bgfx
 		if (extended)
 		{
 			uint32_t extBits = 0;
-			size += bx::read(_reader, extBits, _err);
+			size += base::read(_reader, extBits, _err);
 
 			_operand.modifier = DxbcOperandModifier::Enum( (extBits & UINT32_C(0x00003fc0) ) >> 6);
 		}
@@ -996,7 +996,7 @@ namespace bgfx
 			_operand.num = 2 == _operand.num ? 4 : _operand.num;
 			for (uint32_t ii = 0; ii < _operand.num; ++ii)
 			{
-				size += bx::read(_reader, _operand.un.imm32[ii], _err);
+				size += base::read(_reader, _operand.un.imm32[ii], _err);
 			}
 			break;
 
@@ -1004,7 +1004,7 @@ namespace bgfx
 			_operand.num = 2 == _operand.num ? 4 : _operand.num;
 			for (uint32_t ii = 0; ii < _operand.num; ++ii)
 			{
-				size += bx::read(_reader, _operand.un.imm64[ii], _err);
+				size += base::read(_reader, _operand.un.imm64[ii], _err);
 			}
 			break;
 
@@ -1017,7 +1017,7 @@ namespace bgfx
 			switch (_operand.addrMode[ii])
 			{
 			case DxbcOperandAddrMode::Imm32:
-				size += bx::read(_reader, _operand.regIndex[ii], _err);
+				size += base::read(_reader, _operand.regIndex[ii], _err);
 				break;
 
 			case DxbcOperandAddrMode::Reg:
@@ -1025,12 +1025,12 @@ namespace bgfx
 				break;
 
 			case DxbcOperandAddrMode::RegImm32:
-				size += bx::read(_reader, _operand.regIndex[ii], _err);
+				size += base::read(_reader, _operand.regIndex[ii], _err);
 				size += read(_reader, _operand.subOperand[ii], _err);
 				break;
 
 			default:
-				BX_ASSERT(false, "operand %d addressing mode %d", ii, _operand.addrMode[ii]);
+				BASE_ASSERT(false, "operand %d addressing mode %d", ii, _operand.addrMode[ii]);
 				break;
 			}
 		}
@@ -1038,7 +1038,7 @@ namespace bgfx
 		return size;
 	}
 
-	int32_t write(bx::WriterI* _writer, const DxbcOperand& _operand, bx::Error* _err)
+	int32_t write(base::WriterI* _writer, const DxbcOperand& _operand, base::Error* _err)
 	{
 		int32_t size = 0;
 
@@ -1056,7 +1056,7 @@ namespace bgfx
 		token |= (4 == _operand.num ? 2 : _operand.num) & UINT32_C(0x00000003);
 		token |= ( (_operand.modeBits & "\x0f\xff\x03\x00"[_operand.mode]) << 4) & UINT32_C(0x00000ff0);
 
-		size += bx::write(_writer, token, _err);
+		size += base::write(_writer, token, _err);
 
 		if (extended)
 		{
@@ -1064,7 +1064,7 @@ namespace bgfx
 				| ( (_operand.modifier << 6) & UINT32_C(0x00003fc0) )
 				| 1 /* 1 == has extended operand modifier */
 				;
-			size += bx::write(_writer, extBits, _err);
+			size += base::write(_writer, extBits, _err);
 		}
 
 		switch (_operand.type)
@@ -1072,14 +1072,14 @@ namespace bgfx
 		case DxbcOperandType::Imm32:
 			for (uint32_t ii = 0; ii < _operand.num; ++ii)
 			{
-				size += bx::write(_writer, _operand.un.imm32[ii], _err);
+				size += base::write(_writer, _operand.un.imm32[ii], _err);
 			}
 			break;
 
 		case DxbcOperandType::Imm64:
 			for (uint32_t ii = 0; ii < _operand.num; ++ii)
 			{
-				size += bx::write(_writer, _operand.un.imm64[ii], _err);
+				size += base::write(_writer, _operand.un.imm64[ii], _err);
 			}
 			break;
 
@@ -1087,12 +1087,12 @@ namespace bgfx
 			break;
 		}
 
-		for (uint32_t ii = 0, num = bx::uint32_min(_operand.numAddrModes, BX_COUNTOF(_operand.addrMode) ); ii < num; ++ii)
+		for (uint32_t ii = 0, num = base::uint32_min(_operand.numAddrModes, BASE_COUNTOF(_operand.addrMode) ); ii < num; ++ii)
 		{
 			switch (_operand.addrMode[ii])
 			{
 			case DxbcOperandAddrMode::Imm32:
-				size += bx::write(_writer, _operand.regIndex[ii], _err);
+				size += base::write(_writer, _operand.regIndex[ii], _err);
 				break;
 
 			case DxbcOperandAddrMode::Reg:
@@ -1100,12 +1100,12 @@ namespace bgfx
 				break;
 
 			case DxbcOperandAddrMode::RegImm32:
-				size += bx::write(_writer, _operand.regIndex[ii], _err);
+				size += base::write(_writer, _operand.regIndex[ii], _err);
 				size += write(_writer, _operand.subOperand[ii], _err);
 				break;
 
 			default:
-				BX_ASSERT(false, "operand %d addressing mode %d", ii, _operand.addrMode[ii]);
+				BASE_ASSERT(false, "operand %d addressing mode %d", ii, _operand.addrMode[ii]);
 				break;
 			}
 		}
@@ -1113,12 +1113,12 @@ namespace bgfx
 		return size;
 	}
 
-	int32_t read(bx::ReaderI* _reader, DxbcInstruction& _instruction, bx::Error* _err)
+	int32_t read(base::ReaderI* _reader, DxbcInstruction& _instruction, base::Error* _err)
 	{
 		int32_t size = 0;
 
 		uint32_t token;
-		size += bx::read(_reader, token, _err);
+		size += base::read(_reader, token, _err);
 
 		// 0       1       2       3
 		// 76543210765432107654321076543210
@@ -1128,7 +1128,7 @@ namespace bgfx
 		// +-------------------------------- extended
 
 		_instruction.opcode = DxbcOpcode::Enum( (token & UINT32_C(0x000007ff) )      );
-		BX_ASSERT(_instruction.opcode < DxbcOpcode::Enum::Count, "unknown opcode");
+		BASE_ASSERT(_instruction.opcode < DxbcOpcode::Enum::Count, "unknown opcode");
 
 		_instruction.length =          uint8_t( (token & UINT32_C(0x7f000000) ) >> 24);
 		bool extended       =              0 != (token & UINT32_C(0x80000000) );
@@ -1167,11 +1167,11 @@ namespace bgfx
 					_instruction.customDataClass = DxbcCustomDataClass::Enum( (token & UINT32_C(0xfffff800) ) >> 11);
 
 					_instruction.numOperands = 0;
-					size += bx::read(_reader, _instruction.length, _err);
+					size += base::read(_reader, _instruction.length, _err);
 					for (uint32_t ii = 0, num = (_instruction.length-2); ii < num && _err->isOk(); ++ii)
 					{
 						uint32_t temp;
-						size += bx::read(_reader, temp, _err);
+						size += base::read(_reader, temp, _err);
 						if (_err->isOk() )
 						{
 							_instruction.customData.push_back(temp);
@@ -1230,7 +1230,7 @@ namespace bgfx
 				_instruction.primitiveTopology = DxbcPrimitiveTopology::Enum( (token & UINT32_C(0x0001f800) ) >> 11);
 				break;
 
-			case DxbcOpcode::DCL_INPUT_PS: BX_FALLTHROUGH;
+			case DxbcOpcode::DCL_INPUT_PS: BASE_FALLTHROUGH;
 			case DxbcOpcode::DCL_INPUT_PS_SIV:
 				// 0       1       2       3
 				// 76543210765432107654321076543210
@@ -1304,7 +1304,7 @@ namespace bgfx
 			// +-------------------------------- extended
 
 			uint32_t extBits;
-			size += bx::read(_reader, extBits, _err);
+			size += base::read(_reader, extBits, _err);
 			extended = 0 != (extBits & UINT32_C(0x80000000) );
 			_instruction.extended[ii  ] = DxbcInstruction::ExtendedType::Enum(extBits & UINT32_C(0x0000001f) );
 			_instruction.extended[ii+1] = DxbcInstruction::ExtendedType::Count;
@@ -1381,7 +1381,7 @@ namespace bgfx
 					uint32_t num;
 					size += read(_reader, num, _err);
 
-					BX_ASSERT(false, "not implemented.");
+					BASE_ASSERT(false, "not implemented.");
 				}
 				break;
 
@@ -1395,12 +1395,12 @@ namespace bgfx
 		_instruction.numOperands = info.numOperands;
 		switch (info.numOperands)
 		{
-		case 6: size += read(_reader, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
-		case 5: size += read(_reader, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
-		case 4: size += read(_reader, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
-		case 3: size += read(_reader, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
-		case 2: size += read(_reader, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
-		case 1: size += read(_reader, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
+		case 6: size += read(_reader, _instruction.operand[currOp++], _err); BASE_FALLTHROUGH;
+		case 5: size += read(_reader, _instruction.operand[currOp++], _err); BASE_FALLTHROUGH;
+		case 4: size += read(_reader, _instruction.operand[currOp++], _err); BASE_FALLTHROUGH;
+		case 3: size += read(_reader, _instruction.operand[currOp++], _err); BASE_FALLTHROUGH;
+		case 2: size += read(_reader, _instruction.operand[currOp++], _err); BASE_FALLTHROUGH;
+		case 1: size += read(_reader, _instruction.operand[currOp++], _err); BASE_FALLTHROUGH;
 		case 0:
 			if (0 < info.numValues)
 			{
@@ -1409,7 +1409,7 @@ namespace bgfx
 			break;
 
 		default:
-			BX_ASSERT(false, "Instruction %s with invalid number of operands %d (numValues %d)."
+			BASE_ASSERT(false, "Instruction %s with invalid number of operands %d (numValues %d)."
 					, getName(_instruction.opcode)
 					, info.numOperands
 					, info.numValues
@@ -1420,7 +1420,7 @@ namespace bgfx
 		return size;
 	}
 
-	int32_t write(bx::WriterI* _writer, const DxbcInstruction& _instruction, bx::Error* _err)
+	int32_t write(base::WriterI* _writer, const DxbcInstruction& _instruction, base::Error* _err)
 	{
 		uint32_t token = 0;
 		token |= (_instruction.opcode        ) & UINT32_C(0x000007ff);
@@ -1440,11 +1440,11 @@ namespace bgfx
 					token &= UINT32_C(0x000007ff);
 					token |= _instruction.customDataClass << 11;
 
-					size += bx::write(_writer, token, _err);
+					size += base::write(_writer, token, _err);
 
 					uint32_t len = uint32_t(_instruction.customData.size()*sizeof(uint32_t) );
-					size += bx::write(_writer, len/4+2, _err);
-					size += bx::write(_writer, _instruction.customData.data(), len, _err);
+					size += base::write(_writer, len/4+2, _err);
+					size += base::write(_writer, _instruction.customData.data(), len, _err);
 				}
 				return size;
 
@@ -1471,7 +1471,7 @@ namespace bgfx
 				token |= (_instruction.primitiveTopology << 11) & UINT32_C(0x0001f800);
 				break;
 
-			case DxbcOpcode::DCL_INPUT_PS: BX_FALLTHROUGH;
+			case DxbcOpcode::DCL_INPUT_PS: BASE_FALLTHROUGH;
 			case DxbcOpcode::DCL_INPUT_PS_SIV:
 				token |= (_instruction.interpolation << 11) & UINT32_C(0x0000f800);
 				break;
@@ -1501,7 +1501,7 @@ namespace bgfx
 				break;
 		}
 
-		size += bx::write(_writer, token, _err);
+		size += base::write(_writer, token, _err);
 
 		for (uint32_t ii = 0; _instruction.extended[ii] != DxbcInstruction::ExtendedType::Count; ++ii)
 		{
@@ -1563,7 +1563,7 @@ namespace bgfx
 				break;
 			}
 
-			size += bx::write(_writer, token, _err);
+			size += base::write(_writer, token, _err);
 		}
 
 		for (uint32_t ii = 0; ii < _instruction.numOperands; ++ii)
@@ -1574,7 +1574,7 @@ namespace bgfx
 		const DxbcOpcodeInfo& info = s_dxbcOpcodeInfo[_instruction.opcode];
 		if (0 < info.numValues)
 		{
-			size += bx::write(_writer, _instruction.value, info.numValues*sizeof(uint32_t), _err);
+			size += base::write(_writer, _instruction.value, info.numValues*sizeof(uint32_t), _err);
 		}
 
 		return size;
@@ -1590,7 +1590,7 @@ namespace bgfx
 			if (0xf > _modeBits
 			&&  0   < _modeBits)
 			{
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, ".%s%s%s%s"
 							, 0 == (_modeBits & 1) ? "" : "x"
 							, 0 == (_modeBits & 2) ? "" : "y"
@@ -1603,7 +1603,7 @@ namespace bgfx
 		case DxbcOperandMode::Swizzle:
 			if (0xe4 != _modeBits)
 			{
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, ".%c%c%c%c"
 							, "xyzw"[(_modeBits   )&0x3]
 							, "xyzw"[(_modeBits>>2)&0x3]
@@ -1614,7 +1614,7 @@ namespace bgfx
 			break;
 
 		case DxbcOperandMode::Scalar:
-			size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+			size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 						, ".%c"
 						, "xyzw"[_modeBits]
 						);
@@ -1634,14 +1634,14 @@ namespace bgfx
 		switch (_instruction.opcode)
 		{
 		case DxbcOpcode::CUSTOMDATA:
-			size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+			size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 						, "%s"
 						, s_dxbcCustomDataClass[_instruction.customDataClass]
 						);
 			break;
 
 		case DxbcOpcode::DCL_GS_OUTPUT_PRIMITIVE_TOPOLOGY:
-			size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+			size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 						, "%s %s"
 						, getName(_instruction.opcode)
 						, s_dxbcPrimitiveTopologyName[_instruction.primitiveTopology]
@@ -1649,7 +1649,7 @@ namespace bgfx
 			break;
 
 		case DxbcOpcode::DCL_GS_INPUT_PRIMITIVE:
-			size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+			size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 						, "%s %s"
 						, getName(_instruction.opcode)
 						, s_dxbcPrimitiveName[_instruction.primitive]
@@ -1657,7 +1657,7 @@ namespace bgfx
 			break;
 
 		case DxbcOpcode::IF:
-			size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+			size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 						, "%s%s"
 						, getName(_instruction.opcode)
 						, _instruction.testNZ ? "_nz"  : "_z"
@@ -1665,7 +1665,7 @@ namespace bgfx
 			break;
 
 		default:
-			size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+			size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 						, "%s%s%s"
 						, getName(_instruction.opcode)
 						, _instruction.saturate ? "_sat" : ""
@@ -1676,7 +1676,7 @@ namespace bgfx
 
 		if (DxbcResourceDim::Unknown != _instruction.srv)
 		{
-			size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+			size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 						, " %s<%x>"
 						, s_dxbcSrvType[_instruction.srv]
 						, _instruction.value[0]
@@ -1684,7 +1684,7 @@ namespace bgfx
 		}
 		else if (0 < s_dxbcOpcodeInfo[_instruction.opcode].numValues)
 		{
-			size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+			size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 						, " %d"
 						, _instruction.value[0]
 						);
@@ -1710,7 +1710,7 @@ namespace bgfx
 			default: break;
 			}
 
-			size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+			size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 						, "%s%s%s"
 						, 0 == ii ? " " : ", "
 						, preOperand
@@ -1724,14 +1724,14 @@ namespace bgfx
 				for (uint32_t jj = 0; jj < operand.num; ++jj)
 				{
 					union { uint32_t i; float f; } cast = { operand.un.imm32[jj] };
-					size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+					size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 								, "%s%f"
 								, 0 == jj ? "(" : ", "
 								, cast.f
 								);
 				}
 
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, ")"
 							);
 				break;
@@ -1747,69 +1747,69 @@ namespace bgfx
 				;
 			if (0 == first)
 			{
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, "["
 							);
 			}
 			else
 			{
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, "%d%s"
 							, operand.regIndex[0]
 							, array ? "[" : ""
 							);
 			}
 
-			for (uint32_t jj = first, num = bx::uint32_min(operand.numAddrModes, BX_COUNTOF(operand.addrMode) ); jj < num; ++jj)
+			for (uint32_t jj = first, num = base::uint32_min(operand.numAddrModes, BASE_COUNTOF(operand.addrMode) ); jj < num; ++jj)
 			{
 				switch (operand.addrMode[jj])
 				{
 				case DxbcOperandAddrMode::Imm32:
-					size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+					size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 								, "%d"
 								, operand.regIndex[jj]
 								);
 					break;
 
 				case DxbcOperandAddrMode::Reg:
-					size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+					size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 								, "%s%d"
 								, s_dxbcOperandType[operand.subOperand[jj].type]
 								, operand.subOperand[jj].regIndex
 								);
-					size += toString(&_out[size], bx::uint32_imax(0, _size-size)
+					size += toString(&_out[size], base::uint32_imax(0, _size-size)
 								, DxbcOperandMode::Enum(operand.subOperand[jj].mode)
 								, operand.subOperand[jj].modeBits
 								);
 					break;
 
 				case DxbcOperandAddrMode::RegImm32:
-					size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+					size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 								, "%d + %s%d"
 								, operand.regIndex[jj]
 								, s_dxbcOperandType[operand.subOperand[jj].type]
 								, operand.subOperand[jj].regIndex
 								);
-					size += toString(&_out[size], bx::uint32_imax(0, _size-size)
+					size += toString(&_out[size], base::uint32_imax(0, _size-size)
 								, DxbcOperandMode::Enum(operand.subOperand[jj].mode)
 								, operand.subOperand[jj].modeBits
 								);
 					break;
 
 				default:
-					size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size), "???");
+					size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size), "???");
 					break;
 				}
 			}
 
-			size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+			size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 						, "%s"
 						, array ? "]" : ""
 						);
 
-			size += toString(&_out[size], bx::uint32_imax(0, _size-size), operand.mode, operand.modeBits);
+			size += toString(&_out[size], base::uint32_imax(0, _size-size), operand.mode, operand.modeBits);
 
-			size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+			size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 						, "%s"
 						, postOperand
 						);
@@ -1818,7 +1818,7 @@ namespace bgfx
 		if (_instruction.opcode == DxbcOpcode::DCL_CONSTANT_BUFFER
 		&&  _instruction.allowRefactoring)
 		{
-			size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+			size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 						, ", dynamicIndexed"
 						);
 		}
@@ -1826,38 +1826,38 @@ namespace bgfx
 		return size;
 	}
 
-	int32_t read(bx::ReaderSeekerI* _reader, DxbcSignature& _signature, bx::Error* _err)
+	int32_t read(base::ReaderSeekerI* _reader, DxbcSignature& _signature, base::Error* _err)
 	{
 		int32_t size = 0;
 
-		int64_t offset = bx::seek(_reader);
+		int64_t offset = base::seek(_reader);
 
 		uint32_t num;
-		size += bx::read(_reader, num, _err);
-		size += bx::read(_reader, _signature.key, _err);
+		size += base::read(_reader, num, _err);
+		size += base::read(_reader, _signature.key, _err);
 
 		for (uint32_t ii = 0; ii < num; ++ii)
 		{
 			DxbcSignature::Element element;
 
 			uint32_t nameOffset;
-			size += bx::read(_reader, nameOffset, _err);
+			size += base::read(_reader, nameOffset, _err);
 
 			char name[DXBC_MAX_NAME_STRING];
 			readString(_reader, offset + nameOffset, name, DXBC_MAX_NAME_STRING, _err);
 			element.name = name;
 
-			size += bx::read(_reader, element.semanticIndex, _err);
-			size += bx::read(_reader, element.valueType, _err);
-			size += bx::read(_reader, element.componentType, _err);
-			size += bx::read(_reader, element.registerIndex, _err);
-			size += bx::read(_reader, element.mask, _err);
-			size += bx::read(_reader, element.readWriteMask, _err);
-			size += bx::read(_reader, element.stream, _err);
+			size += base::read(_reader, element.semanticIndex, _err);
+			size += base::read(_reader, element.valueType, _err);
+			size += base::read(_reader, element.componentType, _err);
+			size += base::read(_reader, element.registerIndex, _err);
+			size += base::read(_reader, element.mask, _err);
+			size += base::read(_reader, element.readWriteMask, _err);
+			size += base::read(_reader, element.stream, _err);
 
 			// padding
 			uint8_t padding;
-			size += bx::read(_reader, padding, _err);
+			size += base::read(_reader, padding, _err);
 
 			_signature.elements.push_back(element);
 		}
@@ -1865,13 +1865,13 @@ namespace bgfx
 		return size;
 	}
 
-	int32_t write(bx::WriterI* _writer, const DxbcSignature& _signature, bx::Error* _err)
+	int32_t write(base::WriterI* _writer, const DxbcSignature& _signature, base::Error* _err)
 	{
 		int32_t size = 0;
 
 		const uint32_t num = uint32_t(_signature.elements.size() );
-		size += bx::write(_writer, num, _err);
-		size += bx::write(_writer, _signature.key, _err);
+		size += base::write(_writer, num, _err);
+		size += base::write(_writer, _signature.key, _err);
 
 		typedef stl::unordered_map<stl::string, uint32_t> NameOffsetMap;
 		NameOffsetMap nom;
@@ -1886,22 +1886,22 @@ namespace bgfx
 			if (it == nom.end() )
 			{
 				nom.insert(stl::make_pair(element.name, nameOffset) );
-				size += bx::write(_writer, nameOffset, _err);
+				size += base::write(_writer, nameOffset, _err);
 				nameOffset += uint32_t(element.name.size() + 1);
 			}
 			else
 			{
-				size += bx::write(_writer, it->second, _err);
+				size += base::write(_writer, it->second, _err);
 			}
 
-			size += bx::write(_writer, element.semanticIndex, _err);
-			size += bx::write(_writer, element.valueType, _err);
-			size += bx::write(_writer, element.componentType, _err);
-			size += bx::write(_writer, element.registerIndex, _err);
-			size += bx::write(_writer, element.mask, _err);
-			size += bx::write(_writer, element.readWriteMask, _err);
-			size += bx::write(_writer, element.stream, _err);
-			size += bx::write(_writer, pad, _err);
+			size += base::write(_writer, element.semanticIndex, _err);
+			size += base::write(_writer, element.valueType, _err);
+			size += base::write(_writer, element.componentType, _err);
+			size += base::write(_writer, element.registerIndex, _err);
+			size += base::write(_writer, element.mask, _err);
+			size += base::write(_writer, element.readWriteMask, _err);
+			size += base::write(_writer, element.stream, _err);
+			size += base::write(_writer, pad, _err);
 		}
 
 		uint32_t len = 0;
@@ -1912,138 +1912,138 @@ namespace bgfx
 			if (it != nom.end() )
 			{
 				nom.erase(it);
-				size += bx::write(_writer, element.name.c_str(), uint32_t(element.name.size() + 1), _err);
+				size += base::write(_writer, element.name.c_str(), uint32_t(element.name.size() + 1), _err);
 				len  += uint32_t(element.name.size() + 1);
 			}
 		}
 
 		// align 4 bytes
-		size += bx::writeRep(_writer, 0xab, (len+3)/4*4 - len, _err);
+		size += base::writeRep(_writer, 0xab, (len+3)/4*4 - len, _err);
 
 		return size;
 	}
 
-	int32_t read(bx::ReaderSeekerI* _reader, DxbcShader& _shader, bx::Error* _err)
+	int32_t read(base::ReaderSeekerI* _reader, DxbcShader& _shader, base::Error* _err)
 	{
 		int32_t size = 0;
 
-		size += bx::read(_reader, _shader.version, _err);
+		size += base::read(_reader, _shader.version, _err);
 
 		uint32_t bcLength;
-		size += bx::read(_reader, bcLength, _err);
+		size += base::read(_reader, bcLength, _err);
 
 		uint32_t len = (bcLength-2)*sizeof(uint32_t);
 		_shader.byteCode.resize(len);
-		size += bx::read(_reader, _shader.byteCode.data(), len, _err);
+		size += base::read(_reader, _shader.byteCode.data(), len, _err);
 
 		return size;
 	}
 
-	int32_t write(bx::WriterI* _writer, const DxbcShader& _shader, bx::Error* _err)
+	int32_t write(base::WriterI* _writer, const DxbcShader& _shader, base::Error* _err)
 	{
 		const uint32_t len = uint32_t(_shader.byteCode.size() );
 		const uint32_t bcLength = len / sizeof(uint32_t) + 2;
 
 		int32_t size = 0;
-		size += bx::write(_writer, _shader.version, _err);
-		size += bx::write(_writer, bcLength, _err);
-		size += bx::write(_writer, _shader.byteCode.data(), len, _err);
+		size += base::write(_writer, _shader.version, _err);
+		size += base::write(_writer, bcLength, _err);
+		size += base::write(_writer, _shader.byteCode.data(), len, _err);
 
 		return size;
 	}
 
-#define DXBC_CHUNK_SHADER           BX_MAKEFOURCC('S', 'H', 'D', 'R')
-#define DXBC_CHUNK_SHADER_EX        BX_MAKEFOURCC('S', 'H', 'E', 'X')
+#define DXBC_CHUNK_SHADER           BASE_MAKEFOURCC('S', 'H', 'D', 'R')
+#define DXBC_CHUNK_SHADER_EX        BASE_MAKEFOURCC('S', 'H', 'E', 'X')
 
-#define DXBC_CHUNK_INPUT_SIGNATURE  BX_MAKEFOURCC('I', 'S', 'G', 'N')
-#define DXBC_CHUNK_OUTPUT_SIGNATURE BX_MAKEFOURCC('O', 'S', 'G', 'N')
+#define DXBC_CHUNK_INPUT_SIGNATURE  BASE_MAKEFOURCC('I', 'S', 'G', 'N')
+#define DXBC_CHUNK_OUTPUT_SIGNATURE BASE_MAKEFOURCC('O', 'S', 'G', 'N')
 
-#define DXBC_CHUNK_SFI0             BX_MAKEFOURCC('S', 'F', 'I', '0')
-#define DXBC_CHUNK_SPDB             BX_MAKEFOURCC('S', 'P', 'D', 'B')
+#define DXBC_CHUNK_SFI0             BASE_MAKEFOURCC('S', 'F', 'I', '0')
+#define DXBC_CHUNK_SPDB             BASE_MAKEFOURCC('S', 'P', 'D', 'B')
 
-#define DXBC_CHUNK_RDEF             BX_MAKEFOURCC('R', 'D', 'E', 'F')
-#define DXBC_CHUNK_STAT             BX_MAKEFOURCC('S', 'T', 'A', 'T')
+#define DXBC_CHUNK_RDEF             BASE_MAKEFOURCC('R', 'D', 'E', 'F')
+#define DXBC_CHUNK_STAT             BASE_MAKEFOURCC('S', 'T', 'A', 'T')
 
-	int32_t read(bx::ReaderSeekerI* _reader, DxbcContext& _dxbc, bx::Error* _err)
+	int32_t read(base::ReaderSeekerI* _reader, DxbcContext& _dxbc, base::Error* _err)
 	{
 		int32_t size = 0;
-		size += bx::read(_reader, _dxbc.header, _err);
+		size += base::read(_reader, _dxbc.header, _err);
 		_dxbc.shader.shex = false;
 		_dxbc.shader.aon9 = false;
 
 		for (uint32_t ii = 0; ii < _dxbc.header.numChunks; ++ii)
 		{
-			bx::seek(_reader, sizeof(DxbcContext::Header) + ii*sizeof(uint32_t), bx::Whence::Begin);
+			base::seek(_reader, sizeof(DxbcContext::Header) + ii*sizeof(uint32_t), base::Whence::Begin);
 
 			uint32_t chunkOffset;
-			size += bx::read(_reader, chunkOffset, _err);
+			size += base::read(_reader, chunkOffset, _err);
 
-			bx::seek(_reader, chunkOffset, bx::Whence::Begin);
+			base::seek(_reader, chunkOffset, base::Whence::Begin);
 
 			uint32_t fourcc;
-			size += bx::read(_reader, fourcc, _err);
+			size += base::read(_reader, fourcc, _err);
 			_dxbc.chunksFourcc[ii] = fourcc;
 
 			uint32_t chunkSize;
-			size += bx::read(_reader, chunkSize, _err);
+			size += base::read(_reader, chunkSize, _err);
 
 			switch (fourcc)
 			{
 			case DXBC_CHUNK_SHADER_EX:
 				_dxbc.shader.shex = true;
-				BX_FALLTHROUGH;
+				BASE_FALLTHROUGH;
 
 			case DXBC_CHUNK_SHADER:
 				size += read(_reader, _dxbc.shader, _err);
 				break;
 
-			case BX_MAKEFOURCC('I', 'S', 'G', '1'):
+			case BASE_MAKEFOURCC('I', 'S', 'G', '1'):
 			case DXBC_CHUNK_INPUT_SIGNATURE:
 				size += read(_reader, _dxbc.inputSignature, _err);
 				break;
 
-			case BX_MAKEFOURCC('O', 'S', 'G', '1'):
-			case BX_MAKEFOURCC('O', 'S', 'G', '5'):
+			case BASE_MAKEFOURCC('O', 'S', 'G', '1'):
+			case BASE_MAKEFOURCC('O', 'S', 'G', '5'):
 			case DXBC_CHUNK_OUTPUT_SIGNATURE:
 				size += read(_reader, _dxbc.outputSignature, _err);
 				break;
 
-			case BX_MAKEFOURCC('A', 'o', 'n', '9'): // Contains DX9BC for feature level 9.x (*s_4_0_level_9_*) shaders.
+			case BASE_MAKEFOURCC('A', 'o', 'n', '9'): // Contains DX9BC for feature level 9.x (*s_4_0_level_9_*) shaders.
 				_dxbc.shader.aon9 = true;
 				break;
 
 			case DXBC_CHUNK_SFI0: // ?
-				BX_ASSERT(chunkSize == sizeof(_dxbc.sfi0.data),
+				BASE_ASSERT(chunkSize == sizeof(_dxbc.sfi0.data),
 					"Unexpected size of SFI0 chunk");
 
-				size += bx::read(_reader, _dxbc.sfi0.data, _err);
+				size += base::read(_reader, _dxbc.sfi0.data, _err);
 				break;
 
 			case DXBC_CHUNK_SPDB: // Shader debugging info (new).
 				_dxbc.spdb.debugCode.resize(chunkSize);
-				size += bx::read(_reader, _dxbc.spdb.debugCode.data(), chunkSize, _err);
+				size += base::read(_reader, _dxbc.spdb.debugCode.data(), chunkSize, _err);
 				break;
 			case DXBC_CHUNK_RDEF: // Resource definition.
 				_dxbc.rdef.rdefCode.resize(chunkSize);
-				size += bx::read(_reader, _dxbc.rdef.rdefCode.data(), chunkSize, _err);
+				size += base::read(_reader, _dxbc.rdef.rdefCode.data(), chunkSize, _err);
 				break;
 			case DXBC_CHUNK_STAT: // Statistics.
 				_dxbc.stat.statCode.resize(chunkSize);
-				size += bx::read(_reader, _dxbc.stat.statCode.data(), chunkSize, _err);
+				size += base::read(_reader, _dxbc.stat.statCode.data(), chunkSize, _err);
 				break;
-			case BX_MAKEFOURCC('I', 'F', 'C', 'E'): // Interface.
-			case BX_MAKEFOURCC('S', 'D', 'G', 'B'): // Shader debugging info (old).
-			case BX_MAKEFOURCC('P', 'C', 'S', 'G'): // Patch constant signature.
-			case BX_MAKEFOURCC('P', 'S', 'O', '1'): // Pipeline State Object 1
-			case BX_MAKEFOURCC('P', 'S', 'O', '2'): // Pipeline State Object 2
-			case BX_MAKEFOURCC('X', 'N', 'A', 'P'): // ?
-			case BX_MAKEFOURCC('X', 'N', 'A', 'S'): // ?
+			case BASE_MAKEFOURCC('I', 'F', 'C', 'E'): // Interface.
+			case BASE_MAKEFOURCC('S', 'D', 'G', 'B'): // Shader debugging info (old).
+			case BASE_MAKEFOURCC('P', 'C', 'S', 'G'): // Patch constant signature.
+			case BASE_MAKEFOURCC('P', 'S', 'O', '1'): // Pipeline State Object 1
+			case BASE_MAKEFOURCC('P', 'S', 'O', '2'): // Pipeline State Object 2
+			case BASE_MAKEFOURCC('X', 'N', 'A', 'P'): // ?
+			case BASE_MAKEFOURCC('X', 'N', 'A', 'S'): // ?
 				size += chunkSize;
 				break;
 
 			default:
 				size += chunkSize;
-				BX_ASSERT(false, "UNKNOWN FOURCC %c%c%c%c %d"
+				BASE_ASSERT(false, "UNKNOWN FOURCC %c%c%c%c %d"
 					, ( (char*)&fourcc)[0]
 					, ( (char*)&fourcc)[1]
 					, ( (char*)&fourcc)[2]
@@ -2057,7 +2057,7 @@ namespace bgfx
 		return size;
 	}
 
-	int32_t write(bx::WriterSeekerI* _writer, const DxbcContext& _dxbc, bx::Error* _err)
+	int32_t write(base::WriterSeekerI* _writer, const DxbcContext& _dxbc, base::Error* _err)
 	{
 		int32_t size = 0;
 
@@ -2068,10 +2068,10 @@ namespace bgfx
 			{
 			case DXBC_CHUNK_SHADER_EX:
 			case DXBC_CHUNK_SHADER:
-			case BX_MAKEFOURCC('I', 'S', 'G', '1'):
+			case BASE_MAKEFOURCC('I', 'S', 'G', '1'):
 			case DXBC_CHUNK_INPUT_SIGNATURE:
-			case BX_MAKEFOURCC('O', 'S', 'G', '1'):
-			case BX_MAKEFOURCC('O', 'S', 'G', '5'):
+			case BASE_MAKEFOURCC('O', 'S', 'G', '1'):
+			case BASE_MAKEFOURCC('O', 'S', 'G', '5'):
 			case DXBC_CHUNK_OUTPUT_SIGNATURE:
 			case DXBC_CHUNK_SFI0:
 			case DXBC_CHUNK_SPDB:
@@ -2085,20 +2085,20 @@ namespace bgfx
 			}
 		}
 
-		int64_t dxbcOffset = bx::seek(_writer);
-		size += bx::write(_writer, DXBC_CHUNK_HEADER, _err);
+		int64_t dxbcOffset = base::seek(_writer);
+		size += base::write(_writer, DXBC_CHUNK_HEADER, _err);
 
-		size += bx::writeRep(_writer, 0, 16, _err);
+		size += base::writeRep(_writer, 0, 16, _err);
 
-		size += bx::write(_writer, UINT32_C(1), _err);
+		size += base::write(_writer, UINT32_C(1), _err);
 
-		int64_t sizeOffset = bx::seek(_writer);
-		size += bx::writeRep(_writer, 0, 4, _err);
+		int64_t sizeOffset = base::seek(_writer);
+		size += base::writeRep(_writer, 0, 4, _err);
 
-		size += bx::write(_writer, numSupportedChunks, _err);
+		size += base::write(_writer, numSupportedChunks, _err);
 
-		int64_t chunksOffsets = bx::seek(_writer);
-		size += bx::writeRep(_writer, 0, numSupportedChunks*sizeof(uint32_t), _err);
+		int64_t chunksOffsets = base::seek(_writer);
+		size += base::writeRep(_writer, 0, numSupportedChunks*sizeof(uint32_t), _err);
 
 		uint32_t chunkOffset[DXBC_MAX_CHUNKS] = {};
 		uint32_t chunkSize[DXBC_MAX_CHUNKS] = {};
@@ -2109,74 +2109,74 @@ namespace bgfx
 			{
 			case DXBC_CHUNK_SHADER_EX:
 			case DXBC_CHUNK_SHADER:
-				chunkOffset[idx] = uint32_t(bx::seek(_writer) - dxbcOffset);
-				size += bx::write(_writer, _dxbc.shader.shex ? DXBC_CHUNK_SHADER_EX : DXBC_CHUNK_SHADER, _err);
-				size += bx::write(_writer, UINT32_C(0), _err);
+				chunkOffset[idx] = uint32_t(base::seek(_writer) - dxbcOffset);
+				size += base::write(_writer, _dxbc.shader.shex ? DXBC_CHUNK_SHADER_EX : DXBC_CHUNK_SHADER, _err);
+				size += base::write(_writer, UINT32_C(0), _err);
 				chunkSize[idx] = write(_writer, _dxbc.shader, _err);
 				size += chunkSize[idx++];
 				break;
 
-			case BX_MAKEFOURCC('I', 'S', 'G', '1'):
+			case BASE_MAKEFOURCC('I', 'S', 'G', '1'):
 			case DXBC_CHUNK_INPUT_SIGNATURE:
-				chunkOffset[idx] = uint32_t(bx::seek(_writer) - dxbcOffset);
-				size += bx::write(_writer, DXBC_CHUNK_INPUT_SIGNATURE, _err);
-				size += bx::write(_writer, UINT32_C(0), _err);
+				chunkOffset[idx] = uint32_t(base::seek(_writer) - dxbcOffset);
+				size += base::write(_writer, DXBC_CHUNK_INPUT_SIGNATURE, _err);
+				size += base::write(_writer, UINT32_C(0), _err);
 				chunkSize[idx] = write(_writer, _dxbc.inputSignature, _err);
 				size += chunkSize[idx++];
 				break;
 
-			case BX_MAKEFOURCC('O', 'S', 'G', '1'):
-			case BX_MAKEFOURCC('O', 'S', 'G', '5'):
+			case BASE_MAKEFOURCC('O', 'S', 'G', '1'):
+			case BASE_MAKEFOURCC('O', 'S', 'G', '5'):
 			case DXBC_CHUNK_OUTPUT_SIGNATURE:
-				chunkOffset[idx] = uint32_t(bx::seek(_writer) - dxbcOffset);
-				size += bx::write(_writer, DXBC_CHUNK_OUTPUT_SIGNATURE, _err);
-				size += bx::write(_writer, UINT32_C(0), _err);
+				chunkOffset[idx] = uint32_t(base::seek(_writer) - dxbcOffset);
+				size += base::write(_writer, DXBC_CHUNK_OUTPUT_SIGNATURE, _err);
+				size += base::write(_writer, UINT32_C(0), _err);
 				chunkSize[idx] = write(_writer, _dxbc.outputSignature, _err);
 				size += chunkSize[idx++];
 				break;
 
 			case DXBC_CHUNK_SFI0:
-				chunkOffset[idx] = uint32_t(bx::seek(_writer) - dxbcOffset);
-				size += bx::write(_writer, DXBC_CHUNK_SFI0, _err);
-				size += bx::write(_writer, UINT32_C(0), _err);
-				chunkSize[idx] = bx::write(_writer, _dxbc.sfi0.data, _err);
+				chunkOffset[idx] = uint32_t(base::seek(_writer) - dxbcOffset);
+				size += base::write(_writer, DXBC_CHUNK_SFI0, _err);
+				size += base::write(_writer, UINT32_C(0), _err);
+				chunkSize[idx] = base::write(_writer, _dxbc.sfi0.data, _err);
 				size += chunkSize[idx++];
 				break;
 
 			case DXBC_CHUNK_SPDB: // Shader debugging info (new).
-				chunkOffset[idx] = uint32_t(bx::seek(_writer) - dxbcOffset);
-				size += bx::write(_writer, DXBC_CHUNK_SPDB, _err);
-				size += bx::write(_writer, UINT32_C(0), _err);
-				chunkSize[idx] = bx::write(_writer, _dxbc.spdb.debugCode.data(), int32_t(_dxbc.spdb.debugCode.size() ), _err);
+				chunkOffset[idx] = uint32_t(base::seek(_writer) - dxbcOffset);
+				size += base::write(_writer, DXBC_CHUNK_SPDB, _err);
+				size += base::write(_writer, UINT32_C(0), _err);
+				chunkSize[idx] = base::write(_writer, _dxbc.spdb.debugCode.data(), int32_t(_dxbc.spdb.debugCode.size() ), _err);
 				size += chunkSize[idx++];
 				break;
 
 			case DXBC_CHUNK_RDEF: // Resource definition.
-				chunkOffset[idx] = uint32_t(bx::seek(_writer) - dxbcOffset);
-				size += bx::write(_writer, DXBC_CHUNK_RDEF, _err);
-				size += bx::write(_writer, uint32_t(_dxbc.rdef.rdefCode.size()), _err);
-				chunkSize[idx] = bx::write(_writer, _dxbc.rdef.rdefCode.data(), int32_t(_dxbc.rdef.rdefCode.size() ), _err);
+				chunkOffset[idx] = uint32_t(base::seek(_writer) - dxbcOffset);
+				size += base::write(_writer, DXBC_CHUNK_RDEF, _err);
+				size += base::write(_writer, uint32_t(_dxbc.rdef.rdefCode.size()), _err);
+				chunkSize[idx] = base::write(_writer, _dxbc.rdef.rdefCode.data(), int32_t(_dxbc.rdef.rdefCode.size() ), _err);
 				size += chunkSize[idx++];
 				break;
 
 			case DXBC_CHUNK_STAT: // Statistics.
-				chunkOffset[idx] = uint32_t(bx::seek(_writer) - dxbcOffset);
-				size += bx::write(_writer, DXBC_CHUNK_STAT, _err);
-				size += bx::write(_writer, uint32_t(_dxbc.stat.statCode.size()), _err);
-				chunkSize[idx] = bx::write(_writer, _dxbc.stat.statCode.data(), int32_t(_dxbc.stat.statCode.size() ), _err);
+				chunkOffset[idx] = uint32_t(base::seek(_writer) - dxbcOffset);
+				size += base::write(_writer, DXBC_CHUNK_STAT, _err);
+				size += base::write(_writer, uint32_t(_dxbc.stat.statCode.size()), _err);
+				chunkSize[idx] = base::write(_writer, _dxbc.stat.statCode.data(), int32_t(_dxbc.stat.statCode.size() ), _err);
 				size += chunkSize[idx++];
 				break;
 
-			case BX_MAKEFOURCC('A', 'o', 'n', '9'): // Contains DX9BC for feature level 9.x (*s_4_0_level_9_*) shaders.
-			case BX_MAKEFOURCC('I', 'F', 'C', 'E'): // Interface.
-			case BX_MAKEFOURCC('S', 'D', 'G', 'B'): // Shader debugging info (old).
-			case BX_MAKEFOURCC('P', 'C', 'S', 'G'): // Patch constant signature.
-			case BX_MAKEFOURCC('P', 'S', 'O', '1'): // Pipeline State Object 1
-			case BX_MAKEFOURCC('P', 'S', 'O', '2'): // Pipeline State Object 2
-			case BX_MAKEFOURCC('X', 'N', 'A', 'P'): // ?
-			case BX_MAKEFOURCC('X', 'N', 'A', 'S'): // ?
+			case BASE_MAKEFOURCC('A', 'o', 'n', '9'): // Contains DX9BC for feature level 9.x (*s_4_0_level_9_*) shaders.
+			case BASE_MAKEFOURCC('I', 'F', 'C', 'E'): // Interface.
+			case BASE_MAKEFOURCC('S', 'D', 'G', 'B'): // Shader debugging info (old).
+			case BASE_MAKEFOURCC('P', 'C', 'S', 'G'): // Patch constant signature.
+			case BASE_MAKEFOURCC('P', 'S', 'O', '1'): // Pipeline State Object 1
+			case BASE_MAKEFOURCC('P', 'S', 'O', '2'): // Pipeline State Object 2
+			case BASE_MAKEFOURCC('X', 'N', 'A', 'P'): // ?
+			case BASE_MAKEFOURCC('X', 'N', 'A', 'S'): // ?
 			default:
-				BX_ASSERT(false, "Writing of DXBC %c%c%c%c chunk unsupported"
+				BASE_ASSERT(false, "Writing of DXBC %c%c%c%c chunk unsupported"
 					, ( (char*)&_dxbc.chunksFourcc[ii])[0]
 					, ( (char*)&_dxbc.chunksFourcc[ii])[1]
 					, ( (char*)&_dxbc.chunksFourcc[ii])[2]
@@ -2186,36 +2186,36 @@ namespace bgfx
 			}
 		}
 
-		int64_t eof = bx::seek(_writer);
+		int64_t eof = base::seek(_writer);
 
-		bx::seek(_writer, sizeOffset, bx::Whence::Begin);
-		bx::write(_writer, size, _err);
+		base::seek(_writer, sizeOffset, base::Whence::Begin);
+		base::write(_writer, size, _err);
 
-		bx::seek(_writer, chunksOffsets, bx::Whence::Begin);
-		bx::write(_writer, chunkOffset, numSupportedChunks*sizeof(chunkOffset[0]), _err);
+		base::seek(_writer, chunksOffsets, base::Whence::Begin);
+		base::write(_writer, chunkOffset, numSupportedChunks*sizeof(chunkOffset[0]), _err);
 
 		for (uint32_t ii = 0; ii < numSupportedChunks; ++ii)
 		{
-			bx::seek(_writer, chunkOffset[ii]+4, bx::Whence::Begin);
-			bx::write(_writer, chunkSize[ii], _err);
+			base::seek(_writer, chunkOffset[ii]+4, base::Whence::Begin);
+			base::write(_writer, chunkSize[ii], _err);
 		}
 
-		bx::seek(_writer, eof, bx::Whence::Begin);
+		base::seek(_writer, eof, base::Whence::Begin);
 
 		return size;
 	}
 
-	void parse(const DxbcShader& _src, DxbcParseFn _fn, void* _userData, bx::Error* _err)
+	void parse(const DxbcShader& _src, DxbcParseFn _fn, void* _userData, base::Error* _err)
 	{
-		BX_ERROR_SCOPE(_err);
+		BASE_ERROR_SCOPE(_err);
 
-		bx::MemoryReader reader(_src.byteCode.data(), uint32_t(_src.byteCode.size() ) );
+		base::MemoryReader reader(_src.byteCode.data(), uint32_t(_src.byteCode.size() ) );
 
 		for (uint32_t token = 0, numTokens = uint32_t(_src.byteCode.size() / sizeof(uint32_t) ); token < numTokens;)
 		{
 			DxbcInstruction instruction;
 			uint32_t size = read(&reader, instruction, _err);
-			BX_ASSERT(size/4 == instruction.length, "read %d, expected %d", size/4, instruction.length); BX_UNUSED(size);
+			BASE_ASSERT(size/4 == instruction.length, "read %d, expected %d", size/4, instruction.length); BASE_UNUSED(size);
 
 			bool cont = _fn(token * sizeof(uint32_t), instruction, _userData);
 			if (!cont)
@@ -2227,14 +2227,14 @@ namespace bgfx
 		}
 	}
 
-	void filter(DxbcShader& _dst, const DxbcShader& _src, DxbcFilterFn _fn, void* _userData, bx::Error* _err)
+	void filter(DxbcShader& _dst, const DxbcShader& _src, DxbcFilterFn _fn, void* _userData, base::Error* _err)
 	{
-		BX_ERROR_SCOPE(_err);
+		BASE_ERROR_SCOPE(_err);
 
-		bx::MemoryReader reader(_src.byteCode.data(), uint32_t(_src.byteCode.size() ) );
+		base::MemoryReader reader(_src.byteCode.data(), uint32_t(_src.byteCode.size() ) );
 
-		bx::MemoryBlock mb(g_allocator);
-		bx::MemoryWriter writer(&mb);
+		base::MemoryBlock mb(g_allocator);
+		base::MemoryWriter writer(&mb);
 
 		int32_t total = 0;
 
@@ -2242,11 +2242,11 @@ namespace bgfx
 		{
 			DxbcInstruction instruction;
 			uint32_t size = read(&reader, instruction, _err);
-			BX_ASSERT(size/4 == instruction.length, "read %d, expected %d", size/4, instruction.length); BX_UNUSED(size);
+			BASE_ASSERT(size/4 == instruction.length, "read %d, expected %d", size/4, instruction.length); BASE_UNUSED(size);
 
 			_fn(instruction, _userData);
 
-			bx::SizerWriter sw;
+			base::SizerWriter sw;
 			uint32_t length = instruction.length;
 			instruction.length = uint32_t(write(&sw, instruction, _err)/4);
 
@@ -2256,7 +2256,7 @@ namespace bgfx
 
 		uint8_t* data = (uint8_t*)mb.more();
 		_dst.byteCode.resize(total);
-		bx::memCopy(_dst.byteCode.data(), data, total);
+		base::memCopy(_dst.byteCode.data(), data, total);
 	}
 
-} // namespace bgfx
+} // namespace graphics

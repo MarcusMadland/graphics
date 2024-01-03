@@ -1,25 +1,25 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include "bgfx_p.h"
+#include "graphics_p.h"
 
-#if BX_PLATFORM_WINDOWS || BX_PLATFORM_LINUX
-#	if BX_PLATFORM_WINDOWS
+#if BASE_PLATFORM_WINDOWS || BASE_PLATFORM_LINUX
+#	if BASE_PLATFORM_WINDOWS
 #		ifndef WIN32_LEAN_AND_MEAN
 #			define WIN32_LEAN_AND_MEAN
 #		endif // WIN32_LEAN_AND_MEAN
 #		include <windows.h>
 #		include <psapi.h>
-#	endif // BX_PLATFORM_WINDOWS
+#	endif // BASE_PLATFORM_WINDOWS
 #	include <renderdoc/renderdoc_app.h>
 
-namespace bgfx
+namespace graphics
 {
 	void* findModule(const char* _name)
 	{
-#if BX_PLATFORM_WINDOWS
+#if BASE_PLATFORM_WINDOWS
 		// NOTE: there was some reason to do it this way instead of simply calling GetModuleHandleA,
 		// but not sure what it was.
 		HANDLE process = GetCurrentProcess();
@@ -46,10 +46,10 @@ namespace bgfx
 					result = GetModuleBaseNameA(process
 								, modules[ii]
 								, moduleName
-								, BX_COUNTOF(moduleName)
+								, BASE_COUNTOF(moduleName)
 								);
 					if (0 != result
-					&&  0 == bx::strCmpI(_name, moduleName) )
+					&&  0 == base::strCmpI(_name, moduleName) )
 					{
 						return (void*)modules[ii];
 					}
@@ -57,8 +57,8 @@ namespace bgfx
 			}
 		}
 #else
-		BX_UNUSED(_name);
-#endif // BX_PLATFORM_WINDOWS
+		BASE_UNUSED(_name);
+#endif // BASE_PLATFORM_WINDOWS
 
 		return NULL;
 	}
@@ -75,7 +75,7 @@ namespace bgfx
 		}
 
 		// Skip loading RenderDoc when IntelGPA is present to avoid RenderDoc crash.
-		if (findModule(BX_ARCH_32BIT ? "shimloader32.dll" : "shimloader64.dll") )
+		if (findModule(BASE_ARCH_32BIT ? "shimloader32.dll" : "shimloader64.dll") )
 		{
 			return NULL;
 		}
@@ -85,28 +85,28 @@ namespace bgfx
 		if (NULL == renderDocDll)
 		{
 			// TODO: try common installation paths before looking in current directory
-			renderDocDll = bx::dlopen(
-#if BX_PLATFORM_WINDOWS
+			renderDocDll = base::dlopen(
+#if BASE_PLATFORM_WINDOWS
 					"renderdoc.dll"
 #else
 					"./librenderdoc.so"
-#endif // BX_PLATFORM_WINDOWS
+#endif // BASE_PLATFORM_WINDOWS
 					);
 		}
 
 		if (NULL != renderDocDll)
 		{
-			RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)bx::dlsym(renderDocDll, "RENDERDOC_GetAPI");
+			RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)base::dlsym(renderDocDll, "RENDERDOC_GetAPI");
 
 			if (NULL != RENDERDOC_GetAPI
 			&&  1 == RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void**)&s_renderDoc) )
 			{
-				s_renderDoc->SetCaptureFilePathTemplate(BGFX_CONFIG_RENDERDOC_LOG_FILEPATH);
+				s_renderDoc->SetCaptureFilePathTemplate(GRAPHICS_CONFIG_RENDERDOC_LOG_FILEPATH);
 
 				s_renderDoc->SetFocusToggleKeys(NULL, 0);
 
-				RENDERDOC_InputButton captureKeys[] = BGFX_CONFIG_RENDERDOC_CAPTURE_KEYS;
-				s_renderDoc->SetCaptureKeys(captureKeys, BX_COUNTOF(captureKeys) );
+				RENDERDOC_InputButton captureKeys[] = GRAPHICS_CONFIG_RENDERDOC_CAPTURE_KEYS;
+				s_renderDoc->SetCaptureKeys(captureKeys, BASE_COUNTOF(captureKeys) );
 
 				s_renderDoc->SetCaptureOptionU32(eRENDERDOC_Option_AllowVSync,      1);
 				s_renderDoc->SetCaptureOptionU32(eRENDERDOC_Option_SaveAllInitials, 1);
@@ -117,7 +117,7 @@ namespace bgfx
 			}
 			else
 			{
-				bx::dlclose(renderDocDll);
+				base::dlclose(renderDocDll);
 				renderDocDll = NULL;
 			}
 		}
@@ -131,10 +131,10 @@ namespace bgfx
 		{
 			// BK - Once RenderDoc is loaded there shouldn't be calls
 			// to Shutdown or unload RenderDoc DLL.
-			// https://github.com/bkaradzic/bgfx/issues/1192
+			// https://github.com/bkaradzic/graphics/issues/1192
 			//
 			// s_renderDoc->Shutdown();
-			// bx::dlclose(_renderdocdll);
+			// base::dlclose(_renderdocdll);
 		}
 	}
 
@@ -146,11 +146,11 @@ namespace bgfx
 		}
 	}
 
-} // namespace bgfx
+} // namespace graphics
 
 #else
 
-namespace bgfx
+namespace graphics
 {
 
 	void* loadRenderDoc()
@@ -166,6 +166,6 @@ namespace bgfx
 	{
 	}
 
-} // namespace bgfx
+} // namespace graphics
 
-#endif // BX_PLATFORM_WINDOWS || BX_PLATFORM_LINUX
+#endif // BASE_PLATFORM_WINDOWS || BASE_PLATFORM_LINUX

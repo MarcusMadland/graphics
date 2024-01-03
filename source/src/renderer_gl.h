@@ -1,73 +1,73 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_RENDERER_GL_H_HEADER_GUARD
-#define BGFX_RENDERER_GL_H_HEADER_GUARD
+#ifndef GRAPHICS_RENDERER_GL_H_HEADER_GUARD
+#define GRAPHICS_RENDERER_GL_H_HEADER_GUARD
 
-#define BGFX_USE_EGL ( (BGFX_CONFIG_RENDERER_OPENGL || BGFX_CONFIG_RENDERER_OPENGLES) && (0 \
-	|| BX_PLATFORM_ANDROID                                                                  \
-	|| BX_PLATFORM_BSD                                                                      \
-	|| BX_PLATFORM_LINUX                                                                    \
-	|| BX_PLATFORM_NX                                                                       \
-	|| BX_PLATFORM_RPI                                                                      \
+#define GRAPHICS_USE_EGL ( (GRAPHICS_CONFIG_RENDERER_OPENGL || GRAPHICS_CONFIG_RENDERER_OPENGLES) && (0 \
+	|| BASE_PLATFORM_ANDROID                                                                  \
+	|| BASE_PLATFORM_BSD                                                                      \
+	|| BASE_PLATFORM_LINUX                                                                    \
+	|| BASE_PLATFORM_NX                                                                       \
+	|| BASE_PLATFORM_RPI                                                                      \
 	) )
 
-#define BGFX_USE_HTML5 (BGFX_CONFIG_RENDERER_OPENGLES && (0 \
-	|| BX_PLATFORM_EMSCRIPTEN                               \
+#define GRAPHICS_USE_HTML5 (GRAPHICS_CONFIG_RENDERER_OPENGLES && (0 \
+	|| BASE_PLATFORM_EMSCRIPTEN                               \
 	) )
 
-#define BGFX_USE_WGL (BGFX_CONFIG_RENDERER_OPENGL && (0 \
-	|| BX_PLATFORM_WINDOWS                              \
+#define GRAPHICS_USE_WGL (GRAPHICS_CONFIG_RENDERER_OPENGL && (0 \
+	|| BASE_PLATFORM_WINDOWS                              \
 	) )
 
-#define BGFX_USE_GL_DYNAMIC_LIB (0 \
-	|| BX_PLATFORM_BSD             \
-	|| BX_PLATFORM_LINUX           \
-	|| BX_PLATFORM_WINDOWS         \
+#define GRAPHICS_USE_GL_DYNAMIC_LIB (0 \
+	|| BASE_PLATFORM_BSD             \
+	|| BASE_PLATFORM_LINUX           \
+	|| BASE_PLATFORM_WINDOWS         \
 	)
 
 // Keep a state cache of GL uniform values to avoid redundant uploads
 // on the following platforms.
-#define BGFX_GL_CONFIG_UNIFORM_CACHE BX_PLATFORM_EMSCRIPTEN
+#define GRAPHICS_GL_CONFIG_UNIFORM_CACHE BASE_PLATFORM_EMSCRIPTEN
 
-#ifndef BGFX_GL_CONFIG_BLIT_EMULATION
-#	define BGFX_GL_CONFIG_BLIT_EMULATION 0
-#endif // BGFX_GL_CONFIG_BLIT_EMULATION
+#ifndef GRAPHICS_GL_CONFIG_BLIT_EMULATION
+#	define GRAPHICS_GL_CONFIG_BLIT_EMULATION 0
+#endif // GRAPHICS_GL_CONFIG_BLIT_EMULATION
 
-#ifndef BGFX_GL_CONFIG_TEXTURE_READ_BACK_EMULATION
-#	define BGFX_GL_CONFIG_TEXTURE_READ_BACK_EMULATION 0
-#endif // BGFX_GL_CONFIG_TEXTURE_READ_BACK_EMULATION
+#ifndef GRAPHICS_GL_CONFIG_TEXTURE_READ_BACK_EMULATION
+#	define GRAPHICS_GL_CONFIG_TEXTURE_READ_BACK_EMULATION 0
+#endif // GRAPHICS_GL_CONFIG_TEXTURE_READ_BACK_EMULATION
 
-#define BGFX_GL_PROFILER_BEGIN(_view, _abgr)                                               \
-	BX_MACRO_BLOCK_BEGIN                                                                   \
+#define GRAPHICS_GL_PROFILER_BEGIN(_view, _abgr)                                               \
+	BASE_MACRO_BLOCK_BEGIN                                                                   \
 		GL_CHECK(glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, s_viewName[view]) ); \
-		BGFX_PROFILER_BEGIN(s_viewName[view], _abgr);                                      \
-	BX_MACRO_BLOCK_END
+		GRAPHICS_PROFILER_BEGIN(s_viewName[view], _abgr);                                      \
+	BASE_MACRO_BLOCK_END
 
-#define BGFX_GL_PROFILER_BEGIN_LITERAL(_name, _abgr)                                       \
-	BX_MACRO_BLOCK_BEGIN                                                                   \
+#define GRAPHICS_GL_PROFILER_BEGIN_LITERAL(_name, _abgr)                                       \
+	BASE_MACRO_BLOCK_BEGIN                                                                   \
 		GL_CHECK(glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "" _name) );         \
-		BGFX_PROFILER_BEGIN_LITERAL("" _name, _abgr);                                      \
-	BX_MACRO_BLOCK_END
+		GRAPHICS_PROFILER_BEGIN_LITERAL("" _name, _abgr);                                      \
+	BASE_MACRO_BLOCK_END
 
-#define BGFX_GL_PROFILER_END()        \
-	BX_MACRO_BLOCK_BEGIN              \
-		BGFX_PROFILER_END();          \
+#define GRAPHICS_GL_PROFILER_END()        \
+	BASE_MACRO_BLOCK_BEGIN              \
+		GRAPHICS_PROFILER_END();          \
 		GL_CHECK(glPopDebugGroup() ); \
-	BX_MACRO_BLOCK_END
+	BASE_MACRO_BLOCK_END
 
-#if BGFX_CONFIG_RENDERER_OPENGL
-#	if BGFX_CONFIG_RENDERER_OPENGL >= 31
+#if GRAPHICS_CONFIG_RENDERER_OPENGL
+#	if GRAPHICS_CONFIG_RENDERER_OPENGL >= 31
 #		include <gl/glcorearb.h>
 #	else
-#		if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
+#		if BASE_PLATFORM_LINUX || BASE_PLATFORM_BSD
 #			define GL_PROTOTYPES
 #			define GL_GLEXT_LEGACY
 #			include <GL/gl.h>
 #			undef GL_PROTOTYPES
-#		elif BX_PLATFORM_WINDOWS
+#		elif BASE_PLATFORM_WINDOWS
 #			ifndef WIN32_LEAN_AND_MEAN
 #				define WIN32_LEAN_AND_MEAN
 #			endif // WIN32_LEAN_AND_MEAN
@@ -75,14 +75,14 @@
 #			include <GL/gl.h>
 #		else
 #			include <GL/gl.h>
-#		endif // BX_PLATFORM_
+#		endif // BASE_PLATFORM_
 
 #		include <gl/glext.h>
-#	endif // BGFX_CONFIG_RENDERER_OPENGL >= 31
+#	endif // GRAPHICS_CONFIG_RENDERER_OPENGL >= 31
 
-#elif BGFX_CONFIG_RENDERER_OPENGLES
+#elif GRAPHICS_CONFIG_RENDERER_OPENGLES
 typedef double GLdouble;
-#	if BGFX_CONFIG_RENDERER_OPENGLES < 30
+#	if GRAPHICS_CONFIG_RENDERER_OPENGLES < 30
 #		include <GLES2/gl2platform.h>
 #		include <GLES2/gl2.h>
 #		include <GLES2/gl2ext.h>
@@ -107,19 +107,19 @@ typedef uint64_t GLuint64;
 #		define GL_DEPTH24_STENCIL8 GL_DEPTH24_STENCIL8_OES
 #		define GL_DEPTH_COMPONENT32 GL_DEPTH_COMPONENT32_OES
 #		define GL_UNSIGNED_INT_24_8 GL_UNSIGNED_INT_24_8_OES
-#	elif BGFX_CONFIG_RENDERER_OPENGLES >= 30
+#	elif GRAPHICS_CONFIG_RENDERER_OPENGLES >= 30
 #		include <GLES3/gl3platform.h>
-#		if BGFX_CONFIG_RENDERER_OPENGLES >= 32
+#		if GRAPHICS_CONFIG_RENDERER_OPENGLES >= 32
 #			include <GLES3/gl32.h>
-#		elif BGFX_CONFIG_RENDERER_OPENGLES >= 31
+#		elif GRAPHICS_CONFIG_RENDERER_OPENGLES >= 31
 #			include <GLES3/gl31.h>
 #		else
 #			include <GLES3/gl3.h>
-#		endif // BGFX_CONFIG_RENDERER_OPENGLES
+#		endif // GRAPHICS_CONFIG_RENDERER_OPENGLES
 #		include <GLES2/gl2ext.h>
-#	endif // BGFX_CONFIG_RENDERER_
+#	endif // GRAPHICS_CONFIG_RENDERER_
 
-#endif // BGFX_CONFIG_RENDERER_OPENGL
+#endif // GRAPHICS_CONFIG_RENDERER_OPENGL
 
 #include "renderer.h"
 #include "debug_renderdoc.h"
@@ -1129,13 +1129,13 @@ typedef uint64_t GLuint64;
 #	define GL_TEXTURE_LOD_BIAS 0x8501
 #endif // GL_TEXTURE_LOD_BIAS
 
-#if BGFX_USE_EGL
+#if GRAPHICS_USE_EGL
 #	include "glcontext_egl.h"
-#elif BGFX_USE_HTML5
+#elif GRAPHICS_USE_HTML5
 #	include "glcontext_html5.h"
-#elif BGFX_USE_WGL
+#elif GRAPHICS_USE_WGL
 #	include "glcontext_wgl.h"
-#endif // BGFX_USE_*
+#endif // GRAPHICS_USE_*
 
 #ifndef GL_APIENTRY
 #	define GL_APIENTRY APIENTRY
@@ -1145,16 +1145,16 @@ typedef uint64_t GLuint64;
 #	define GL_APIENTRYP GL_APIENTRY*
 #endif // GL_APIENTRYP
 
-#if !BGFX_CONFIG_RENDERER_OPENGL
+#if !GRAPHICS_CONFIG_RENDERER_OPENGL
 #	define glClearDepth glClearDepthf
-#endif // !BGFX_CONFIG_RENDERER_OPENGL
+#endif // !GRAPHICS_CONFIG_RENDERER_OPENGL
 
-namespace bgfx
+namespace graphics
 {
 	class UniformBuffer;
-} // namespace bgfx
+} // namespace graphics
 
-namespace bgfx { namespace gl
+namespace graphics { namespace gl
 {
 	void dumpExtensions(const char* _extensions);
 
@@ -1164,23 +1164,23 @@ namespace bgfx { namespace gl
 	const char* glEnumName(GLenum _enum);
 
 #define _GL_CHECK(_check, _call)                                                                    \
-	BX_MACRO_BLOCK_BEGIN                                                                \
-		/*BX_TRACE(#_call);*/                                                           \
+	BASE_MACRO_BLOCK_BEGIN                                                                \
+		/*BASE_TRACE(#_call);*/                                                           \
 		_call;                                                                          \
 		GLenum gl_err = glGetError();                                                   \
 		_check(0 == gl_err, #_call "; GL error 0x%x: %s", gl_err, glEnumName(gl_err) ); \
-		BX_UNUSED(gl_err);                                                              \
-	BX_MACRO_BLOCK_END
+		BASE_UNUSED(gl_err);                                                              \
+	BASE_MACRO_BLOCK_END
 
-#define IGNORE_GL_ERROR_CHECK(...) BX_NOOP()
+#define IGNORE_GL_ERROR_CHECK(...) BASE_NOOP()
 
-#if BGFX_CONFIG_DEBUG
-#	define GL_CHECK(_call)   _GL_CHECK(BX_ASSERT, _call)
+#if GRAPHICS_CONFIG_DEBUG
+#	define GL_CHECK(_call)   _GL_CHECK(BASE_ASSERT, _call)
 #	define GL_CHECK_I(_call) _GL_CHECK(IGNORE_GL_ERROR_CHECK, _call)
 #else
 #	define GL_CHECK(_call)   _call
 #	define GL_CHECK_I(_call) _call
-#endif // BGFX_CONFIG_DEBUG
+#endif // GRAPHICS_CONFIG_DEBUG
 
 #define GL_IMPORT_TYPEDEFS 1
 #define GL_IMPORT(_optional, _proto, _func, _import) extern _proto _func
@@ -1208,7 +1208,7 @@ namespace bgfx { namespace gl
 		template<typename T>
 		bool updateUniformCache(uint32_t loc, const T &value)
 		{
-			if (BX_ENABLED(BGFX_GL_CONFIG_UNIFORM_CACHE) )
+			if (BASE_ENABLED(GRAPHICS_GL_CONFIG_UNIFORM_CACHE) )
 			{
 				// Uniform state cache for various types.
 				stl::unordered_map<uint64_t, T>& uniformCacheMap = getUniformCache<T>();
@@ -1238,7 +1238,7 @@ namespace bgfx { namespace gl
 
 		void saveCurrentProgram(GLuint program)
 		{
-			if (BX_ENABLED(BGFX_GL_CONFIG_UNIFORM_CACHE) )
+			if (BASE_ENABLED(GRAPHICS_GL_CONFIG_UNIFORM_CACHE) )
 			{
 				m_currentProgram = program;
 			}
@@ -1331,7 +1331,7 @@ namespace bgfx { namespace gl
 			m_flags = _flags;
 
 			GL_CHECK(glGenBuffers(1, &m_id) );
-			BX_ASSERT(0 != m_id, "Failed to generate buffer id.");
+			BASE_ASSERT(0 != m_id, "Failed to generate buffer id.");
 			GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_id) );
 			GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER
 				, _size
@@ -1343,7 +1343,7 @@ namespace bgfx { namespace gl
 
 		void update(uint32_t _offset, uint32_t _size, void* _data, bool _discard = false)
 		{
-			BX_ASSERT(0 != m_id, "Updating invalid index buffer.");
+			BASE_ASSERT(0 != m_id, "Updating invalid index buffer.");
 
 			if (_discard)
 			{
@@ -1374,12 +1374,12 @@ namespace bgfx { namespace gl
 		{
 			m_size = _size;
 			m_layoutHandle = _layoutHandle;
-			const bool drawIndirect = 0 != (_flags & BGFX_BUFFER_DRAW_INDIRECT);
+			const bool drawIndirect = 0 != (_flags & GRAPHICS_BUFFER_DRAW_INDIRECT);
 
 			m_target = drawIndirect ? GL_DRAW_INDIRECT_BUFFER : GL_ARRAY_BUFFER;
 
 			GL_CHECK(glGenBuffers(1, &m_id) );
-			BX_ASSERT(0 != m_id, "Failed to generate buffer id.");
+			BASE_ASSERT(0 != m_id, "Failed to generate buffer id.");
 			GL_CHECK(glBindBuffer(m_target, m_id) );
 			GL_CHECK(glBufferData(m_target
 				, _size
@@ -1391,7 +1391,7 @@ namespace bgfx { namespace gl
 
 		void update(uint32_t _offset, uint32_t _size, void* _data, bool _discard = false)
 		{
-			BX_ASSERT(0 != m_id, "Updating invalid vertex buffer.");
+			BASE_ASSERT(0 != m_id, "Updating invalid vertex buffer.");
 
 			if (_discard)
 			{
@@ -1489,7 +1489,7 @@ namespace bgfx { namespace gl
 			, m_num(0)
 			, m_needPresent(false)
 		{
-			bx::memSet(m_fbo, 0, sizeof(m_fbo) );
+			base::memSet(m_fbo, 0, sizeof(m_fbo) );
 		}
 
 		void create(uint8_t _num, const Attachment* _attachment);
@@ -1507,7 +1507,7 @@ namespace bgfx { namespace gl
 		uint8_t  m_num;
 		uint8_t  m_numTh;
 		bool     m_needPresent;
-		Attachment m_attachment[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
+		Attachment m_attachment[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
 	};
 
 	struct ProgramGL
@@ -1538,10 +1538,10 @@ namespace bgfx { namespace gl
 		uint8_t m_used[Attrib::Count]; // Dense.
 		GLint   m_attributes[Attrib::Count]; // Sparse.
 
-		GLint    m_instanceData[BGFX_CONFIG_MAX_INSTANCE_DATA_COUNT+1];
-		uint16_t m_instanceOffset[BGFX_CONFIG_MAX_INSTANCE_DATA_COUNT];
+		GLint    m_instanceData[GRAPHICS_CONFIG_MAX_INSTANCE_DATA_COUNT+1];
+		uint16_t m_instanceOffset[GRAPHICS_CONFIG_MAX_INSTANCE_DATA_COUNT];
 
-		GLint m_sampler[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
+		GLint m_sampler[GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS];
 		uint8_t m_numSamplers;
 
 		UniformBuffer* m_constantBuffer;
@@ -1552,13 +1552,13 @@ namespace bgfx { namespace gl
 	struct TimerQueryGL
 	{
 		TimerQueryGL()
-			: m_control(BX_COUNTOF(m_query) )
+			: m_control(BASE_COUNTOF(m_query) )
 		{
 		}
 
 		void create()
 		{
-			for (uint32_t ii = 0; ii < BX_COUNTOF(m_query); ++ii)
+			for (uint32_t ii = 0; ii < BASE_COUNTOF(m_query); ++ii)
 			{
 				Query& query = m_query[ii];
 				query.m_ready = false;
@@ -1567,7 +1567,7 @@ namespace bgfx { namespace gl
 				GL_CHECK(glGenQueries(1, &query.m_end) );
 			}
 
-			for (uint32_t ii = 0; ii < BX_COUNTOF(m_result); ++ii)
+			for (uint32_t ii = 0; ii < BASE_COUNTOF(m_result); ++ii)
 			{
 				Result& result = m_result[ii];
 				result.reset();
@@ -1576,7 +1576,7 @@ namespace bgfx { namespace gl
 
 		void destroy()
 		{
-			for (uint32_t ii = 0; ii < BX_COUNTOF(m_query); ++ii)
+			for (uint32_t ii = 0; ii < BASE_COUNTOF(m_query); ++ii)
 			{
 				Query& query = m_query[ii];
 				GL_CHECK(glDeleteQueries(1, &query.m_begin) );
@@ -1690,16 +1690,16 @@ namespace bgfx { namespace gl
 			bool     m_ready;
 		};
 
-		Result m_result[BGFX_CONFIG_MAX_VIEWS+1];
+		Result m_result[GRAPHICS_CONFIG_MAX_VIEWS+1];
 
-		Query m_query[BGFX_CONFIG_MAX_VIEWS*4];
-		bx::RingBufferControl m_control;
+		Query m_query[GRAPHICS_CONFIG_MAX_VIEWS*4];
+		base::RingBufferControl m_control;
 	};
 
 	struct OcclusionQueryGL
 	{
 		OcclusionQueryGL()
-			: m_control(BX_COUNTOF(m_query) )
+			: m_control(BASE_COUNTOF(m_query) )
 		{
 		}
 
@@ -1716,10 +1716,10 @@ namespace bgfx { namespace gl
 			OcclusionQueryHandle m_handle;
 		};
 
-		Query m_query[BGFX_CONFIG_MAX_OCCLUSION_QUERIES];
-		bx::RingBufferControl m_control;
+		Query m_query[GRAPHICS_CONFIG_MAX_OCCLUSION_QUERIES];
+		base::RingBufferControl m_control;
 	};
 
-} /* namespace gl */ } // namespace bgfx
+} /* namespace gl */ } // namespace graphics
 
-#endif // BGFX_RENDERER_GL_H_HEADER_GUARD
+#endif // GRAPHICS_RENDERER_GL_H_HEADER_GUARD

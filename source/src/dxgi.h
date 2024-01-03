@@ -1,28 +1,28 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_DXGI_H_HEADER_GUARD
-#define BGFX_DXGI_H_HEADER_GUARD
+#ifndef GRAPHICS_DXGI_H_HEADER_GUARD
+#define GRAPHICS_DXGI_H_HEADER_GUARD
 
 #include <sal.h>
 #include <unknwn.h>
 
-#if BX_PLATFORM_LINUX || BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
+#if BASE_PLATFORM_LINUX || BASE_PLATFORM_WINDOWS || BASE_PLATFORM_WINRT
 #	include <d3dcommon.h>
 #	include <dxgi1_6.h>
 #else
 #	include <d3d11_x.h>
-#endif // BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
+#endif // BASE_PLATFORM_WINDOWS || BASE_PLATFORM_WINRT
 
-namespace bgfx
+namespace graphics
 {
-#if BX_PLATFORM_LINUX || BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
+#if BASE_PLATFORM_LINUX || BASE_PLATFORM_WINDOWS || BASE_PLATFORM_WINRT
 	typedef ::IUnknown IUnknown;
 #else
 	typedef ::IGraphicsUnknown IUnknown;
-#endif // BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
+#endif // BASE_PLATFORM_WINDOWS || BASE_PLATFORM_WINRT
 
 	typedef HRESULT (WINAPI* PFN_CREATE_DXGI_FACTORY)(REFIID _riid, void** _factory);
 	typedef HRESULT (WINAPI* PFN_GET_DEBUG_INTERFACE)(REFIID _riid, void** _debug);
@@ -56,12 +56,12 @@ namespace bgfx
 	///
 	struct Dxgi
 	{
-#if BX_PLATFORM_LINUX || BX_PLATFORM_WINDOWS
+#if BASE_PLATFORM_LINUX || BASE_PLATFORM_WINDOWS
 		typedef ::IDXGIAdapter3   AdapterI;
 		typedef ::IDXGIFactory5   FactoryI;
 		typedef ::IDXGISwapChain3 SwapChainI;
 		typedef ::IDXGIOutput     OutputI;
-#elif BX_PLATFORM_WINRT
+#elif BASE_PLATFORM_WINRT
 		typedef ::IDXGIAdapter    AdapterI;
 		typedef ::IDXGIFactory4   FactoryI;
 		typedef ::IDXGISwapChain1 SwapChainI;
@@ -71,7 +71,7 @@ namespace bgfx
 		typedef ::IDXGIFactory2   FactoryI;
 		typedef ::IDXGISwapChain1 SwapChainI;
 		typedef ::IDXGIOutput     OutputI;
-#endif // BX_PLATFORM_WINDOWS
+#endif // BASE_PLATFORM_WINDOWS
 
 		///
 		Dxgi();
@@ -88,7 +88,7 @@ namespace bgfx
 		///
 		HRESULT createSwapChain(IUnknown* _device, const SwapChainDesc& _scd, SwapChainI** _swapChain);
 
-#if BX_PLATFORM_WINRT
+#if BASE_PLATFORM_WINRT
 		///
 		HRESULT removeSwapChain(const SwapChainDesc& _scd);
 #endif
@@ -117,6 +117,6 @@ namespace bgfx
 		bool m_tearingSupported;
 	};
 
-} // namespace bgfx
+} // namespace graphics
 
-#endif // BGFX_DXGI_H_HEADER_GUARD
+#endif // GRAPHICS_DXGI_H_HEADER_GUARD

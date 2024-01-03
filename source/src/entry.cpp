@@ -1,49 +1,49 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include <mapp/bx.h>
-#include <mapp/file.h>
-#include <mapp/sort.h>
-#include <mrender/bgfx.h>
+#include <base/base.h>
+#include <base/file.h>
+#include <base/sort.h>
+#include <graphics/graphics.h>
 
 #include <time.h>
 
-#if BX_PLATFORM_EMSCRIPTEN
+#if BASE_PLATFORM_EMSCRIPTEN
 #	include <emscripten.h>
-#endif // BX_PLATFORM_EMSCRIPTEN
+#endif // BASE_PLATFORM_EMSCRIPTEN
 
 #include "entry_p.h"
-#include "mrender/cmd.h"
-#include "mrender/input.h"
+#include "graphics/cmd.h"
+#include "graphics/input.h"
 
 extern "C" int32_t _main_(int32_t _argc, char** _argv);
 
-namespace mrender
+namespace entry
 {
-	static uint32_t s_debug = BGFX_DEBUG_NONE;
-	static uint32_t s_reset = BGFX_RESET_NONE;
+	static uint32_t s_debug = GRAPHICS_DEBUG_NONE;
+	static uint32_t s_reset = GRAPHICS_RESET_NONE;
 	static uint32_t s_width = ENTRY_DEFAULT_WIDTH;
 	static uint32_t s_height = ENTRY_DEFAULT_HEIGHT;
 	static bool s_exit = false;
 
-	static bx::FileReaderI* s_fileReader = NULL;
-	static bx::FileWriterI* s_fileWriter = NULL;
+	static base::FileReaderI* s_fileReader = NULL;
+	static base::FileWriterI* s_fileWriter = NULL;
 
-	extern bx::AllocatorI* getDefaultAllocator();
-	bx::AllocatorI* g_allocator = getDefaultAllocator();
+	extern base::AllocatorI* getDefaultAllocator();
+	base::AllocatorI* g_allocator = getDefaultAllocator();
 
-	typedef bx::StringT<&g_allocator> String;
+	typedef base::StringT<&g_allocator> String;
 
 	static String s_currentDir;
 
-	class FileReader : public bx::FileReader
+	class FileReader : public base::FileReader
 	{
-		typedef bx::FileReader super;
+		typedef base::FileReader super;
 
 	public:
-		virtual bool open(const bx::FilePath& _filePath, bx::Error* _err) override
+		virtual bool open(const base::FilePath& _filePath, base::Error* _err) override
 		{
 			String filePath(s_currentDir);
 			filePath.append(_filePath);
@@ -51,12 +51,12 @@ namespace mrender
 		}
 	};
 
-	class FileWriter : public bx::FileWriter
+	class FileWriter : public base::FileWriter
 	{
-		typedef bx::FileWriter super;
+		typedef base::FileWriter super;
 
 	public:
-		virtual bool open(const bx::FilePath& _filePath, bool _append, bx::Error* _err) override
+		virtual bool open(const base::FilePath& _filePath, bool _append, base::Error* _err) override
 		{
 			String filePath(s_currentDir);
 			filePath.append(_filePath);
@@ -70,14 +70,14 @@ namespace mrender
 	}
 
 #if ENTRY_CONFIG_IMPLEMENT_DEFAULT_ALLOCATOR
-	bx::AllocatorI* getDefaultAllocator()
+	base::AllocatorI* getDefaultAllocator()
 	{
-BX_PRAGMA_DIAGNOSTIC_PUSH();
-BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4459); // warning C4459: declaration of 's_allocator' hides global declaration
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wshadow");
-		static bx::DefaultAllocator s_allocator;
+BASE_PRAGMA_DIAGNOSTIC_PUSH();
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4459); // warning C4459: declaration of 's_allocator' hides global declaration
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wshadow");
+		static base::DefaultAllocator s_allocator;
 		return &s_allocator;
-BX_PRAGMA_DIAGNOSTIC_POP();
+BASE_PRAGMA_DIAGNOSTIC_POP();
 	}
 #endif // ENTRY_CONFIG_IMPLEMENT_DEFAULT_ALLOCATOR
 
@@ -185,11 +185,11 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 		"GamepadStart",
 		"GamepadGuide",
 	};
-	BX_STATIC_ASSERT(Key::Count == BX_COUNTOF(s_keyName) );
+	BASE_STATIC_ASSERT(Key::Count == BASE_COUNTOF(s_keyName) );
 
 	const char* getName(Key::Enum _key)
 	{
-		BX_ASSERT(_key < Key::Count, "Invalid key %d.", _key);
+		BASE_ASSERT(_key < Key::Count, "Invalid key %d.", _key);
 		return s_keyName[_key];
 	}
 
@@ -234,7 +234,7 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 
 	bool setOrToggle(uint32_t& _flags, const char* _name, uint32_t _bit, int _first, int _argc, char const* const* _argv)
 	{
-		if (0 == bx::strCmp(_argv[_first], _name) )
+		if (0 == base::strCmp(_argv[_first], _name) )
 		{
 			int arg = _first+1;
 			if (_argc > arg)
@@ -242,7 +242,7 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 				_flags &= ~_bit;
 
 				bool set = false;
-				bx::fromString(&set, _argv[arg]);
+				base::fromString(&set, _argv[arg]);
 
 				_flags |= set ? _bit : 0;
 			}
@@ -264,7 +264,7 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 			bool set = false;
 			if (2 < _argc)
 			{
-				bx::fromString(&set, _argv[1]);
+				base::fromString(&set, _argv[1]);
 				inputSetMouseLock(set);
 			}
 			else
@@ -272,44 +272,44 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 				inputSetMouseLock(!inputIsMouseLocked() );
 			}
 
-			return bx::kExitSuccess;
+			return base::kExitSuccess;
 		}
 
-		return bx::kExitFailure;
+		return base::kExitFailure;
 	}
 
 	int cmdGraphics(CmdContext* /*_context*/, void* /*_userData*/, int _argc, char const* const* _argv)
 	{
 		if (_argc > 1)
 		{
-			if (setOrToggle(s_reset, "vsync",       BGFX_RESET_VSYNC,              1, _argc, _argv)
-			||  setOrToggle(s_reset, "maxaniso",    BGFX_RESET_MAXANISOTROPY,      1, _argc, _argv)
-			||  setOrToggle(s_reset, "msaa",        BGFX_RESET_MSAA_X16,           1, _argc, _argv)
-			||  setOrToggle(s_reset, "flush",       BGFX_RESET_FLUSH_AFTER_RENDER, 1, _argc, _argv)
-			||  setOrToggle(s_reset, "flip",        BGFX_RESET_FLIP_AFTER_RENDER,  1, _argc, _argv)
-			||  setOrToggle(s_reset, "hidpi",       BGFX_RESET_HIDPI,              1, _argc, _argv)
-			||  setOrToggle(s_reset, "depthclamp",  BGFX_RESET_DEPTH_CLAMP,        1, _argc, _argv)
+			if (setOrToggle(s_reset, "vsync",       GRAPHICS_RESET_VSYNC,              1, _argc, _argv)
+			||  setOrToggle(s_reset, "maxaniso",    GRAPHICS_RESET_MAXANISOTROPY,      1, _argc, _argv)
+			||  setOrToggle(s_reset, "msaa",        GRAPHICS_RESET_MSAA_X16,           1, _argc, _argv)
+			||  setOrToggle(s_reset, "flush",       GRAPHICS_RESET_FLUSH_AFTER_RENDER, 1, _argc, _argv)
+			||  setOrToggle(s_reset, "flip",        GRAPHICS_RESET_FLIP_AFTER_RENDER,  1, _argc, _argv)
+			||  setOrToggle(s_reset, "hidpi",       GRAPHICS_RESET_HIDPI,              1, _argc, _argv)
+			||  setOrToggle(s_reset, "depthclamp",  GRAPHICS_RESET_DEPTH_CLAMP,        1, _argc, _argv)
 			   )
 			{
-				return bx::kExitSuccess;
+				return base::kExitSuccess;
 			}
-			else if (setOrToggle(s_debug, "stats",     BGFX_DEBUG_STATS,     1, _argc, _argv)
-				 ||  setOrToggle(s_debug, "ifh",       BGFX_DEBUG_IFH,       1, _argc, _argv)
-				 ||  setOrToggle(s_debug, "text",      BGFX_DEBUG_TEXT,      1, _argc, _argv)
-				 ||  setOrToggle(s_debug, "wireframe", BGFX_DEBUG_WIREFRAME, 1, _argc, _argv)
-				 ||  setOrToggle(s_debug, "profiler",  BGFX_DEBUG_PROFILER,  1, _argc, _argv)
+			else if (setOrToggle(s_debug, "stats",     GRAPHICS_DEBUG_STATS,     1, _argc, _argv)
+				 ||  setOrToggle(s_debug, "ifh",       GRAPHICS_DEBUG_IFH,       1, _argc, _argv)
+				 ||  setOrToggle(s_debug, "text",      GRAPHICS_DEBUG_TEXT,      1, _argc, _argv)
+				 ||  setOrToggle(s_debug, "wireframe", GRAPHICS_DEBUG_WIREFRAME, 1, _argc, _argv)
+				 ||  setOrToggle(s_debug, "profiler",  GRAPHICS_DEBUG_PROFILER,  1, _argc, _argv)
 				    )
 			{
-				bgfx::setDebug(s_debug);
-				return bx::kExitSuccess;
+				graphics::setDebug(s_debug);
+				return base::kExitSuccess;
 			}
-			else if (0 == bx::strCmp(_argv[1], "screenshot") )
+			else if (0 == base::strCmp(_argv[1], "screenshot") )
 			{
-				bgfx::FrameBufferHandle fbh = BGFX_INVALID_HANDLE;
+				graphics::FrameBufferHandle fbh = GRAPHICS_INVALID_HANDLE;
 
 				if (_argc > 2)
 				{
-					bgfx::requestScreenShot(fbh, _argv[2]);
+					graphics::requestScreenShot(fbh, _argv[2]);
 				}
 				else
 				{
@@ -317,59 +317,59 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 					time(&tt);
 
 					char filePath[256];
-					bx::snprintf(filePath, sizeof(filePath), "temp/screenshot-%d", tt);
-					bgfx::requestScreenShot(fbh, filePath);
+					base::snprintf(filePath, sizeof(filePath), "temp/screenshot-%d", tt);
+					graphics::requestScreenShot(fbh, filePath);
 				}
 
-				return bx::kExitSuccess;
+				return base::kExitSuccess;
 			}
-			else if (0 == bx::strCmp(_argv[1], "fullscreen") )
+			else if (0 == base::strCmp(_argv[1], "fullscreen") )
 			{
 				WindowHandle window = { 0 };
 				toggleFullscreen(window);
-				return bx::kExitSuccess;
+				return base::kExitSuccess;
 			}
 		}
 
-		return bx::kExitFailure;
+		return base::kExitFailure;
 	}
 
 	int cmdExit(CmdContext* /*_context*/, void* /*_userData*/, int /*_argc*/, char const* const* /*_argv*/)
 	{
 		s_exit = true;
-		return bx::kExitSuccess;
+		return base::kExitSuccess;
 	}
 
 	static const InputBinding s_bindings[] =
 	{
-		{ mrender::Key::KeyQ,         mrender::Modifier::LeftCtrl,  1, NULL, "exit"                              },
-		{ mrender::Key::KeyQ,         mrender::Modifier::RightCtrl, 1, NULL, "exit"                              },
-		{ mrender::Key::KeyF,         mrender::Modifier::LeftCtrl,  1, NULL, "graphics fullscreen"               },
-		{ mrender::Key::KeyF,         mrender::Modifier::RightCtrl, 1, NULL, "graphics fullscreen"               },
-		{ mrender::Key::Return,       mrender::Modifier::RightAlt,  1, NULL, "graphics fullscreen"               },
-		{ mrender::Key::F1,           mrender::Modifier::None,      1, NULL, "graphics stats"                    },
-		{ mrender::Key::F1,           mrender::Modifier::LeftCtrl,  1, NULL, "graphics ifh"                      },
-		{ mrender::Key::GamepadStart, mrender::Modifier::None,      1, NULL, "graphics stats"                    },
-		{ mrender::Key::F1,           mrender::Modifier::LeftShift, 1, NULL, "graphics stats 0\ngraphics text 0" },
-		{ mrender::Key::F3,           mrender::Modifier::None,      1, NULL, "graphics wireframe"                },
-		{ mrender::Key::F6,           mrender::Modifier::None,      1, NULL, "graphics profiler"                 },
-		{ mrender::Key::F7,           mrender::Modifier::None,      1, NULL, "graphics vsync"                    },
-		{ mrender::Key::F8,           mrender::Modifier::None,      1, NULL, "graphics msaa"                     },
-		{ mrender::Key::F9,           mrender::Modifier::None,      1, NULL, "graphics flush"                    },
-		{ mrender::Key::F10,          mrender::Modifier::None,      1, NULL, "graphics hidpi"                    },
-		{ mrender::Key::Print,        mrender::Modifier::None,      1, NULL, "graphics screenshot"               },
-		{ mrender::Key::KeyP,         mrender::Modifier::LeftCtrl,  1, NULL, "graphics screenshot"               },
+		{ entry::Key::KeyQ,         entry::Modifier::LeftCtrl,  1, NULL, "exit"                              },
+		{ entry::Key::KeyQ,         entry::Modifier::RightCtrl, 1, NULL, "exit"                              },
+		{ entry::Key::KeyF,         entry::Modifier::LeftCtrl,  1, NULL, "graphics fullscreen"               },
+		{ entry::Key::KeyF,         entry::Modifier::RightCtrl, 1, NULL, "graphics fullscreen"               },
+		{ entry::Key::Return,       entry::Modifier::RightAlt,  1, NULL, "graphics fullscreen"               },
+		{ entry::Key::F1,           entry::Modifier::None,      1, NULL, "graphics stats"                    },
+		{ entry::Key::F1,           entry::Modifier::LeftCtrl,  1, NULL, "graphics ifh"                      },
+		{ entry::Key::GamepadStart, entry::Modifier::None,      1, NULL, "graphics stats"                    },
+		{ entry::Key::F1,           entry::Modifier::LeftShift, 1, NULL, "graphics stats 0\ngraphics text 0" },
+		{ entry::Key::F3,           entry::Modifier::None,      1, NULL, "graphics wireframe"                },
+		{ entry::Key::F6,           entry::Modifier::None,      1, NULL, "graphics profiler"                 },
+		{ entry::Key::F7,           entry::Modifier::None,      1, NULL, "graphics vsync"                    },
+		{ entry::Key::F8,           entry::Modifier::None,      1, NULL, "graphics msaa"                     },
+		{ entry::Key::F9,           entry::Modifier::None,      1, NULL, "graphics flush"                    },
+		{ entry::Key::F10,          entry::Modifier::None,      1, NULL, "graphics hidpi"                    },
+		{ entry::Key::Print,        entry::Modifier::None,      1, NULL, "graphics screenshot"               },
+		{ entry::Key::KeyP,         entry::Modifier::LeftCtrl,  1, NULL, "graphics screenshot"               },
 
 		INPUT_BINDING_END
 	};
 
-#if BX_PLATFORM_EMSCRIPTEN
+#if BASE_PLATFORM_EMSCRIPTEN
 	static AppI* s_app;
 	static void updateApp()
 	{
 		s_app->update();
 	}
-#endif // BX_PLATFORM_EMSCRIPTEN
+#endif // BASE_PLATFORM_EMSCRIPTEN
 
 	static AppI*    s_currentApp = NULL;
 	static AppI*    s_apps       = NULL;
@@ -404,21 +404,21 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 
 	int cmdApp(CmdContext* /*_context*/, void* /*_userData*/, int _argc, char const* const* _argv)
 	{
-		if (0 == bx::strCmp(_argv[1], "restart") )
+		if (0 == base::strCmp(_argv[1], "restart") )
 		{
 			if (2 == _argc)
 			{
-				bx::strCopy(s_restartArgs, BX_COUNTOF(s_restartArgs), getCurrentApp()->getName() );
-				return bx::kExitSuccess;
+				base::strCopy(s_restartArgs, BASE_COUNTOF(s_restartArgs), getCurrentApp()->getName() );
+				return base::kExitSuccess;
 			}
 
-			if (0 == bx::strCmp(_argv[2], "next") )
+			if (0 == base::strCmp(_argv[2], "next") )
 			{
 				AppI* next = getNextWrap(getCurrentApp() );
-				bx::strCopy(s_restartArgs, BX_COUNTOF(s_restartArgs), next->getName() );
-				return bx::kExitSuccess;
+				base::strCopy(s_restartArgs, BASE_COUNTOF(s_restartArgs), next->getName() );
+				return base::kExitSuccess;
 			}
-			else if (0 == bx::strCmp(_argv[2], "prev") )
+			else if (0 == base::strCmp(_argv[2], "prev") )
 			{
 				AppI* prev = getCurrentApp();
 				for (AppI* app = getNextWrap(prev); app != getCurrentApp(); app = getNextWrap(app) )
@@ -426,21 +426,21 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 					prev = app;
 				}
 
-				bx::strCopy(s_restartArgs, BX_COUNTOF(s_restartArgs), prev->getName() );
-				return bx::kExitSuccess;
+				base::strCopy(s_restartArgs, BASE_COUNTOF(s_restartArgs), prev->getName() );
+				return base::kExitSuccess;
 			}
 
 			for (AppI* app = getFirstApp(); NULL != app; app = app->getNext() )
 			{
-				if (0 == bx::strCmp(_argv[2], app->getName() ) )
+				if (0 == base::strCmp(_argv[2], app->getName() ) )
 				{
-					bx::strCopy(s_restartArgs, BX_COUNTOF(s_restartArgs), app->getName() );
-					return bx::kExitSuccess;
+					base::strCopy(s_restartArgs, BASE_COUNTOF(s_restartArgs), app->getName() );
+					return base::kExitSuccess;
 				}
 			}
 		}
 
-		return bx::kExitFailure;
+		return base::kExitFailure;
 	}
 
 	struct AppInternal
@@ -454,8 +454,8 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 
 	AppI::AppI(const char* _name, const char* _description)
 	{
-		BX_STATIC_ASSERT(sizeof(AppInternal) <= sizeof(m_internal) );
-		s_offset = BX_OFFSETOF(AppI, m_internal);
+		BASE_STATIC_ASSERT(sizeof(AppInternal) <= sizeof(m_internal) );
+		s_offset = BASE_OFFSETOF(AppI, m_internal);
 
 		AppInternal* ai = (AppInternal*)m_internal;
 
@@ -477,7 +477,7 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 			{
 				if (NULL != prev)
 				{
-					AppInternal* ai = bx::addressOf<AppInternal>(prev, s_offset);
+					AppInternal* ai = base::addressOf<AppInternal>(prev, s_offset);
 					ai->m_next = next;
 				}
 				else
@@ -525,20 +525,20 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 		setWindowSize(kDefaultWindowHandle, s_width, s_height);
 
 		_app->init(_argc, _argv, s_width, s_height);
-		bgfx::frame();
+		graphics::frame();
 
-#if BX_PLATFORM_EMSCRIPTEN
+#if BASE_PLATFORM_EMSCRIPTEN
 		s_app = _app;
 		emscripten_set_main_loop(&updateApp, -1, 1);
 #else
 		while (_app->update() )
 		{
-			if (0 != bx::strLen(s_restartArgs) )
+			if (0 != base::strLen(s_restartArgs) )
 			{
 				break;
 			}
 		}
-#endif // BX_PLATFORM_EMSCRIPTEN
+#endif // BASE_PLATFORM_EMSCRIPTEN
 
 		return _app->shutdown();
 	}
@@ -548,7 +548,7 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 		const AppI* lhs = *(const AppI**)_lhs;
 		const AppI* rhs = *(const AppI**)_rhs;
 
-		return bx::strCmpI(lhs->getName(), rhs->getName() );
+		return base::strCmpI(lhs->getName(), rhs->getName() );
 	}
 
 	static void sortApps()
@@ -558,38 +558,38 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 			return;
 		}
 
-		AppI** apps = (AppI**)bx::alloc(g_allocator, s_numApps*sizeof(AppI*) );
+		AppI** apps = (AppI**)base::alloc(g_allocator, s_numApps*sizeof(AppI*) );
 
 		uint32_t ii = 0;
 		for (AppI* app = getFirstApp(); NULL != app; app = app->getNext() )
 		{
 			apps[ii++] = app;
 		}
-		bx::quickSort(apps, s_numApps, sizeof(AppI*), sortApp);
+		base::quickSort(apps, s_numApps, sizeof(AppI*), sortApp);
 
 		s_apps = apps[0];
 		for (ii = 1; ii < s_numApps; ++ii)
 		{
 			AppI* app = apps[ii-1];
 
-			AppInternal* ai = bx::addressOf<AppInternal>(app, s_offset);
+			AppInternal* ai = base::addressOf<AppInternal>(app, s_offset);
 			ai->m_next = apps[ii];
 		}
 
 		{
-			AppInternal* ai = bx::addressOf<AppInternal>(apps[s_numApps-1], s_offset);
+			AppInternal* ai = base::addressOf<AppInternal>(apps[s_numApps-1], s_offset);
 			ai->m_next = NULL;
 		}
 
-		bx::free(g_allocator, apps);
+		base::free(g_allocator, apps);
 	}
 
 	int main(int _argc, const char* const* _argv)
 	{
-		//DBG(BX_COMPILER_NAME " / " BX_CPU_NAME " / " BX_ARCH_NAME " / " BX_PLATFORM_NAME);
+		//DBG(BASE_COMPILER_NAME " / " BASE_CPU_NAME " / " BASE_ARCH_NAME " / " BASE_PLATFORM_NAME);
 
-		s_fileReader = BX_NEW(g_allocator, FileReader);
-		s_fileWriter = BX_NEW(g_allocator, FileWriter);
+		s_fileReader = BASE_NEW(g_allocator, FileReader);
+		s_fileWriter = BASE_NEW(g_allocator, FileWriter);
 
 		cmdInit();
 		cmdAdd("mouselock", cmdMouseLock);
@@ -600,11 +600,11 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 		inputInit();
 		inputAddBindings("bindings", s_bindings);
 
-		bx::FilePath fp(_argv[0]);
-		char title[bx::kMaxFilePath];
-		bx::strCopy(title, BX_COUNTOF(title), fp.getBaseName() );
+		base::FilePath fp(_argv[0]);
+		char title[base::kMaxFilePath];
+		base::strCopy(title, BASE_COUNTOF(title), fp.getBaseName() );
 
-		mrender::setWindowTitle(kDefaultWindowHandle, title);
+		entry::setWindowTitle(kDefaultWindowHandle, title);
 		setWindowSize(kDefaultWindowHandle, ENTRY_DEFAULT_WIDTH, ENTRY_DEFAULT_HEIGHT);
 
 		sortApps();
@@ -621,7 +621,7 @@ restart:
 		for (AppI* app = getFirstApp(); NULL != app; app = app->getNext() )
 		{
 			if (NULL == selected
-			&&  !bx::strFindI(app->getName(), find).isEmpty() )
+			&&  !base::strFindI(app->getName(), find).isEmpty() )
 			{
 				selected = app;
 			}
@@ -634,7 +634,7 @@ restart:
 #endif // 0
 		}
 
-		int32_t result = bx::kExitSuccess;
+		int32_t result = base::kExitSuccess;
 		s_restartArgs[0] = '\0';
 		if (0 == s_numApps)
 		{
@@ -645,7 +645,7 @@ restart:
 			result = runApp(getCurrentApp(selected), _argc, _argv);
 		}
 
-		if (0 != bx::strLen(s_restartArgs) )
+		if (0 != base::strLen(s_restartArgs) )
 		{
 			find = s_restartArgs;
 			goto restart;
@@ -658,10 +658,10 @@ restart:
 
 		cmdShutdown();
 
-		bx::deleteObject(g_allocator, s_fileReader);
+		base::deleteObject(g_allocator, s_fileReader);
 		s_fileReader = NULL;
 
-		bx::deleteObject(g_allocator, s_fileWriter);
+		base::deleteObject(g_allocator, s_fileWriter);
 		s_fileWriter = NULL;
 
 		return result;
@@ -792,7 +792,7 @@ restart:
 		&&  needReset)
 		{
 			_reset = s_reset;
-			bgfx::reset(_width, _height, _reset);
+			graphics::reset(_width, _height, _reset);
 			inputSetMouseResolution(uint16_t(_width), uint16_t(_height) );
 		}
 
@@ -971,7 +971,7 @@ restart:
 		if (needReset)
 		{
 			_reset = s_reset;
-			bgfx::reset(s_window[0].m_width, s_window[0].m_height, _reset);
+			graphics::reset(s_window[0].m_width, s_window[0].m_height, _reset);
 			inputSetMouseResolution(uint16_t(s_window[0].m_width), uint16_t(s_window[0].m_height) );
 		}
 
@@ -980,17 +980,17 @@ restart:
 		return s_exit;
 	}
 
-	bx::FileReaderI* getFileReader()
+	base::FileReaderI* getFileReader()
 	{
 		return s_fileReader;
 	}
 
-	bx::FileWriterI* getFileWriter()
+	base::FileWriterI* getFileWriter()
 	{
 		return s_fileWriter;
 	}
 
-	bx::AllocatorI* getAllocator()
+	base::AllocatorI* getAllocator()
 	{
 		if (NULL == g_allocator)
 		{
@@ -1002,30 +1002,30 @@ restart:
 
 	void* TinyStlAllocator::static_allocate(size_t _bytes)
 	{
-		return bx::alloc(getAllocator(), _bytes);
+		return base::alloc(getAllocator(), _bytes);
 	}
 
 	void TinyStlAllocator::static_deallocate(void* _ptr, size_t /*_bytes*/)
 	{
 		if (NULL != _ptr)
 		{
-			bx::free(getAllocator(), _ptr);
+			base::free(getAllocator(), _ptr);
 		}
 	}
 
-} // namespace mrender
+} // namespace graphics
 
 extern "C" bool entry_process_events(uint32_t* _width, uint32_t* _height, uint32_t* _debug, uint32_t* _reset)
 {
-	return mrender::processEvents(*_width, *_height, *_debug, *_reset, NULL);
+	return entry::processEvents(*_width, *_height, *_debug, *_reset, NULL);
 }
 
 extern "C" void* entry_get_default_native_window_handle()
 {
-	return mrender::getNativeWindowHandle(mrender::kDefaultWindowHandle);
+	return entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
 }
 
 extern "C" void* entry_get_native_display_handle()
 {
-	return mrender::getNativeDisplayHandle();
+	return entry::getNativeDisplayHandle();
 }

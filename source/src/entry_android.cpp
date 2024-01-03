@@ -1,14 +1,14 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
 #include "entry_p.h"
 
-#if ENTRY_CONFIG_USE_NATIVE && BX_PLATFORM_ANDROID
+#if ENTRY_CONFIG_USE_NATIVE && BASE_PLATFORM_ANDROID
 
-#include <mapp/thread.h>
-#include <mapp/file.h>
+#include <base/thread.h>
+#include <base/file.h>
 
 #include <android/input.h>
 #include <android/log.h>
@@ -25,7 +25,7 @@ extern "C"
 #pragma GCC diagnostic pop
 } // extern "C"
 
-namespace mrender
+namespace entry
 {
 	struct GamepadRemap
 	{
@@ -74,10 +74,10 @@ namespace mrender
 		int m_argc;
 		const char* const* m_argv;
 
-		static int32_t threadFunc(bx::Thread* _thread, void* _userData);
+		static int32_t threadFunc(base::Thread* _thread, void* _userData);
 	};
 
-	class FileReaderAndroid : public bx::FileReaderI
+	class FileReaderAndroid : public base::FileReaderI
 	{
 	public:
 		FileReaderAndroid(AAssetManager* _assetManager, AAsset* _file)
@@ -92,20 +92,20 @@ namespace mrender
 			close();
 		}
 
-		virtual bool open(const bx::FilePath& _filePath, bx::Error* _err) override
+		virtual bool open(const base::FilePath& _filePath, base::Error* _err) override
 		{
-			BX_ASSERT(NULL != _err, "Reader/Writer interface calling functions must handle errors.");
+			BASE_ASSERT(NULL != _err, "Reader/Writer interface calling functions must handle errors.");
 
 			if (NULL != m_file)
 			{
-				BX_ERROR_SET(_err, bx::kErrorReaderWriterAlreadyOpen, "FileReader: File is already open.");
+				BASE_ERROR_SET(_err, base::kErrorReaderWriterAlreadyOpen, "FileReader: File is already open.");
 				return false;
 			}
 
 			m_file = AAssetManager_open(m_assetManager, _filePath.getCPtr(), AASSET_MODE_RANDOM);
 			if (NULL == m_file)
 			{
-				BX_ERROR_SET(_err, bx::kErrorReaderWriterOpen, "FileReader: Failed to open file.");
+				BASE_ERROR_SET(_err, base::kErrorReaderWriterOpen, "FileReader: Failed to open file.");
 				return false;
 			}
 
@@ -123,24 +123,24 @@ namespace mrender
 			}
 		}
 
-		virtual int64_t seek(int64_t _offset, bx::Whence::Enum _whence) override
+		virtual int64_t seek(int64_t _offset, base::Whence::Enum _whence) override
 		{
-			BX_ASSERT(NULL != m_file, "Reader/Writer file is not open.");
+			BASE_ASSERT(NULL != m_file, "Reader/Writer file is not open.");
 			return AAsset_seek64(m_file, _offset, _whence);
 
 		}
 
-		virtual int32_t read(void* _data, int32_t _size, bx::Error* _err) override
+		virtual int32_t read(void* _data, int32_t _size, base::Error* _err) override
 		{
-			BX_ASSERT(NULL != m_file, "Reader/Writer file is not open.");
-			BX_ASSERT(NULL != _err, "Reader/Writer interface calling functions must handle errors.");
+			BASE_ASSERT(NULL != m_file, "Reader/Writer file is not open.");
+			BASE_ASSERT(NULL != _err, "Reader/Writer interface calling functions must handle errors.");
 
 			int32_t size = (int32_t)AAsset_read(m_file, _data, _size);
 			if (size != _size)
 			{
 				if (0 == AAsset_getRemainingLength(m_file) )
 				{
-					BX_ERROR_SET(_err, bx::kErrorReaderWriterEof, "FileReader: EOF.");
+					BASE_ERROR_SET(_err, base::kErrorReaderWriterEof, "FileReader: EOF.");
 				}
 
 				return size >= 0 ? size : 0;
@@ -160,7 +160,7 @@ namespace mrender
 		Context()
 			: m_window(NULL)
 		{
-			bx::memSet(m_value, 0, sizeof(m_value) );
+			base::memSet(m_value, 0, sizeof(m_value) );
 
 			// Deadzone values from xinput.h
 			m_deadzone[GamepadAxis::LeftX ] =
@@ -184,7 +184,7 @@ namespace mrender
 				);
 
 			static const char* const argv[] = { "android.so" };
-			m_mte.m_argc = BX_COUNTOF(argv);
+			m_mte.m_argc = BASE_COUNTOF(argv);
 			m_mte.m_argv = argv;
 
 			while (0 == m_app->destroyRequested)
@@ -350,7 +350,7 @@ namespace mrender
 				{
 					if (0 != (source & (AINPUT_SOURCE_GAMEPAD|AINPUT_SOURCE_JOYSTICK) ) )
 					{
-						for (uint32_t ii = 0; ii < BX_COUNTOF(s_translateAxis); ++ii)
+						for (uint32_t ii = 0; ii < BASE_COUNTOF(s_translateAxis); ++ii)
 						{
 							const float fval = AMotionEvent_getAxisValue(_event, s_translateAxis[ii].m_event, 0);
 							int32_t value = int32_t( (s_translateAxis[ii].m_convert ? fval * 2.0f + 1.0f : fval) * INT16_MAX);
@@ -430,7 +430,7 @@ namespace mrender
 
 					if (0 != (source & (AINPUT_SOURCE_GAMEPAD|AINPUT_SOURCE_JOYSTICK) ) )
 					{
-						for (uint32_t jj = 0; jj < BX_COUNTOF(s_gamepadRemap); ++jj)
+						for (uint32_t jj = 0; jj < BASE_COUNTOF(s_gamepadRemap); ++jj)
 						{
 							if (keyCode == s_gamepadRemap[jj].m_keyCode)
 							{
@@ -465,7 +465,7 @@ namespace mrender
 		}
 
 		MainThreadEntry m_mte;
-		bx::Thread m_thread;
+		base::Thread m_thread;
 
 		EventQueue m_eventQueue;
 
@@ -495,44 +495,44 @@ namespace mrender
 
 	WindowHandle createWindow(int32_t _x, int32_t _y, uint32_t _width, uint32_t _height, uint32_t _flags, const char* _title)
 	{
-		BX_UNUSED(_x, _y, _width, _height, _flags, _title);
+		BASE_UNUSED(_x, _y, _width, _height, _flags, _title);
 		WindowHandle handle = { UINT16_MAX };
 		return handle;
 	}
 
 	void destroyWindow(WindowHandle _handle)
 	{
-		BX_UNUSED(_handle);
+		BASE_UNUSED(_handle);
 	}
 
 	void setWindowPos(WindowHandle _handle, int32_t _x, int32_t _y)
 	{
-		BX_UNUSED(_handle, _x, _y);
+		BASE_UNUSED(_handle, _x, _y);
 	}
 
 	void setWindowSize(WindowHandle _handle, uint32_t _width, uint32_t _height)
 	{
-		BX_UNUSED(_handle, _width, _height);
+		BASE_UNUSED(_handle, _width, _height);
 	}
 
 	void setWindowTitle(WindowHandle _handle, const char* _title)
 	{
-		BX_UNUSED(_handle, _title);
+		BASE_UNUSED(_handle, _title);
 	}
 
 	void setWindowFlags(WindowHandle _handle, uint32_t _flags, bool _enabled)
 	{
-		BX_UNUSED(_handle, _flags, _enabled);
+		BASE_UNUSED(_handle, _flags, _enabled);
 	}
 
 	void toggleFullscreen(WindowHandle _handle)
 	{
-		BX_UNUSED(_handle);
+		BASE_UNUSED(_handle);
 	}
 
 	void setMouseLock(WindowHandle _handle, bool _lock)
 	{
-		BX_UNUSED(_handle, _lock);
+		BASE_UNUSED(_handle, _lock);
 	}
 
 	void* getNativeWindowHandle(WindowHandle _handle)
@@ -550,12 +550,12 @@ namespace mrender
 		return NULL;
 	}
 
-	int32_t MainThreadEntry::threadFunc(bx::Thread* _thread, void* _userData)
+	int32_t MainThreadEntry::threadFunc(base::Thread* _thread, void* _userData)
 	{
-		BX_UNUSED(_thread);
+		BASE_UNUSED(_thread);
 
-		int32_t result = chdir("/sdcard/bgfx/examples/runtime");
-		BX_ASSERT(0 == result
+		int32_t result = chdir("/sdcard/graphics/examples/runtime");
+		BASE_ASSERT(0 == result
 			, "Failed to chdir to directory (errno: %d, android.permission.WRITE_EXTERNAL_STORAGE?)."
 			, errno
 			);
@@ -565,12 +565,12 @@ namespace mrender
 		return result;
 	}
 
-} // namespace mrender
+} // namespace graphics
 
 extern "C" void android_main(android_app* _app)
 {
-	using namespace mrender;
+	using namespace graphics;
 	s_ctx.run(_app);
 }
 
-#endif // ENTRY_CONFIG_USE_NATIVE && BX_PLATFORM_ANDROID
+#endif // ENTRY_CONFIG_USE_NATIVE && BASE_PLATFORM_ANDROID

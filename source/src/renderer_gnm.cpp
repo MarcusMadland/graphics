@@ -1,41 +1,41 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include "bgfx_p.h"
+#include "graphics_p.h"
 
-namespace bgfx
+namespace graphics
 {
 
-#define BGFX_DECLARE_EMBEDDED_SHADER(_name)                                             \
-	extern const uint8_t* BX_CONCATENATE(_name, _pssl);                                 \
-	extern const uint32_t BX_CONCATENATE(_name, _pssl_size);                            \
-	static const uint8_t  BX_CONCATENATE(_name, _int_pssl)[] = { 0 };                   \
-	const uint8_t* BX_CONCATENATE(_name, _pssl) = &BX_CONCATENATE(_name, _int_pssl)[0]; \
-	const uint32_t BX_CONCATENATE(_name, _pssl_size) = 1
+#define GRAPHICS_DECLARE_EMBEDDED_SHADER(_name)                                             \
+	extern const uint8_t* BASE_CONCATENATE(_name, _pssl);                                 \
+	extern const uint32_t BASE_CONCATENATE(_name, _pssl_size);                            \
+	static const uint8_t  BASE_CONCATENATE(_name, _int_pssl)[] = { 0 };                   \
+	const uint8_t* BASE_CONCATENATE(_name, _pssl) = &BASE_CONCATENATE(_name, _int_pssl)[0]; \
+	const uint32_t BASE_CONCATENATE(_name, _pssl_size) = 1
 
-BGFX_DECLARE_EMBEDDED_SHADER(vs_debugfont);
-BGFX_DECLARE_EMBEDDED_SHADER(fs_debugfont);
-BGFX_DECLARE_EMBEDDED_SHADER(vs_clear);
-BGFX_DECLARE_EMBEDDED_SHADER(fs_clear0);
-BGFX_DECLARE_EMBEDDED_SHADER(fs_clear1);
-BGFX_DECLARE_EMBEDDED_SHADER(fs_clear2);
-BGFX_DECLARE_EMBEDDED_SHADER(fs_clear3);
-BGFX_DECLARE_EMBEDDED_SHADER(fs_clear4);
-BGFX_DECLARE_EMBEDDED_SHADER(fs_clear5);
-BGFX_DECLARE_EMBEDDED_SHADER(fs_clear6);
-BGFX_DECLARE_EMBEDDED_SHADER(fs_clear7);
+GRAPHICS_DECLARE_EMBEDDED_SHADER(vs_debugfont);
+GRAPHICS_DECLARE_EMBEDDED_SHADER(fs_debugfont);
+GRAPHICS_DECLARE_EMBEDDED_SHADER(vs_clear);
+GRAPHICS_DECLARE_EMBEDDED_SHADER(fs_clear0);
+GRAPHICS_DECLARE_EMBEDDED_SHADER(fs_clear1);
+GRAPHICS_DECLARE_EMBEDDED_SHADER(fs_clear2);
+GRAPHICS_DECLARE_EMBEDDED_SHADER(fs_clear3);
+GRAPHICS_DECLARE_EMBEDDED_SHADER(fs_clear4);
+GRAPHICS_DECLARE_EMBEDDED_SHADER(fs_clear5);
+GRAPHICS_DECLARE_EMBEDDED_SHADER(fs_clear6);
+GRAPHICS_DECLARE_EMBEDDED_SHADER(fs_clear7);
 
-#undef BGFX_DECLARE_EMBEDDED_SHADER
+#undef GRAPHICS_DECLARE_EMBEDDED_SHADER
 
-} // namespace bgfx
+} // namespace graphics
 
-namespace bgfx { namespace gnm
+namespace graphics { namespace gnm
 {
 	RendererContextI* rendererCreate(const Init& _init)
 	{
-		BX_UNUSED(_init);
+		BASE_UNUSED(_init);
 		return NULL;
 	}
 
@@ -43,4 +43,4 @@ namespace bgfx { namespace gnm
 	{
 	}
 
-} /* namespace gnm */ } // namespace bgfx
+} /* namespace gnm */ } // namespace graphics

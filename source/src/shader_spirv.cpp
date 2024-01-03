@@ -1,12 +1,12 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include "bgfx_p.h"
+#include "graphics_p.h"
 #include "shader_spirv.h"
 
-namespace bgfx
+namespace graphics
 {
 #define SPV_OPERAND_1(_a0) SpvOperand::_a0
 #define SPV_OPERAND_2(_a0, _a1) SPV_OPERAND_1(_a0), SPV_OPERAND_1(_a1)
@@ -17,12 +17,12 @@ namespace bgfx
 #define SPV_OPERAND_7(_a0, _a1, _a2, _a3, _a4, _a5, _a6) SPV_OPERAND_1(_a0), SPV_OPERAND_6(_a1, _a2, _a3, _a4, _a5, _a6)
 #define SPV_OPERAND_8(_a0, _a1, _a2, _a3, _a4, _a5, _a6, _a7) SPV_OPERAND_1(_a0), SPV_OPERAND_7(_a1, _a2, _a3, _a4, _a5, _a6, _a7)
 #define SPV_OPERAND_9(_a0, _a1, _a2, _a3, _a4, _a5, _a6, _a7, _a8) SPV_OPERAND_1(_a0), SPV_OPERAND_8(_a1, _a2, _a3, _a4, _a5, _a6, _a7, _a8)
-#if BX_COMPILER_MSVC
+#if BASE_COMPILER_MSVC
 // Workaround MSVS bug...
-#	define SPV_OPERAND(...) { BX_MACRO_DISPATCHER(SPV_OPERAND_, __VA_ARGS__) BX_VA_ARGS_PASS(__VA_ARGS__) }
+#	define SPV_OPERAND(...) { BASE_MACRO_DISPATCHER(SPV_OPERAND_, __VA_ARGS__) BASE_VA_ARGS_PASS(__VA_ARGS__) }
 #else
-#	define SPV_OPERAND(...) { BX_MACRO_DISPATCHER(SPV_OPERAND_, __VA_ARGS__)(__VA_ARGS__) }
-#endif // BX_COMPILER_MSVC
+#	define SPV_OPERAND(...) { BASE_MACRO_DISPATCHER(SPV_OPERAND_, __VA_ARGS__)(__VA_ARGS__) }
+#endif // BASE_COMPILER_MSVC
 #define _ Count
 
 	bool isDebug(SpvOpcode::Enum _opcode)
@@ -363,7 +363,7 @@ namespace bgfx
 		{ false, false, /* AtomicFlagClear,                         // 319 */ SPV_OPERAND(_) },
 		{ true,  true,  /* ImageSparseRead,                         // 320 */ SPV_OPERAND(_) },
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_spvOpcodeInfo) == SpvOpcode::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_spvOpcodeInfo) == SpvOpcode::Count);
 
 	const char* s_spvOpcode[] =
 	{
@@ -690,11 +690,11 @@ namespace bgfx
 		"ImageSparseRead",
 		"",
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_spvOpcode)-1 == SpvOpcode::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_spvOpcode)-1 == SpvOpcode::Count);
 
 	const char* getName(SpvOpcode::Enum _opcode)
 	{
-		BX_WARN(_opcode <= SpvOpcode::Count, "Unknown opcode id %d.", _opcode);
+		BASE_WARN(_opcode <= SpvOpcode::Count, "Unknown opcode id %d.", _opcode);
 		return _opcode <= SpvOpcode::Count
 			?  s_spvOpcode[_opcode]
 			: "?SpvOpcode?"
@@ -804,12 +804,12 @@ namespace bgfx
 		"Alignment",
 		""
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_spvDecoration)-1 == SpvDecoration::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_spvDecoration)-1 == SpvDecoration::Count);
 
 	const char* getName(SpvDecoration::Enum _enum)
 	{
-		BX_UNUSED(s_spvDecorationInfo);
-		BX_ASSERT(_enum <= SpvDecoration::Count, "Unknown decoration id %d.", _enum);
+		BASE_UNUSED(s_spvDecorationInfo);
+		BASE_ASSERT(_enum <= SpvDecoration::Count, "Unknown decoration id %d.", _enum);
 		return _enum <= SpvDecoration::Count
 			?  s_spvDecoration[_enum]
 			: "?SpvDecoration?"
@@ -835,11 +835,11 @@ namespace bgfx
 		"Image",
 		""
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_spvStorageClass)-1 == SpvStorageClass::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_spvStorageClass)-1 == SpvStorageClass::Count);
 
 	const char* getName(SpvStorageClass::Enum _enum)
 	{
-		BX_ASSERT(_enum <= SpvStorageClass::Count, "Unknown storage class id %d.", _enum);
+		BASE_ASSERT(_enum <= SpvStorageClass::Count, "Unknown storage class id %d.", _enum);
 		return _enum <= SpvStorageClass::Count
 			?  s_spvStorageClass[_enum]
 			: "?SpvStorageClass?"
@@ -891,18 +891,18 @@ namespace bgfx
 		"InstanceIndex",
 		"",
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_spvBuiltin)-1 == SpvBuiltin::Count);
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_spvBuiltin)-1 == SpvBuiltin::Count);
 
 	const char* getName(SpvBuiltin::Enum _enum)
 	{
-		BX_ASSERT(_enum <= SpvBuiltin::Count, "Unknown builtin id %d.", _enum);
+		BASE_ASSERT(_enum <= SpvBuiltin::Count, "Unknown builtin id %d.", _enum);
 		return _enum <= SpvBuiltin::Count
 			?  s_spvBuiltin[_enum]
 			: "?SpvBuiltin?"
 			;
 	}
 
-	int32_t read(bx::ReaderI* _reader, SpvOperand& _operand, bx::Error* _err)
+	int32_t read(base::ReaderI* _reader, SpvOperand& _operand, base::Error* _err)
 	{
 		int32_t size = 0;
 
@@ -914,33 +914,33 @@ namespace bgfx
 		case SpvOperand::LiteralString:
 			do
 			{
-				size += bx::read(_reader, token, _err);
+				size += base::read(_reader, token, _err);
 				_operand.literalString.append( (char*)&token, (char*)&token + sizeof(token) );
 			}
 			while (0 != (token & 0xff000000) && _err->isOk() );
 			break;
 
 		default:
-			size += bx::read(_reader, _operand.data, _err);
+			size += base::read(_reader, _operand.data, _err);
 			break;
 		}
 
 		return size;
 	}
 
-	int32_t read(bx::ReaderI* _reader, SpvInstruction& _instruction, bx::Error* _err)
+	int32_t read(base::ReaderI* _reader, SpvInstruction& _instruction, base::Error* _err)
 	{
 		int32_t size = 0;
 
 		uint32_t token;
-		size += bx::read(_reader, token, _err);
+		size += base::read(_reader, token, _err);
 
 		_instruction.opcode = SpvOpcode::Enum( (token & UINT32_C(0x0000ffff) )      );
 		_instruction.length =        uint16_t( (token & UINT32_C(0xffff0000) ) >> 16);
 
 		if (_instruction.opcode >= SpvOpcode::Count)
 		{
-			BX_ERROR_SET(_err, BGFX_SHADER_SPIRV_INVALID_INSTRUCTION, "SPIR-V: Invalid instruction.");
+			BASE_ERROR_SET(_err, GRAPHICS_SHADER_SPIRV_INVALID_INSTRUCTION, "SPIR-V: Invalid instruction.");
 			return size;
 		}
 
@@ -993,7 +993,7 @@ namespace bgfx
 			for (
 				;  size/4 != _instruction.length
 				&& _err->isOk()
-				&& currOp < BX_COUNTOF(_instruction.operand)
+				&& currOp < BASE_COUNTOF(_instruction.operand)
 				; ++currOp)
 			{
 				_instruction.operand[currOp].type = info.operands[currOp];
@@ -1007,10 +1007,10 @@ namespace bgfx
 		return size;
 	}
 
-	int32_t write(bx::WriterI* _writer, const SpvInstruction& _instruction, bx::Error* _err)
+	int32_t write(base::WriterI* _writer, const SpvInstruction& _instruction, base::Error* _err)
 	{
 		int32_t size = 0;
-		BX_UNUSED(_writer, _instruction, _err);
+		BASE_UNUSED(_writer, _instruction, _err);
 		return size;
 	}
 
@@ -1022,7 +1022,7 @@ namespace bgfx
 		{
 			if (_instruction.hasType)
 			{
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, " r%d.t%d = "
 							, _instruction.result
 							, _instruction.type
@@ -1030,14 +1030,14 @@ namespace bgfx
 			}
 			else
 			{
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, " r%d = "
 							, _instruction.result
 							);
 			}
 		}
 
-		size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+		size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 					, "%s"
 					, getName(_instruction.opcode)
 					);
@@ -1048,7 +1048,7 @@ namespace bgfx
 			switch (operand.type)
 			{
 			case SpvOperand::AddressingModel:
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, "%sAddressingModel(%d)"
 							, 0 == ii ? " " : ", "
 							, operand.data
@@ -1056,7 +1056,7 @@ namespace bgfx
 				break;
 
 			case SpvOperand::Decoration:
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, "%s%s"
 							, 0 == ii ? " " : ", "
 							, getName(SpvDecoration::Enum(operand.data) )
@@ -1064,7 +1064,7 @@ namespace bgfx
 				break;
 
 			case SpvOperand::FunctionControl:
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, "%s0x%08x"
 							, 0 == ii ? " " : ", "
 							, operand.data
@@ -1072,7 +1072,7 @@ namespace bgfx
 				break;
 
 			case SpvOperand::LiteralNumber:
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, "%s%d"
 							, 0 == ii ? " " : ", "
 							, operand.data
@@ -1080,7 +1080,7 @@ namespace bgfx
 				break;
 
 			case SpvOperand::LiteralString:
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, "%s%s"
 							, 0 == ii ? " " : ", "
 							, operand.literalString.c_str()
@@ -1088,7 +1088,7 @@ namespace bgfx
 				break;
 
 			case SpvOperand::MemoryModel:
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, "%sMemoryModel(%d)"
 							, 0 == ii ? " " : ", "
 							, operand.data
@@ -1096,7 +1096,7 @@ namespace bgfx
 				break;
 
 			case SpvOperand::StorageClass:
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, "%s%s"
 							, 0 == ii ? " " : ", "
 							, getName(SpvStorageClass::Enum(operand.data) )
@@ -1104,7 +1104,7 @@ namespace bgfx
 				break;
 
 			case SpvOperand::Count:
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, "%s__%d__"
 							, 0 == ii ? " " : ", "
 							, operand.data
@@ -1112,7 +1112,7 @@ namespace bgfx
 				break;
 
 			default:
-				size += bx::snprintf(&_out[size], bx::uint32_imax(0, _size-size)
+				size += base::snprintf(&_out[size], base::uint32_imax(0, _size-size)
 							, "%sr%d"
 							, 0 == ii ? " " : ", "
 							, operand.data
@@ -1125,40 +1125,40 @@ namespace bgfx
 		return size;
 	}
 
-	int32_t read(bx::ReaderSeekerI* _reader, SpvShader& _shader, bx::Error* _err)
+	int32_t read(base::ReaderSeekerI* _reader, SpvShader& _shader, base::Error* _err)
 	{
 		int32_t size = 0;
 
-		uint32_t numBytes = uint32_t(bx::getSize(_reader) - bx::seek(_reader) );
+		uint32_t numBytes = uint32_t(base::getSize(_reader) - base::seek(_reader) );
 		_shader.byteCode.resize(numBytes);
-		size += bx::read(_reader, _shader.byteCode.data(), numBytes, _err);
+		size += base::read(_reader, _shader.byteCode.data(), numBytes, _err);
 
 		return size;
 	}
 
-	int32_t write(bx::WriterI* _writer, const SpvShader& _shader, bx::Error* _err)
+	int32_t write(base::WriterI* _writer, const SpvShader& _shader, base::Error* _err)
 	{
 		int32_t size = 0;
-		BX_UNUSED(_writer, _shader, _err);
+		BASE_UNUSED(_writer, _shader, _err);
 		return size;
 	}
 
 #define SPIRV_MAGIC 0x07230203
 
-	int32_t read(bx::ReaderSeekerI* _reader, SpirV& _spirv, bx::Error* _err)
+	int32_t read(base::ReaderSeekerI* _reader, SpirV& _spirv, base::Error* _err)
 	{
-		BX_ERROR_SCOPE(_err);
+		BASE_ERROR_SCOPE(_err);
 
 		int32_t size = 0;
 
-		size += bx::read(_reader, _spirv.header, _err);
+		size += base::read(_reader, _spirv.header, _err);
 
 		if (!_err->isOk()
 		||  size != sizeof(SpirV::Header)
 		||  _spirv.header.magic != SPIRV_MAGIC
 		   )
 		{
-			BX_ERROR_SET(_err, BGFX_SHADER_SPIRV_INVALID_HEADER, "SPIR-V: Invalid header.");
+			BASE_ERROR_SET(_err, GRAPHICS_SHADER_SPIRV_INVALID_HEADER, "SPIR-V: Invalid header.");
 			return size;
 		}
 
@@ -1167,19 +1167,19 @@ namespace bgfx
 		return size;
 	}
 
-	int32_t write(bx::WriterSeekerI* _writer, const SpirV& _spirv, bx::Error* _err)
+	int32_t write(base::WriterSeekerI* _writer, const SpirV& _spirv, base::Error* _err)
 	{
 		int32_t size = 0;
-		BX_UNUSED(_writer, _spirv, _err);
+		BASE_UNUSED(_writer, _spirv, _err);
 		return size;
 	}
 
-	void parse(const SpvShader& _src, SpvParseFn _fn, void* _userData, bx::Error* _err)
+	void parse(const SpvShader& _src, SpvParseFn _fn, void* _userData, base::Error* _err)
 	{
-		BX_ERROR_SCOPE(_err);
+		BASE_ERROR_SCOPE(_err);
 
 		uint32_t numBytes = uint32_t(_src.byteCode.size() );
-		bx::MemoryReader reader(_src.byteCode.data(), numBytes);
+		base::MemoryReader reader(_src.byteCode.data(), numBytes);
 
 		for (uint32_t token = 0, numTokens = uint32_t(_src.byteCode.size() / sizeof(uint32_t) ); token < numTokens;)
 		{
@@ -1193,12 +1193,12 @@ namespace bgfx
 
 			if (size/4 != instruction.length)
 			{
-				BX_TRACE("read %d, expected %d, %s"
+				BASE_TRACE("read %d, expected %d, %s"
 						, size/4
 						, instruction.length
 						, getName(instruction.opcode)
 						);
-				BX_ERROR_SET(_err, BGFX_SHADER_SPIRV_INVALID_INSTRUCTION, "SPIR-V: Invalid instruction.");
+				BASE_ERROR_SET(_err, GRAPHICS_SHADER_SPIRV_INVALID_INSTRUCTION, "SPIR-V: Invalid instruction.");
 				return;
 			}
 
@@ -1212,4 +1212,4 @@ namespace bgfx
 		}
 	}
 
-} // namespace bgfx
+} // namespace graphics

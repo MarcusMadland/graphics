@@ -1,14 +1,14 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_RENDERER_H_HEADER_GUARD
-#define BGFX_RENDERER_H_HEADER_GUARD
+#ifndef GRAPHICS_RENDERER_H_HEADER_GUARD
+#define GRAPHICS_RENDERER_H_HEADER_GUARD
 
-#include "bgfx_p.h"
+#include "graphics_p.h"
 
-namespace bgfx
+namespace graphics
 {
 	inline constexpr uint32_t toAbgr8(uint8_t _r, uint8_t _g, uint8_t _b, uint8_t _a = 0xff)
 	{
@@ -78,14 +78,14 @@ namespace bgfx
 
 			m_view = m_viewTmp;
 
-			for (uint32_t ii = 0; ii < BGFX_CONFIG_MAX_VIEWS; ++ii)
+			for (uint32_t ii = 0; ii < GRAPHICS_CONFIG_MAX_VIEWS; ++ii)
 			{
-				bx::memCopy(&m_view[ii].un.f4x4, &_frame->m_view[ii].m_view.un.f4x4, sizeof(Matrix4) );
+				base::memCopy(&m_view[ii].un.f4x4, &_frame->m_view[ii].m_view.un.f4x4, sizeof(Matrix4) );
 			}
 
-			for (uint32_t ii = 0; ii < BGFX_CONFIG_MAX_VIEWS; ++ii)
+			for (uint32_t ii = 0; ii < GRAPHICS_CONFIG_MAX_VIEWS; ++ii)
 			{
-				bx::float4x4_mul(&m_viewProj[ii].un.f4x4
+				base::float4x4_mul(&m_viewProj[ii].un.f4x4
 					, &m_view[ii].un.f4x4
 					, &_frame->m_view[ii].m_proj.un.f4x4
 					);
@@ -138,7 +138,7 @@ namespace bgfx
 						_renderer->setShaderUniform4x4f(flags
 							, predefined.m_loc
 							, m_view[_view].un.val
-							, bx::uint32_min(mtxRegs, predefined.m_count)
+							, base::uint32_min(mtxRegs, predefined.m_count)
 							);
 					}
 					break;
@@ -148,7 +148,7 @@ namespace bgfx
 						if (_view != m_invViewCached)
 						{
 							m_invViewCached = _view;
-							bx::float4x4_inverse(&m_invView.un.f4x4
+							base::float4x4_inverse(&m_invView.un.f4x4
 								, &m_view[_view].un.f4x4
 								);
 						}
@@ -156,7 +156,7 @@ namespace bgfx
 						_renderer->setShaderUniform4x4f(flags
 							, predefined.m_loc
 							, m_invView.un.val
-							, bx::uint32_min(mtxRegs, predefined.m_count)
+							, base::uint32_min(mtxRegs, predefined.m_count)
 							);
 					}
 					break;
@@ -166,7 +166,7 @@ namespace bgfx
 						_renderer->setShaderUniform4x4f(flags
 							, predefined.m_loc
 							, _frame->m_view[_view].m_proj.un.val
-							, bx::uint32_min(mtxRegs, predefined.m_count)
+							, base::uint32_min(mtxRegs, predefined.m_count)
 							);
 					}
 					break;
@@ -176,7 +176,7 @@ namespace bgfx
 						if (_view != m_invProjCached)
 						{
 							m_invProjCached = _view;
-							bx::float4x4_inverse(&m_invProj.un.f4x4
+							base::float4x4_inverse(&m_invProj.un.f4x4
 								, &_frame->m_view[_view].m_proj.un.f4x4
 								);
 						}
@@ -184,7 +184,7 @@ namespace bgfx
 						_renderer->setShaderUniform4x4f(flags
 							, predefined.m_loc
 							, m_invProj.un.val
-							, bx::uint32_min(mtxRegs, predefined.m_count)
+							, base::uint32_min(mtxRegs, predefined.m_count)
 							);
 					}
 					break;
@@ -194,7 +194,7 @@ namespace bgfx
 						_renderer->setShaderUniform4x4f(flags
 							, predefined.m_loc
 							, m_viewProj[_view].un.val
-							, bx::uint32_min(mtxRegs, predefined.m_count)
+							, base::uint32_min(mtxRegs, predefined.m_count)
 							);
 					}
 					break;
@@ -204,7 +204,7 @@ namespace bgfx
 						if (_view != m_invViewProjCached)
 						{
 							m_invViewProjCached = _view;
-							bx::float4x4_inverse(&m_invViewProj.un.f4x4
+							base::float4x4_inverse(&m_invViewProj.un.f4x4
 								, &m_viewProj[_view].un.f4x4
 								);
 						}
@@ -212,7 +212,7 @@ namespace bgfx
 						_renderer->setShaderUniform4x4f(flags
 							, predefined.m_loc
 							, m_invViewProj.un.val
-							, bx::uint32_min(mtxRegs, predefined.m_count)
+							, base::uint32_min(mtxRegs, predefined.m_count)
 							);
 					}
 					break;
@@ -223,7 +223,7 @@ namespace bgfx
 						_renderer->setShaderUniform4x4f(flags
 							, predefined.m_loc
 							, model.un.val
-							, bx::uint32_min(_draw.m_numMatrices*mtxRegs, predefined.m_count)
+							, base::uint32_min(_draw.m_numMatrices*mtxRegs, predefined.m_count)
 							);
 					}
 					break;
@@ -232,14 +232,14 @@ namespace bgfx
 					{
 						Matrix4 modelView;
 						const Matrix4& model = frameCache.m_matrixCache.m_cache[_draw.m_startMatrix];
-						bx::model4x4_mul(&modelView.un.f4x4
+						base::model4x4_mul(&modelView.un.f4x4
 							, &model.un.f4x4
 							, &m_view[_view].un.f4x4
 							);
 						_renderer->setShaderUniform4x4f(flags
 							, predefined.m_loc
 							, modelView.un.val
-							, bx::uint32_min(mtxRegs, predefined.m_count)
+							, base::uint32_min(mtxRegs, predefined.m_count)
 							);
 					}
 					break;
@@ -248,14 +248,14 @@ namespace bgfx
 					{
 						Matrix4 modelViewProj;
 						const Matrix4& model = frameCache.m_matrixCache.m_cache[_draw.m_startMatrix];
-						bx::model4x4_mul_viewproj4x4(&modelViewProj.un.f4x4
+						base::model4x4_mul_viewproj4x4(&modelViewProj.un.f4x4
 							, &model.un.f4x4
 							, &m_viewProj[_view].un.f4x4
 							);
 						_renderer->setShaderUniform4x4f(flags
 							, predefined.m_loc
 							, modelViewProj.un.val
-							, bx::uint32_min(mtxRegs, predefined.m_count)
+							, base::uint32_min(mtxRegs, predefined.m_count)
 							);
 					}
 					break;
@@ -271,14 +271,14 @@ namespace bgfx
 					break;
 
 				default:
-					BX_ASSERT(false, "predefined %d not handled", predefined.m_type);
+					BASE_ASSERT(false, "predefined %d not handled", predefined.m_type);
 					break;
 				}
 			}
 		}
 
-		Matrix4  m_viewTmp[BGFX_CONFIG_MAX_VIEWS];
-		Matrix4  m_viewProj[BGFX_CONFIG_MAX_VIEWS];
+		Matrix4  m_viewTmp[GRAPHICS_CONFIG_MAX_VIEWS];
+		Matrix4  m_viewProj[GRAPHICS_CONFIG_MAX_VIEWS];
 		Matrix4* m_view;
 		Rect     m_rect;
 		Matrix4  m_invView;
@@ -304,7 +304,7 @@ namespace bgfx
 				handle = m_alloc.alloc();
 			}
 
-			BX_ASSERT(UINT16_MAX != handle, "Failed to find handle.");
+			BASE_ASSERT(UINT16_MAX != handle, "Failed to find handle.");
 
 			Data& data = m_data[handle];
 			data.m_hash   = _key;
@@ -312,7 +312,7 @@ namespace bgfx
 			data.m_parent = _parent;
 			m_hashMap.insert(stl::make_pair(_key, handle) );
 
-			return bx::addressOf(m_data[handle].m_value);
+			return base::addressOf(m_data[handle].m_value);
 		}
 
 		Ty* find(uint64_t _key)
@@ -322,7 +322,7 @@ namespace bgfx
 			{
 				uint16_t handle = it->second;
 				m_alloc.touch(handle);
-				return bx::addressOf(m_data[handle].m_value);
+				return base::addressOf(m_data[handle].m_value);
 			}
 
 			return NULL;
@@ -392,7 +392,7 @@ namespace bgfx
 	private:
 		typedef stl::unordered_map<uint64_t, uint16_t> HashMap;
 		HashMap m_hashMap;
-		bx::HandleAllocLruT<MaxHandleT> m_alloc;
+		base::HandleAllocLruT<MaxHandleT> m_alloc;
 		struct Data
 		{
 			uint64_t m_hash;
@@ -462,7 +462,7 @@ namespace bgfx
 			; streamMask >>= 1, idx += 1
 			)
 		{
-			const uint32_t ntz = bx::uint32_cnttz(streamMask);
+			const uint32_t ntz = base::uint32_cnttz(streamMask);
 			streamMask >>= ntz;
 			idx         += ntz;
 
@@ -479,13 +479,13 @@ namespace bgfx
 	template<typename Ty>
 	struct Profiler
 	{
-		Profiler(Frame* _frame, Ty& _gpuTimer, const char (*_viewName)[BGFX_CONFIG_MAX_VIEW_NAME], bool _enabled = true)
+		Profiler(Frame* _frame, Ty& _gpuTimer, const char (*_viewName)[GRAPHICS_CONFIG_MAX_VIEW_NAME], bool _enabled = true)
 			: m_viewName(_viewName)
 			, m_frame(_frame)
 			, m_gpuTimer(_gpuTimer)
 			, m_queryIdx(UINT32_MAX)
 			, m_numViews(0)
-			, m_enabled(_enabled && 0 != (_frame->m_debug & BGFX_DEBUG_PROFILER) )
+			, m_enabled(_enabled && 0 != (_frame->m_debug & GRAPHICS_DEBUG_PROFILER) )
 		{
 		}
 
@@ -499,14 +499,14 @@ namespace bgfx
 			if (m_enabled)
 			{
 				ViewStats& viewStats = m_frame->m_perfStats.viewStats[m_numViews];
-				viewStats.cpuTimeBegin = bx::getHPCounter();
+				viewStats.cpuTimeBegin = base::getHPCounter();
 
 				m_queryIdx = m_gpuTimer.begin(_view, m_frame->m_frameNum);
 
 				viewStats.view = ViewId(_view);
-				bx::strCopy(viewStats.name
-					, BGFX_CONFIG_MAX_VIEW_NAME
-					, &m_viewName[_view][BGFX_CONFIG_MAX_VIEW_NAME_RESERVED]
+				base::strCopy(viewStats.name
+					, GRAPHICS_CONFIG_MAX_VIEW_NAME
+					, &m_viewName[_view][GRAPHICS_CONFIG_MAX_VIEW_NAME_RESERVED]
 					);
 			}
 		}
@@ -521,7 +521,7 @@ namespace bgfx
 				ViewStats& viewStats = m_frame->m_perfStats.viewStats[m_numViews];
 				const typename Ty::Result& result = m_gpuTimer.m_result[viewStats.view];
 
-				viewStats.cpuTimeEnd = bx::getHPCounter();
+				viewStats.cpuTimeEnd = base::getHPCounter();
 				viewStats.gpuTimeBegin = result.m_begin;
 				viewStats.gpuTimeEnd = result.m_end;
 				viewStats.gpuFrameNum = result.m_frameNum;
@@ -531,7 +531,7 @@ namespace bgfx
 			}
 		}
 
-		const char (*m_viewName)[BGFX_CONFIG_MAX_VIEW_NAME];
+		const char (*m_viewName)[GRAPHICS_CONFIG_MAX_VIEW_NAME];
 		Frame*   m_frame;
 		Ty&      m_gpuTimer;
 		uint32_t m_queryIdx;
@@ -539,6 +539,6 @@ namespace bgfx
 		bool     m_enabled;
 	};
 
-} // namespace bgfx
+} // namespace graphics
 
-#endif // BGFX_RENDERER_H_HEADER_GUARD
+#endif // GRAPHICS_RENDERER_H_HEADER_GUARD

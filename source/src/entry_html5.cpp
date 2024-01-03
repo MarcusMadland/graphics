@@ -1,13 +1,13 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
 #include "entry_p.h"
 
-#if BX_PLATFORM_EMSCRIPTEN
+#if BASE_PLATFORM_EMSCRIPTEN
 
-#include <bgfx/platform.h>
+#include <graphics/platform.h>
 
 #include <emscripten.h>
 #include <emscripten/html5.h>
@@ -18,15 +18,15 @@ extern "C" void entry_emscripten_yield()
 }
 
 #define _EMSCRIPTEN_CHECK(_check, _call)                                                                  \
-	BX_MACRO_BLOCK_BEGIN                                                                                  \
+	BASE_MACRO_BLOCK_BEGIN                                                                                  \
 		EMSCRIPTEN_RESULT __result__ = _call;                                                             \
 		_check(EMSCRIPTEN_RESULT_SUCCESS == __result__, #_call " FAILED 0x%08x\n", (uint32_t)__result__); \
-		BX_UNUSED(__result__);                                                                            \
-	BX_MACRO_BLOCK_END
+		BASE_UNUSED(__result__);                                                                            \
+	BASE_MACRO_BLOCK_END
 
-#define EMSCRIPTEN_CHECK(_call) _EMSCRIPTEN_CHECK(BX_ASSERT, _call)
+#define EMSCRIPTEN_CHECK(_call) _EMSCRIPTEN_CHECK(BASE_ASSERT, _call)
 
-namespace mrender
+namespace entry
 {
 	static uint8_t s_translateKey[256];
 
@@ -38,7 +38,7 @@ namespace mrender
 			, m_my(0)
 			, m_scroll(0)
 		{
-			bx::memSet(s_translateKey, 0, sizeof(s_translateKey));
+			base::memSet(s_translateKey, 0, sizeof(s_translateKey));
 			s_translateKey[27]             = Key::Esc;
 			s_translateKey[uint8_t('\n')]  =
 			s_translateKey[uint8_t('\r')]  = Key::Return;
@@ -147,7 +147,7 @@ namespace mrender
 
 	EM_BOOL Context::mouseCb(int32_t _eventType, const EmscriptenMouseEvent* _event, void* _userData)
 	{
-		BX_UNUSED(_userData);
+		BASE_UNUSED(_userData);
 
 		if (_event)
 		{
@@ -185,7 +185,7 @@ namespace mrender
 
 	EM_BOOL Context::wheelCb(int32_t _eventType, const EmscriptenWheelEvent* _event, void* _userData)
 	{
-		BX_UNUSED(_userData);
+		BASE_UNUSED(_userData);
 
 		if (_event)
 		{
@@ -274,7 +274,7 @@ namespace mrender
 
 	EM_BOOL Context::keyCb(int32_t _eventType, const EmscriptenKeyboardEvent* _event, void* _userData)
 	{
-		BX_UNUSED(_userData);
+		BASE_UNUSED(_userData);
 
 		if (_event)
 		{
@@ -314,19 +314,19 @@ namespace mrender
 
 	EM_BOOL Context::resizeCb(int32_t _eventType, const EmscriptenUiEvent* _event, void* _userData)
 	{
-		BX_UNUSED(_eventType, _event, _userData);
+		BASE_UNUSED(_eventType, _event, _userData);
 		return false;
 	}
 
 	EM_BOOL Context::canvasResizeCb(int32_t _eventType, const void* _reserved, void* _userData)
 	{
-		BX_UNUSED(_eventType, _reserved, _userData);
+		BASE_UNUSED(_eventType, _reserved, _userData);
 		return false;
 	}
 
 	EM_BOOL Context::focusCb(int32_t _eventType, const EmscriptenFocusEvent* _event, void* _userData)
 	{
-		BX_UNUSED(_event, _userData);
+		BASE_UNUSED(_event, _userData);
 
 		if (_event)
 		{
@@ -372,7 +372,7 @@ namespace mrender
 
 	WindowHandle createWindow(int32_t _x, int32_t _y, uint32_t _width, uint32_t _height, uint32_t _flags, const char* _title)
 	{
-		BX_UNUSED(_x, _y, _width, _height, _flags, _title);
+		BASE_UNUSED(_x, _y, _width, _height, _flags, _title);
 		WindowHandle handle = { UINT16_MAX };
 
 		return handle;
@@ -380,37 +380,37 @@ namespace mrender
 
 	void destroyWindow(WindowHandle _handle)
 	{
-		BX_UNUSED(_handle);
+		BASE_UNUSED(_handle);
 	}
 
 	void setWindowPos(WindowHandle _handle, int32_t _x, int32_t _y)
 	{
-		BX_UNUSED(_handle, _x, _y);
+		BASE_UNUSED(_handle, _x, _y);
 	}
 
 	void setWindowSize(WindowHandle _handle, uint32_t _width, uint32_t _height)
 	{
-		BX_UNUSED(_handle, _width, _height);
+		BASE_UNUSED(_handle, _width, _height);
 	}
 
 	void setWindowTitle(WindowHandle _handle, const char* _title)
 	{
-		BX_UNUSED(_handle, _title);
+		BASE_UNUSED(_handle, _title);
 	}
 
 	void setWindowFlags(WindowHandle _handle, uint32_t _flags, bool _enabled)
 	{
-		BX_UNUSED(_handle, _flags, _enabled);
+		BASE_UNUSED(_handle, _flags, _enabled);
 	}
 
 	void toggleFullscreen(WindowHandle _handle)
 	{
-		BX_UNUSED(_handle);
+		BASE_UNUSED(_handle);
 	}
 
 	void setMouseLock(WindowHandle _handle, bool _lock)
 	{
-		BX_UNUSED(_handle, _lock);
+		BASE_UNUSED(_handle, _lock);
 	}
 
 	void* getNativeWindowHandle(WindowHandle _handle)
@@ -431,8 +431,8 @@ namespace mrender
 
 int main(int _argc, const char* const* _argv)
 {
-	using namespace mrender;
+	using namespace graphics;
 	return s_ctx.run(_argc, _argv);
 }
 
-#endif // BX_PLATFORM_EMSCRIPTEN
+#endif // BASE_PLATFORM_EMSCRIPTEN

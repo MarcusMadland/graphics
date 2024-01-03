@@ -1,17 +1,17 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_RENDERDOC_H_HEADER_GUARD
-#define BGFX_RENDERDOC_H_HEADER_GUARD
+#ifndef GRAPHICS_RENDERDOC_H_HEADER_GUARD
+#define GRAPHICS_RENDERDOC_H_HEADER_GUARD
 
-namespace bgfx
+namespace graphics
 {
 	void* loadRenderDoc();
 	void unloadRenderDoc(void*);
 	void renderDocTriggerCapture();
 
-} // namespace bgfx
+} // namespace graphics
 
-#endif // BGFX_RENDERDOC_H_HEADER_GUARD
+#endif // GRAPHICS_RENDERDOC_H_HEADER_GUARD

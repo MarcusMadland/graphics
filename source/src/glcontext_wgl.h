@@ -1,16 +1,16 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_GLCONTEXT_WGL_H_HEADER_GUARD
-#define BGFX_GLCONTEXT_WGL_H_HEADER_GUARD
+#ifndef GRAPHICS_GLCONTEXT_WGL_H_HEADER_GUARD
+#define GRAPHICS_GLCONTEXT_WGL_H_HEADER_GUARD
 
-#if BGFX_USE_WGL
+#if GRAPHICS_USE_WGL
 
 #include <wgl/wglext.h>
 
-namespace bgfx { namespace gl
+namespace graphics { namespace gl
 {
 typedef PROC (APIENTRYP PFNWGLGETPROCADDRESSPROC) (LPCSTR lpszProc);
 typedef BOOL (APIENTRYP PFNWGLMAKECURRENTPROC) (HDC hdc, HGLRC hglrc);
@@ -96,8 +96,8 @@ typedef void (APIENTRYP PFNGLSTENCILOPPROC) (GLenum fail, GLenum zfail, GLenum z
 		// true when MSAA is handled by the context instead of using MSAA FBO
 		bool m_msaaContext;
 	};
-} /* namespace gl */ } // namespace bgfx
+} /* namespace gl */ } // namespace graphics
 
-#endif // BGFX_USE_WGL
+#endif // GRAPHICS_USE_WGL
 
-#endif // BGFX_GLCONTEXT_WGL_H_HEADER_GUARD
+#endif // GRAPHICS_GLCONTEXT_WGL_H_HEADER_GUARD

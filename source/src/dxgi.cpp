@@ -1,23 +1,23 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include "bgfx_p.h"
+#include "graphics_p.h"
 
-#if BGFX_CONFIG_RENDERER_DIRECT3D11 || (BGFX_CONFIG_RENDERER_DIRECT3D12 && !BX_PLATFORM_LINUX)
+#if GRAPHICS_CONFIG_RENDERER_DIRECT3D11 || (GRAPHICS_CONFIG_RENDERER_DIRECT3D12 && !BASE_PLATFORM_LINUX)
 
 #include "dxgi.h"
 #include "renderer_d3d.h"
 
-#if !BX_PLATFORM_WINDOWS && !BX_PLATFORM_LINUX
+#if !BASE_PLATFORM_WINDOWS && !BASE_PLATFORM_LINUX
 #	include <inspectable.h>
-#	if BX_PLATFORM_WINRT
+#	if BASE_PLATFORM_WINRT
 #		include <windows.ui.xaml.media.dxinterop.h>
-#	endif // BX_PLATFORM_WINRT
-#endif // !BX_PLATFORM_WINDOWS
+#	endif // BASE_PLATFORM_WINRT
+#endif // !BASE_PLATFORM_WINDOWS
 
-#if BX_PLATFORM_WINRT
+#if BASE_PLATFORM_WINRT
 // Copied from <microsoft.ui.xaml.media.dxinterop.h> from Windows App SDK
 // Put in a namespace to avoid conflict with <windows.ui.xaml.media.dxinterop.h>
 namespace WinUI3
@@ -42,20 +42,20 @@ namespace WinUI3
 			_In_  IDXGISwapChain *swapChain) = 0;
 	};
 }
-#endif // BX_PLATFORM_WINRT
+#endif // BASE_PLATFORM_WINRT
 
-namespace bgfx
+namespace graphics
 {
-	BX_PRAGMA_DIAGNOSTIC_PUSH();
-	BX_PRAGMA_DIAGNOSTIC_IGNORED_GCC("-Wunused-variable");
-	BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG("-Wunused-const-variable");
-	BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG("-Wunneeded-internal-declaration");
+	BASE_PRAGMA_DIAGNOSTIC_PUSH();
+	BASE_PRAGMA_DIAGNOSTIC_IGNORED_GCC("-Wunused-variable");
+	BASE_PRAGMA_DIAGNOSTIC_IGNORED_CLANG("-Wunused-const-variable");
+	BASE_PRAGMA_DIAGNOSTIC_IGNORED_CLANG("-Wunneeded-internal-declaration");
 
-#if BX_PLATFORM_WINDOWS
+#if BASE_PLATFORM_WINDOWS
 	static PFN_CREATE_DXGI_FACTORY  CreateDXGIFactory;
 	static PFN_GET_DEBUG_INTERFACE  DXGIGetDebugInterface;
 	static PFN_GET_DEBUG_INTERFACE1 DXGIGetDebugInterface1;
-#endif // BX_PLATFORM_WINDOWS
+#endif // BASE_PLATFORM_WINDOWS
 
 	static const GUID IID_IDXGIFactory    = { 0x7b7166ec, 0x21c7, 0x44ae, { 0xb2, 0x1a, 0xc9, 0xae, 0x32, 0x1a, 0xe3, 0x69 } };
 	static const GUID IID_IDXGIFactory2   = { 0x50c83a1c, 0xe072, 0x4c48, { 0x87, 0xb0, 0x36, 0x30, 0xfa, 0x36, 0xa6, 0xd0 } };
@@ -74,7 +74,7 @@ namespace bgfx
 	static const GUID IID_IDXGISwapChain4 = { 0x3d585d5a, 0xbd4a, 0x489e, { 0xb1, 0xf4, 0x3d, 0xbc, 0xb6, 0x45, 0x2f, 0xfb } };
 	static const GUID IID_IDXGIOutput6    = { 0x068346e8, 0xaaec, 0x4b84, { 0xad, 0xd7, 0x13, 0x7f, 0x51, 0x3f, 0x77, 0xa1 } };
 
-	BX_PRAGMA_DIAGNOSTIC_POP();
+	BASE_PRAGMA_DIAGNOSTIC_POP();
 
 	static const DXGI_COLOR_SPACE_TYPE s_colorSpace[] =
 	{
@@ -103,7 +103,7 @@ namespace bgfx
 		"RGB,    0-255, 2084, Image, BT.2020, n/a",    // DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020
 		"YCbCr, 16-235, 2.2,  Video, BT.2020, n/a",    // DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_TOPLEFT_P2020
 		"YCbCr, 16-235, 2084, Video, BT.2020, n/a",    // DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020
-#if BX_PLATFORM_WINDOWS
+#if BASE_PLATFORM_WINDOWS
 		"RGB,    0-255, 2.2,  Image, BT.2020, n/a",    // DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P2020
 		"YCbCr, 16-235, HLG,  Video, BT.2020, n/a",    // DXGI_COLOR_SPACE_YCBCR_STUDIO_GHLG_TOPLEFT_P2020
 		"YCbCr,  0-255, HLG,  Video, BT.2020, n/a",    // DXGI_COLOR_SPACE_YCBCR_FULL_GHLG_TOPLEFT_P2020
@@ -112,17 +112,17 @@ namespace bgfx
 //		"YCbCr, 16-235, 2.4,  Video, BT.709,  n/a",    // DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P709
 //		"YCbCr, 16-235, 2.4,  Video, BT.2020, n/a",    // DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P2020
 //		"YCbCr, 16-235, 2.4,  Video, BT.2020, n/a",    // DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_TOPLEFT_P2020
-#endif // BX_PLATFORM_WINDOWS
+#endif // BASE_PLATFORM_WINDOWS
 		"Custom",
 	};
 	static const DXGI_COLOR_SPACE_TYPE kDxgiLastColorSpace =
-#if BX_PLATFORM_WINDOWS
+#if BASE_PLATFORM_WINDOWS
 		DXGI_COLOR_SPACE_YCBCR_FULL_GHLG_TOPLEFT_P2020
 #else
 		DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020
-#endif // BX_PLATFORM_WINDOWS
+#endif // BASE_PLATFORM_WINDOWS
 		;
-	BX_STATIC_ASSERT(BX_COUNTOF(s_colorSpaceStr) == kDxgiLastColorSpace+2, "Colorspace string table mismatch with DXGI_COLOR_SPACE_*.");
+	BASE_STATIC_ASSERT(BASE_COUNTOF(s_colorSpaceStr) == kDxgiLastColorSpace+2, "Colorspace string table mismatch with DXGI_COLOR_SPACE_*.");
 
 	static const GUID s_dxgiDeviceIIDs[] =
 	{
@@ -138,7 +138,7 @@ namespace bgfx
 		IID_IDXGISwapChain3,
 	};
 
-#if BX_PLATFORM_WINRT
+#if BASE_PLATFORM_WINRT
 	template<typename T>
 	static bool trySetSwapChain(IInspectable* nativeWindow, Dxgi::SwapChainI* swapChain, HRESULT* hr)
 	{
@@ -174,17 +174,17 @@ namespace bgfx
 		{
 			if (FAILED(hr))
 			{
-				BX_TRACE("Failed to SetSwapChain, hr %x.");
+				BASE_TRACE("Failed to SetSwapChain, hr %x.");
 			}
 		}
 		else
 		{
-			BX_TRACE("No available interface on native window to SetSwapChain.");
+			BASE_TRACE("No available interface on native window to SetSwapChain.");
 		}
 
 		return hr;
 	}
-#endif // BX_PLATFORM_WINRT
+#endif // BASE_PLATFORM_WINRT
 
 	DxgiSwapChain::DxgiSwapChain()
 	{
@@ -203,68 +203,68 @@ namespace bgfx
 
 	bool Dxgi::init(Caps& _caps)
 	{
-#if BX_PLATFORM_LINUX || BX_PLATFORM_WINDOWS
+#if BASE_PLATFORM_LINUX || BASE_PLATFORM_WINDOWS
 
 		const char* dxgiDllName =
-#if BX_PLATFORM_LINUX
+#if BASE_PLATFORM_LINUX
 				"dxgi.so"
 #else
 				"dxgi.dll"
-#endif // BX_PLATFORM_LINUX
+#endif // BASE_PLATFORM_LINUX
 				;
-		m_dxgiDll = bx::dlopen(dxgiDllName);
+		m_dxgiDll = base::dlopen(dxgiDllName);
 
 		if (NULL == m_dxgiDll)
 		{
-			BX_TRACE("Init error: Failed to load %s.", dxgiDllName);
+			BASE_TRACE("Init error: Failed to load %s.", dxgiDllName);
 			return false;
 		}
 
-#	if BX_PLATFORM_WINDOWS
-		m_dxgiDebugDll = bx::dlopen("dxgidebug.dll");
+#	if BASE_PLATFORM_WINDOWS
+		m_dxgiDebugDll = base::dlopen("dxgidebug.dll");
 
 		if (NULL != m_dxgiDebugDll)
 		{
-			DXGIGetDebugInterface  = (PFN_GET_DEBUG_INTERFACE )bx::dlsym(m_dxgiDebugDll, "DXGIGetDebugInterface");
-			DXGIGetDebugInterface1 = (PFN_GET_DEBUG_INTERFACE1)bx::dlsym(m_dxgiDebugDll, "DXGIGetDebugInterface1");
+			DXGIGetDebugInterface  = (PFN_GET_DEBUG_INTERFACE )base::dlsym(m_dxgiDebugDll, "DXGIGetDebugInterface");
+			DXGIGetDebugInterface1 = (PFN_GET_DEBUG_INTERFACE1)base::dlsym(m_dxgiDebugDll, "DXGIGetDebugInterface1");
 			if (NULL == DXGIGetDebugInterface
 			&&  NULL == DXGIGetDebugInterface1)
 			{
-				bx::dlclose(m_dxgiDebugDll);
+				base::dlclose(m_dxgiDebugDll);
 				m_dxgiDebugDll = NULL;
 			}
 		}
 
-		CreateDXGIFactory = (PFN_CREATE_DXGI_FACTORY)bx::dlsym(m_dxgiDll, "CreateDXGIFactory1");
+		CreateDXGIFactory = (PFN_CREATE_DXGI_FACTORY)base::dlsym(m_dxgiDll, "CreateDXGIFactory1");
 
 		if (NULL == CreateDXGIFactory)
 		{
-			CreateDXGIFactory = (PFN_CREATE_DXGI_FACTORY)bx::dlsym(m_dxgiDll, "CreateDXGIFactory");
+			CreateDXGIFactory = (PFN_CREATE_DXGI_FACTORY)base::dlsym(m_dxgiDll, "CreateDXGIFactory");
 		}
 
 		if (NULL == CreateDXGIFactory)
 		{
-			BX_TRACE("Init error: Function CreateDXGIFactory not found.");
+			BASE_TRACE("Init error: Function CreateDXGIFactory not found.");
 			return false;
 		}
-#	endif // BX_PLATFORM_WINDOWS
-#endif // BX_PLATFORM_WINDOWS
+#	endif // BASE_PLATFORM_WINDOWS
+#endif // BASE_PLATFORM_WINDOWS
 
 		HRESULT hr = S_OK;
-#if BX_PLATFORM_WINRT
+#if BASE_PLATFORM_WINRT
 		// WinRT requires the IDXGIFactory2 interface, which isn't supported on older platforms
 		hr = CreateDXGIFactory1(IID_IDXGIFactory2, (void**)&m_factory);
-#elif BX_PLATFORM_WINDOWS
+#elif BASE_PLATFORM_WINDOWS
 		hr = CreateDXGIFactory(IID_IDXGIFactory, (void**)&m_factory);
-#endif // BX_PLATFORM_*
+#endif // BASE_PLATFORM_*
 
 		if (FAILED(hr))
 		{
-			BX_TRACE("Init error: Unable to create DXGI factory.");
+			BASE_TRACE("Init error: Unable to create DXGI factory.");
 			return false;
 		}
 
-		m_driverType = BGFX_PCI_ID_SOFTWARE_RASTERIZER == _caps.vendorId
+		m_driverType = GRAPHICS_PCI_ID_SOFTWARE_RASTERIZER == _caps.vendorId
 			? D3D_DRIVER_TYPE_WARP
 			: D3D_DRIVER_TYPE_HARDWARE
 			;
@@ -273,7 +273,7 @@ namespace bgfx
 		{
 			AdapterI* adapter;
 			for (uint32_t ii = 0
-				; DXGI_ERROR_NOT_FOUND != m_factory->EnumAdapters(ii, reinterpret_cast<IDXGIAdapter**>(&adapter) ) && ii < BX_COUNTOF(_caps.gpu)
+				; DXGI_ERROR_NOT_FOUND != m_factory->EnumAdapters(ii, reinterpret_cast<IDXGIAdapter**>(&adapter) ) && ii < BASE_COUNTOF(_caps.gpu)
 				; ++ii
 				)
 			{
@@ -282,12 +282,12 @@ namespace bgfx
 					hr = adapter->GetDesc(&desc);
 					if (SUCCEEDED(hr) )
 					{
-						BX_TRACE("Adapter #%d", ii);
+						BASE_TRACE("Adapter #%d", ii);
 
-						char description[BX_COUNTOF(desc.Description)];
-						wcstombs(description, desc.Description, BX_COUNTOF(desc.Description) );
-						BX_TRACE("\tDescription: %s", description);
-						BX_TRACE("\tVendorId: 0x%08x, DeviceId: 0x%08x, SubSysId: 0x%08x, Revision: 0x%08x"
+						char description[BASE_COUNTOF(desc.Description)];
+						wcstombs(description, desc.Description, BASE_COUNTOF(desc.Description) );
+						BASE_TRACE("\tDescription: %s", description);
+						BASE_TRACE("\tVendorId: 0x%08x, DeviceId: 0x%08x, SubSysId: 0x%08x, Revision: 0x%08x"
 							, desc.VendorId
 							, desc.DeviceId
 							, desc.SubSysId
@@ -295,15 +295,15 @@ namespace bgfx
 							);
 
 						char dedicatedVideo[16];
-						bx::prettify(dedicatedVideo, BX_COUNTOF(dedicatedVideo), desc.DedicatedVideoMemory);
+						base::prettify(dedicatedVideo, BASE_COUNTOF(dedicatedVideo), desc.DedicatedVideoMemory);
 
 						char dedicatedSystem[16];
-						bx::prettify(dedicatedSystem, BX_COUNTOF(dedicatedSystem), desc.DedicatedSystemMemory);
+						base::prettify(dedicatedSystem, BASE_COUNTOF(dedicatedSystem), desc.DedicatedSystemMemory);
 
 						char sharedSystem[16];
-						bx::prettify(sharedSystem, BX_COUNTOF(sharedSystem), desc.SharedSystemMemory);
+						base::prettify(sharedSystem, BASE_COUNTOF(sharedSystem), desc.SharedSystemMemory);
 
-						BX_TRACE("\tMemory: %s (video), %s (system), %s (shared)"
+						BASE_TRACE("\tMemory: %s (video), %s (system), %s (shared)"
 							, dedicatedVideo
 							, dedicatedSystem
 							, sharedSystem
@@ -315,8 +315,8 @@ namespace bgfx
 
 						if (NULL == m_adapter)
 						{
-							if ( (BGFX_PCI_ID_NONE != _caps.vendorId ||             0 != _caps.deviceId)
-							&&   (BGFX_PCI_ID_NONE == _caps.vendorId || desc.VendorId == _caps.vendorId)
+							if ( (GRAPHICS_PCI_ID_NONE != _caps.vendorId ||             0 != _caps.deviceId)
+							&&   (GRAPHICS_PCI_ID_NONE == _caps.vendorId || desc.VendorId == _caps.vendorId)
 							&&   (               0 == _caps.deviceId || desc.DeviceId == _caps.deviceId) )
 							{
 								m_adapter = adapter;
@@ -324,8 +324,8 @@ namespace bgfx
 								m_driverType = D3D_DRIVER_TYPE_UNKNOWN;
 							}
 
-							if (BX_ENABLED(BGFX_CONFIG_DEBUG_PERFHUD)
-							&&  !bx::strFind(description, "PerfHUD").isEmpty() )
+							if (BASE_ENABLED(GRAPHICS_CONFIG_DEBUG_PERFHUD)
+							&&  !base::strFind(description, "PerfHUD").isEmpty() )
 							{
 								m_adapter = adapter;
 								m_driverType = D3D_DRIVER_TYPE_REFERENCE;
@@ -346,21 +346,21 @@ namespace bgfx
 					hr = output->GetDesc(&outputDesc);
 					if (SUCCEEDED(hr) )
 					{
-						BX_TRACE("\tOutput #%d", jj);
+						BASE_TRACE("\tOutput #%d", jj);
 
-						char deviceName[BX_COUNTOF(outputDesc.DeviceName)];
-						wcstombs(deviceName, outputDesc.DeviceName, BX_COUNTOF(outputDesc.DeviceName) );
-						BX_TRACE("\t\t           DeviceName: %s", deviceName);
-						BX_TRACE("\t\t   DesktopCoordinates: %d, %d, %d, %d"
+						char deviceName[BASE_COUNTOF(outputDesc.DeviceName)];
+						wcstombs(deviceName, outputDesc.DeviceName, BASE_COUNTOF(outputDesc.DeviceName) );
+						BASE_TRACE("\t\t           DeviceName: %s", deviceName);
+						BASE_TRACE("\t\t   DesktopCoordinates: %d, %d, %d, %d"
 							, outputDesc.DesktopCoordinates.left
 							, outputDesc.DesktopCoordinates.top
 							, outputDesc.DesktopCoordinates.right
 							, outputDesc.DesktopCoordinates.bottom
 							);
-						BX_TRACE("\t\t    AttachedToDesktop: %d", outputDesc.AttachedToDesktop);
-						BX_TRACE("\t\t             Rotation: %d", outputDesc.Rotation);
+						BASE_TRACE("\t\t    AttachedToDesktop: %d", outputDesc.AttachedToDesktop);
+						BASE_TRACE("\t\t             Rotation: %d", outputDesc.Rotation);
 
-#if BX_PLATFORM_LINUX || BX_PLATFORM_WINDOWS
+#if BASE_PLATFORM_LINUX || BASE_PLATFORM_WINDOWS
 						IDXGIOutput6* output6;
 						hr = output->QueryInterface(IID_IDXGIOutput6, (void**)&output6);
 						if (SUCCEEDED(hr) )
@@ -369,18 +369,18 @@ namespace bgfx
 							hr = output6->GetDesc1(&desc);
 							if (SUCCEEDED(hr) )
 							{
-								BX_TRACE("\t\t         BitsPerColor: %d", desc.BitsPerColor);
-								BX_TRACE("\t\t          Color space: %s (colorspace, range, gamma, sitting, primaries, transform)"
-									, s_colorSpaceStr[bx::min<uint32_t>(desc.ColorSpace, kDxgiLastColorSpace+1)]
+								BASE_TRACE("\t\t         BitsPerColor: %d", desc.BitsPerColor);
+								BASE_TRACE("\t\t          Color space: %s (colorspace, range, gamma, sitting, primaries, transform)"
+									, s_colorSpaceStr[base::min<uint32_t>(desc.ColorSpace, kDxgiLastColorSpace+1)]
 									);
-								BX_TRACE("\t\t           RedPrimary: %f, %f", desc.RedPrimary[0],   desc.RedPrimary[1]);
-								BX_TRACE("\t\t         GreenPrimary: %f, %f", desc.GreenPrimary[0], desc.GreenPrimary[1]);
-								BX_TRACE("\t\t          BluePrimary: %f, %f", desc.BluePrimary[0],  desc.BluePrimary[1]);
-								BX_TRACE("\t\t           WhitePoint: %f, %f", desc.WhitePoint[0],   desc.WhitePoint[1]);
-								BX_TRACE("\t\t         MinLuminance: %f", desc.MinLuminance);
-								BX_TRACE("\t\t         MaxLuminance: %f", desc.MaxLuminance);
-								BX_TRACE("\t\tMaxFullFrameLuminance: %f", desc.MaxFullFrameLuminance);
-								BX_TRACE("\t\t          HDR support: %s", DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 == desc.ColorSpace ? "true" : "false");
+								BASE_TRACE("\t\t           RedPrimary: %f, %f", desc.RedPrimary[0],   desc.RedPrimary[1]);
+								BASE_TRACE("\t\t         GreenPrimary: %f, %f", desc.GreenPrimary[0], desc.GreenPrimary[1]);
+								BASE_TRACE("\t\t          BluePrimary: %f, %f", desc.BluePrimary[0],  desc.BluePrimary[1]);
+								BASE_TRACE("\t\t           WhitePoint: %f, %f", desc.WhitePoint[0],   desc.WhitePoint[1]);
+								BASE_TRACE("\t\t         MinLuminance: %f", desc.MinLuminance);
+								BASE_TRACE("\t\t         MaxLuminance: %f", desc.MaxLuminance);
+								BASE_TRACE("\t\tMaxFullFrameLuminance: %f", desc.MaxFullFrameLuminance);
+								BASE_TRACE("\t\t          HDR support: %s", DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 == desc.ColorSpace ? "true" : "false");
 
 								hdr10 |= DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 == desc.ColorSpace;
 							}
@@ -388,14 +388,14 @@ namespace bgfx
 							// BK - warn only because RenderDoc might be present.
 							DX_RELEASE_W(output6, 1);
 						}
-#endif // BX_PLATFORM_WINDOWS
+#endif // BASE_PLATFORM_WINDOWS
 
 						DX_RELEASE(output, 0);
 					}
 				}
 
-				_caps.supported |= hdr10 ? BGFX_CAPS_HDR10 : 0;
-				_caps.supported |= BX_ENABLED(BX_PLATFORM_WINRT) ? BGFX_CAPS_TRANSPARENT_BACKBUFFER : 0;
+				_caps.supported |= hdr10 ? GRAPHICS_CAPS_HDR10 : 0;
+				_caps.supported |= BASE_ENABLED(BASE_PLATFORM_WINRT) ? GRAPHICS_CAPS_TRANSPARENT_BACKBUFFER : 0;
 
 				DX_RELEASE(adapter, adapter == m_adapter ? 1 : 0);
 			}
@@ -403,18 +403,18 @@ namespace bgfx
 			if (NULL == m_adapter)
 			{
 				hr = m_factory->EnumAdapters(0, reinterpret_cast<IDXGIAdapter**>(&m_adapter) );
-				BX_WARN(SUCCEEDED(hr), "EnumAdapters failed 0x%08x.", hr);
+				BASE_WARN(SUCCEEDED(hr), "EnumAdapters failed 0x%08x.", hr);
 				m_driverType = D3D_DRIVER_TYPE_UNKNOWN;
 			}
 
-			bx::memSet(&m_adapterDesc, 0, sizeof(m_adapterDesc) );
+			base::memSet(&m_adapterDesc, 0, sizeof(m_adapterDesc) );
 			hr = m_adapter->GetDesc(&m_adapterDesc);
-			BX_WARN(SUCCEEDED(hr), "Adapter GetDesc failed 0x%08x.", hr);
+			BASE_WARN(SUCCEEDED(hr), "Adapter GetDesc failed 0x%08x.", hr);
 
 			m_adapter->EnumOutputs(0, &m_output);
 
 			_caps.vendorId = 0 == m_adapterDesc.VendorId
-				? BGFX_PCI_ID_SOFTWARE_RASTERIZER
+				? GRAPHICS_PCI_ID_SOFTWARE_RASTERIZER
 				: (uint16_t)m_adapterDesc.VendorId
 				;
 			_caps.deviceId = (uint16_t)m_adapterDesc.DeviceId;
@@ -429,10 +429,10 @@ namespace bgfx
 		DX_RELEASE(m_adapter, 0);
 		DX_RELEASE(m_factory, 0);
 
-		bx::dlclose(m_dxgiDebugDll);
+		base::dlclose(m_dxgiDebugDll);
 		m_dxgiDebugDll = NULL;
 
-		bx::dlclose(m_dxgiDll);
+		base::dlclose(m_dxgiDll);
 		m_dxgiDll = NULL;
 	}
 
@@ -440,19 +440,19 @@ namespace bgfx
 	{
 		IDXGIDevice* dxgiDevice = NULL;
 		HRESULT hr = E_FAIL;
-		for (uint32_t ii = 0; ii < BX_COUNTOF(s_dxgiDeviceIIDs) && FAILED(hr); ++ii)
+		for (uint32_t ii = 0; ii < BASE_COUNTOF(s_dxgiDeviceIIDs) && FAILED(hr); ++ii)
 		{
 			hr = _device->QueryInterface(s_dxgiDeviceIIDs[ii], (void**)&dxgiDevice);
-			BX_TRACE("DXGI device 11.%d, hr %x", BX_COUNTOF(s_dxgiDeviceIIDs) - 1 - ii, hr);
+			BASE_TRACE("DXGI device 11.%d, hr %x", BASE_COUNTOF(s_dxgiDeviceIIDs) - 1 - ii, hr);
 		}
 
 		if (NULL == m_factory)
 		{
 			DX_CHECK(dxgiDevice->GetAdapter(reinterpret_cast<IDXGIAdapter**>(&m_adapter) ) );
 
-			bx::memSet(&m_adapterDesc, 0, sizeof(m_adapterDesc) );
+			base::memSet(&m_adapterDesc, 0, sizeof(m_adapterDesc) );
 			hr = m_adapter->GetDesc(&m_adapterDesc);
-			BX_WARN(SUCCEEDED(hr), "Adapter GetDesc failed 0x%08x.", hr);
+			BASE_WARN(SUCCEEDED(hr), "Adapter GetDesc failed 0x%08x.", hr);
 
 			DX_CHECK(m_adapter->GetParent(IID_IDXGIFactory2, (void**)&m_factory) );
 		}
@@ -466,7 +466,7 @@ namespace bgfx
 
 		uint32_t scdFlags = _scd.flags;
 
-#if BX_PLATFORM_LINUX || BX_PLATFORM_WINDOWS
+#if BASE_PLATFORM_LINUX || BASE_PLATFORM_WINDOWS
 		IDXGIFactory5* factory5;
 		hr = m_factory->QueryInterface(IID_IDXGIFactory5, (void**)&factory5);
 
@@ -476,7 +476,7 @@ namespace bgfx
 			// BK - CheckFeatureSupport with DXGI_FEATURE_PRESENT_ALLOW_TEARING
 			//      will crash on pre Windows 8. Issue #1356.
 			hr = factory5->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing) );
-			BX_TRACE("Allow tearing is %ssupported.", allowTearing ? "" : "not ");
+			BASE_TRACE("Allow tearing is %ssupported.", allowTearing ? "" : "not ");
 
 			scdFlags |= allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 			scdFlags |= false
@@ -555,16 +555,16 @@ namespace bgfx
 				return hr;
 			}
 
-#	if BX_PLATFORM_WINRT
+#	if BASE_PLATFORM_WINRT
 			IInspectable* nativeWindow = reinterpret_cast<IInspectable*>(_scd.nwh);
 			hr = setSwapChain(nativeWindow, *_swapChain);
 			if (FAILED(hr))
 			{
 				return hr;
 			}
-#	endif // BX_PLATFORM_WINRT
+#	endif // BASE_PLATFORM_WINRT
 		}
-#endif // BX_PLATFORM_WINDOWS
+#endif // BASE_PLATFORM_WINDOWS
 
 		if (SUCCEEDED(hr) )
 		{
@@ -575,7 +575,7 @@ namespace bgfx
 				hr = dxgiDevice1->SetMaximumFrameLatency(_scd.maxFrameLatency);
 				if (FAILED(hr))
 				{
-					BX_TRACE("Failed to set maximum frame latency, hr 0x%08x", hr);
+					BASE_TRACE("Failed to set maximum frame latency, hr 0x%08x", hr);
 					hr = S_OK;
 				}
 				DX_RELEASE_I(dxgiDevice1);
@@ -584,30 +584,30 @@ namespace bgfx
 
 		if (FAILED(hr))
 		{
-			BX_TRACE("Failed to create swap chain.");
+			BASE_TRACE("Failed to create swap chain.");
 			return hr;
 		}
 
-#if BX_PLATFORM_LINUX || BX_PLATFORM_WINDOWS
+#if BASE_PLATFORM_LINUX || BASE_PLATFORM_WINDOWS
 		if (SUCCEEDED(hr) )
 		{
-			for (uint32_t ii = 0; ii < BX_COUNTOF(s_dxgiSwapChainIIDs); ++ii)
+			for (uint32_t ii = 0; ii < BASE_COUNTOF(s_dxgiSwapChainIIDs); ++ii)
 			{
 				IDXGISwapChain1* swapChain;
 				hr = (*_swapChain)->QueryInterface(s_dxgiSwapChainIIDs[ii], (void**)&swapChain);
-				BX_TRACE("DXGI swap chain %d, hr %x", 4-ii, hr);
+				BASE_TRACE("DXGI swap chain %d, hr %x", 4-ii, hr);
 
 				if (SUCCEEDED(hr) )
 				{
 					DX_RELEASE(*_swapChain, 1);
 					*_swapChain = reinterpret_cast<SwapChainI*>(swapChain);
 
-					BX_TRACE("Color space support:");
-					for (uint32_t jj = 0; jj < BX_COUNTOF(s_colorSpace); ++jj)
+					BASE_TRACE("Color space support:");
+					for (uint32_t jj = 0; jj < BASE_COUNTOF(s_colorSpace); ++jj)
 					{
 						uint32_t colorSpaceSupport;
 						reinterpret_cast<IDXGISwapChain3*>(*_swapChain)->CheckColorSpaceSupport(s_colorSpace[jj], &colorSpaceSupport);
-						BX_TRACE("\t%2d: \"%-20s\", 0x%08x, %s"
+						BASE_TRACE("\t%2d: \"%-20s\", 0x%08x, %s"
 							, s_colorSpace[jj]
 							, s_colorSpaceStr[s_colorSpace[jj]]
 							, colorSpaceSupport
@@ -621,14 +621,14 @@ namespace bgfx
 				}
 			}
 		}
-#endif // BX_PLATFORM_LINUX || BX_PLATFORM_WINDOWS
+#endif // BASE_PLATFORM_LINUX || BASE_PLATFORM_WINDOWS
 
 		updateHdr10(*_swapChain, _scd);
 
 		return S_OK;
 	}
 
-#if BX_PLATFORM_WINRT
+#if BASE_PLATFORM_WINRT
 	HRESULT Dxgi::removeSwapChain(const SwapChainDesc& _scd)
 	{
 		IInspectable* nativeWindow = reinterpret_cast<IInspectable*>(_scd.nwh);
@@ -638,7 +638,7 @@ namespace bgfx
 
 	void Dxgi::updateHdr10(SwapChainI* _swapChain, const SwapChainDesc& _scd)
 	{
-#if BX_PLATFORM_WINDOWS
+#if BASE_PLATFORM_WINDOWS
 		::IDXGISwapChain4* swapChain4;
 		HRESULT hr = _swapChain->QueryInterface(IID_IDXGISwapChain4, (void**)&swapChain4);
 
@@ -667,18 +667,18 @@ namespace bgfx
 						hr = output6->GetDesc1(&desc);
 						if (SUCCEEDED(hr) )
 						{
-							BX_TRACE("Display specs:");
-							BX_TRACE("\t         BitsPerColor: %d", desc.BitsPerColor);
-							BX_TRACE("\t          Color space: %s (colorspace, range, gamma, sitting, primaries, transform)"
-								, s_colorSpaceStr[bx::min<uint32_t>(desc.ColorSpace, kDxgiLastColorSpace+1)]
+							BASE_TRACE("Display specs:");
+							BASE_TRACE("\t         BitsPerColor: %d", desc.BitsPerColor);
+							BASE_TRACE("\t          Color space: %s (colorspace, range, gamma, sitting, primaries, transform)"
+								, s_colorSpaceStr[base::min<uint32_t>(desc.ColorSpace, kDxgiLastColorSpace+1)]
 								);
-							BX_TRACE("\t           RedPrimary: %f, %f", desc.RedPrimary[0],   desc.RedPrimary[1]);
-							BX_TRACE("\t         GreenPrimary: %f, %f", desc.GreenPrimary[0], desc.GreenPrimary[1]);
-							BX_TRACE("\t          BluePrimary: %f, %f", desc.BluePrimary[0],  desc.BluePrimary[1]);
-							BX_TRACE("\t           WhitePoint: %f, %f", desc.WhitePoint[0],   desc.WhitePoint[1]);
-							BX_TRACE("\t         MinLuminance: %f", desc.MinLuminance);
-							BX_TRACE("\t         MaxLuminance: %f", desc.MaxLuminance);
-							BX_TRACE("\tMaxFullFrameLuminance: %f", desc.MaxFullFrameLuminance);
+							BASE_TRACE("\t           RedPrimary: %f, %f", desc.RedPrimary[0],   desc.RedPrimary[1]);
+							BASE_TRACE("\t         GreenPrimary: %f, %f", desc.GreenPrimary[0], desc.GreenPrimary[1]);
+							BASE_TRACE("\t          BluePrimary: %f, %f", desc.BluePrimary[0],  desc.BluePrimary[1]);
+							BASE_TRACE("\t           WhitePoint: %f, %f", desc.WhitePoint[0],   desc.WhitePoint[1]);
+							BASE_TRACE("\t         MinLuminance: %f", desc.MinLuminance);
+							BASE_TRACE("\t         MaxLuminance: %f", desc.MaxLuminance);
+							BASE_TRACE("\tMaxFullFrameLuminance: %f", desc.MaxFullFrameLuminance);
 						}
 
 						DX_RELEASE(output6, 1);
@@ -706,8 +706,8 @@ namespace bgfx
 			DX_RELEASE(swapChain4, 1);
 		}
 #else
-		BX_UNUSED(_swapChain, _scd);
-#endif // BX_PLATFORM_WINDOWS
+		BASE_UNUSED(_swapChain, _scd);
+#endif // BASE_PLATFORM_WINDOWS
 	}
 
 	HRESULT Dxgi::resizeBuffers(SwapChainI* _swapChain, const SwapChainDesc& _scd, const uint32_t* _nodeMask, IUnknown* const* _presentQueue)
@@ -716,7 +716,7 @@ namespace bgfx
 
 		uint32_t scdFlags = _scd.flags;
 
-#if BX_PLATFORM_LINUX || BX_PLATFORM_WINDOWS
+#if BASE_PLATFORM_LINUX || BASE_PLATFORM_WINDOWS
 		IDXGIFactory5* factory5;
 		hr = m_factory->QueryInterface(IID_IDXGIFactory5, (void**)&factory5);
 
@@ -726,7 +726,7 @@ namespace bgfx
 			// BK - CheckFeatureSupport with DXGI_FEATURE_PRESENT_ALLOW_TEARING
 			//      will crash on pre Windows 8. Issue #1356.
 			hr = factory5->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
-			BX_TRACE("Allow tearing is %ssupported.", allowTearing ? "" : "not ");
+			BASE_TRACE("Allow tearing is %ssupported.", allowTearing ? "" : "not ");
 
 			scdFlags |= allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 			scdFlags |= false
@@ -753,9 +753,9 @@ namespace bgfx
 				);
 		}
 		else
-#endif // BX_PLATFORM_WINDOWS
+#endif // BASE_PLATFORM_WINDOWS
 		{
-			BX_UNUSED(_nodeMask, _presentQueue);
+			BASE_UNUSED(_nodeMask, _presentQueue);
 
 			hr = _swapChain->ResizeBuffers(
 				  _scd.bufferCount
@@ -776,7 +776,7 @@ namespace bgfx
 
 	void Dxgi::trim()
 	{
-#if BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
+#if BASE_PLATFORM_WINDOWS || BASE_PLATFORM_WINRT
 		IDXGIDevice3* device;
 		HRESULT hr = m_factory->QueryInterface(IID_IDXGIDevice3, (void**)&device);
 		if (SUCCEEDED(hr) )
@@ -784,7 +784,7 @@ namespace bgfx
 			device->Trim();
 			DX_RELEASE(device, 1);
 		}
-#endif // BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
+#endif // BASE_PLATFORM_WINDOWS || BASE_PLATFORM_WINRT
 	}
 
 	bool Dxgi::tearingSupported() const
@@ -792,6 +792,6 @@ namespace bgfx
 		return m_tearingSupported;
 	}
 
-} // namespace bgfx
+} // namespace graphics
 
-#endif // BGFX_CONFIG_RENDERER_DIRECT3D11 || BGFX_CONFIG_RENDERER_DIRECT3D12
+#endif // GRAPHICS_CONFIG_RENDERER_DIRECT3D11 || GRAPHICS_CONFIG_RENDERER_DIRECT3D12

@@ -1,39 +1,39 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include "bgfx_p.h"
+#include "graphics_p.h"
 
-#if (BGFX_CONFIG_RENDERER_OPENGLES || BGFX_CONFIG_RENDERER_OPENGL)
+#if (GRAPHICS_CONFIG_RENDERER_OPENGLES || GRAPHICS_CONFIG_RENDERER_OPENGL)
 #	include "renderer_gl.h"
 
-#	if BGFX_USE_EGL
+#	if GRAPHICS_USE_EGL
 
-#		if BX_PLATFORM_RPI
+#		if BASE_PLATFORM_RPI
 #			include <X11/Xlib.h>
 #			include <bcm_host.h>
-#		endif // BX_PLATFORM_RPI
+#		endif // BASE_PLATFORM_RPI
 
 #define _EGL_CHECK(_check, _call)                                   \
-	BX_MACRO_BLOCK_BEGIN                                            \
+	BASE_MACRO_BLOCK_BEGIN                                            \
 		EGLBoolean success = _call;                                 \
 		_check(success, #_call "; EGL error 0x%x", eglGetError() ); \
-	BX_MACRO_BLOCK_END
+	BASE_MACRO_BLOCK_END
 
-#if BGFX_CONFIG_DEBUG
-#	define EGL_CHECK(_call) _EGL_CHECK(BX_ASSERT, _call)
+#if GRAPHICS_CONFIG_DEBUG
+#	define EGL_CHECK(_call) _EGL_CHECK(BASE_ASSERT, _call)
 #else
 #	define EGL_CHECK(_call) _call
-#endif // BGFX_CONFIG_DEBUG
+#endif // GRAPHICS_CONFIG_DEBUG
 
-namespace bgfx { namespace gl
+namespace graphics { namespace gl
 {
 #ifndef EGL_CONTEXT_FLAG_NO_ERROR_BIT_KHR
 #	define EGL_CONTEXT_FLAG_NO_ERROR_BIT_KHR 0x00000008
 #endif // EGL_CONTEXT_FLAG_NO_ERROR_BIT_KHR
 
-#if BGFX_USE_GL_DYNAMIC_LIB
+#if GRAPHICS_USE_GL_DYNAMIC_LIB
 
 	typedef void (*EGLPROC)(void);
 
@@ -82,20 +82,20 @@ EGL_IMPORT
 
 	void* eglOpen()
 	{
-	    void* handle = bx::dlopen(
-#if BX_PLATFORM_LINUX
+	    void* handle = base::dlopen(
+#if BASE_PLATFORM_LINUX
 			"libEGL.so.1"
 #else
-			"libEGL." BX_DL_EXT
-#endif // BX_PLATFORM_*
+			"libEGL." BASE_DL_EXT
+#endif // BASE_PLATFORM_*
 			);
 
-		BGFX_FATAL(NULL != handle, Fatal::UnableToInitialize, "Failed to load libEGL dynamic library.");
+		GRAPHICS_FATAL(NULL != handle, Fatal::UnableToInitialize, "Failed to load libEGL dynamic library.");
 
 #define EGL_IMPORT_FUNC(_proto, _func)         \
-	_func = (_proto)bx::dlsym(handle, #_func); \
-	BX_TRACE("%p " #_func, _func);             \
-	BGFX_FATAL(NULL != _func, Fatal::UnableToInitialize, "Failed get " #_func ".")
+	_func = (_proto)base::dlsym(handle, #_func); \
+	BASE_TRACE("%p " #_func, _func);             \
+	GRAPHICS_FATAL(NULL != _func, Fatal::UnableToInitialize, "Failed get " #_func ".")
 EGL_IMPORT
 #undef EGL_IMPORT_FUNC
 
@@ -104,7 +104,7 @@ EGL_IMPORT
 
 	void eglClose(void* _handle)
 	{
-		bx::dlclose(_handle);
+		base::dlclose(_handle);
 
 #define EGL_IMPORT_FUNC(_proto, _func) _func = NULL
 EGL_IMPORT
@@ -121,7 +121,7 @@ EGL_IMPORT
 	void eglClose(void* /*_handle*/)
 	{
 	}
-#endif // BGFX_USE_GL_DYNAMIC_LIB
+#endif // GRAPHICS_USE_GL_DYNAMIC_LIB
 
 #	define GL_IMPORT(_optional, _proto, _func, _import) _proto _func = NULL
 #	include "glimports.h"
@@ -145,10 +145,10 @@ EGL_IMPORT
 				m_surface = eglCreateWindowSurface(m_display, _config, _nwh, NULL);
 			}
 
-			BGFX_FATAL(m_surface != EGL_NO_SURFACE, Fatal::UnableToInitialize, "Failed to create surface.");
+			GRAPHICS_FATAL(m_surface != EGL_NO_SURFACE, Fatal::UnableToInitialize, "Failed to create surface.");
 
 			m_context = eglCreateContext(m_display, _config, _context, s_contextAttrs);
-			BX_ASSERT(NULL != m_context, "Create swap chain failed: %x", eglGetError() );
+			BASE_ASSERT(NULL != m_context, "Create swap chain failed: %x", eglGetError() );
 
 			makeCurrent();
 			GL_CHECK(glClearColor(0.0f, 0.0f, 0.0f, 0.0f) );
@@ -188,83 +188,83 @@ EGL_IMPORT
 		EGLSurface m_surface;
 	};
 
-#	if BX_PLATFORM_RPI
+#	if BASE_PLATFORM_RPI
 	static EGL_DISPMANX_WINDOW_T s_dispmanWindow;
-#	endif // BX_PLATFORM_RPI
+#	endif // BASE_PLATFORM_RPI
 
 	void GlContext::create(uint32_t _width, uint32_t _height, uint32_t _flags)
 	{
-		BX_UNUSED(_flags);
+		BASE_UNUSED(_flags);
 
-#	if BX_PLATFORM_RPI
+#	if BASE_PLATFORM_RPI
 		bcm_host_init();
-#	endif // BX_PLATFORM_RPI
+#	endif // BASE_PLATFORM_RPI
 
 		m_eglLibrary = eglOpen();
 
 		if (NULL == g_platformData.context)
 		{
-#	if BX_PLATFORM_RPI
+#	if BASE_PLATFORM_RPI
 			g_platformData.ndt = EGL_DEFAULT_DISPLAY;
-#	endif // BX_PLATFORM_RPI
+#	endif // BASE_PLATFORM_RPI
 
-			BX_UNUSED(_width, _height);
+			BASE_UNUSED(_width, _height);
 			EGLNativeDisplayType ndt = (EGLNativeDisplayType)g_platformData.ndt;
 			EGLNativeWindowType  nwh = (EGLNativeWindowType )g_platformData.nwh;
 
-#	if BX_PLATFORM_WINDOWS
+#	if BASE_PLATFORM_WINDOWS
 			if (NULL == g_platformData.ndt)
 			{
 				ndt = GetDC( (HWND)g_platformData.nwh);
 			}
-#	endif // BX_PLATFORM_WINDOWS
+#	endif // BASE_PLATFORM_WINDOWS
 
             m_display = eglGetDisplay(NULL == ndt ? EGL_DEFAULT_DISPLAY : ndt);
-			BGFX_FATAL(m_display != EGL_NO_DISPLAY, Fatal::UnableToInitialize, "Failed to create display %p", m_display);
+			GRAPHICS_FATAL(m_display != EGL_NO_DISPLAY, Fatal::UnableToInitialize, "Failed to create display %p", m_display);
 
 			EGLint major = 0;
 			EGLint minor = 0;
 			EGLBoolean success = eglInitialize(m_display, &major, &minor);
-			BGFX_FATAL(success && major >= 1 && minor >= 3, Fatal::UnableToInitialize, "Failed to initialize %d.%d", major, minor);
+			GRAPHICS_FATAL(success && major >= 1 && minor >= 3, Fatal::UnableToInitialize, "Failed to initialize %d.%d", major, minor);
 
-			BX_TRACE("EGL info:");
+			BASE_TRACE("EGL info:");
 			const char* clientApis = eglQueryString(m_display, EGL_CLIENT_APIS);
-			BX_TRACE("   APIs: %s", clientApis); BX_UNUSED(clientApis);
+			BASE_TRACE("   APIs: %s", clientApis); BASE_UNUSED(clientApis);
 
 			const char* vendor = eglQueryString(m_display, EGL_VENDOR);
-			BX_TRACE(" Vendor: %s", vendor); BX_UNUSED(vendor);
+			BASE_TRACE(" Vendor: %s", vendor); BASE_UNUSED(vendor);
 
 			const char* version = eglQueryString(m_display, EGL_VERSION);
-			BX_TRACE("Version: %s", version); BX_UNUSED(version);
+			BASE_TRACE("Version: %s", version); BASE_UNUSED(version);
 
 			const char* extensions = eglQueryString(m_display, EGL_EXTENSIONS);
-			BX_TRACE("Supported EGL extensions:");
+			BASE_TRACE("Supported EGL extensions:");
 			dumpExtensions(extensions);
 
-			if (BX_ENABLED(BGFX_CONFIG_RENDERER_OPENGL) )
+			if (BASE_ENABLED(GRAPHICS_CONFIG_RENDERER_OPENGL) )
 			{
 				EGLBoolean ok = eglBindAPI(EGL_OPENGL_API);
-				BGFX_FATAL(ok, Fatal::UnableToInitialize, "Could not set API! error: %d", eglGetError());
+				GRAPHICS_FATAL(ok, Fatal::UnableToInitialize, "Could not set API! error: %d", eglGetError());
 			}
 
-			const bool hasEglAndroidRecordable = !bx::findIdentifierMatch(extensions, "EGL_ANDROID_recordable").isEmpty();
+			const bool hasEglAndroidRecordable = !base::findIdentifierMatch(extensions, "EGL_ANDROID_recordable").isEmpty();
 
-			const uint32_t glVersion = !!BGFX_CONFIG_RENDERER_OPENGL
-				? BGFX_CONFIG_RENDERER_OPENGL
-				: BGFX_CONFIG_RENDERER_OPENGLES
+			const uint32_t glVersion = !!GRAPHICS_CONFIG_RENDERER_OPENGL
+				? GRAPHICS_CONFIG_RENDERER_OPENGL
+				: GRAPHICS_CONFIG_RENDERER_OPENGLES
 				;
 
-#if BX_PLATFORM_ANDROID
-			const uint32_t msaa = (_flags&BGFX_RESET_MSAA_MASK)>>BGFX_RESET_MSAA_SHIFT;
+#if BASE_PLATFORM_ANDROID
+			const uint32_t msaa = (_flags&GRAPHICS_RESET_MSAA_MASK)>>GRAPHICS_RESET_MSAA_SHIFT;
 			const uint32_t msaaSamples = msaa == 0 ? 0 : 1<<msaa;
 			m_msaaContext = true;
-#endif // BX_PLATFORM_ANDROID
+#endif // BASE_PLATFORM_ANDROID
 
 			const bool headless = EGLNativeWindowType(0) == nwh;
 
 			EGLint attrs[] =
 			{
-				EGL_RENDERABLE_TYPE, !!BGFX_CONFIG_RENDERER_OPENGL
+				EGL_RENDERABLE_TYPE, !!GRAPHICS_CONFIG_RENDERER_OPENGL
 					? EGL_OPENGL_BIT
 					: (glVersion >= 30) ? EGL_OPENGL_ES3_BIT_KHR : EGL_OPENGL_ES2_BIT
 					,
@@ -276,12 +276,12 @@ EGL_IMPORT
 				EGL_RED_SIZE,   8,
 				EGL_ALPHA_SIZE, 8,
 
-#	if BX_PLATFORM_ANDROID
+#	if BASE_PLATFORM_ANDROID
 				EGL_DEPTH_SIZE, 16,
 				EGL_SAMPLES, (EGLint)msaaSamples,
 #	else
 				EGL_DEPTH_SIZE, 24,
-#	endif // BX_PLATFORM_
+#	endif // BASE_PLATFORM_
 				EGL_STENCIL_SIZE, 8,
 
 				// Android Recordable surface
@@ -293,15 +293,15 @@ EGL_IMPORT
 
 			EGLint numConfig = 0;
 			success = eglChooseConfig(m_display, attrs, &m_config, 1, &numConfig);
-			BGFX_FATAL(success, Fatal::UnableToInitialize, "eglChooseConfig");
+			GRAPHICS_FATAL(success, Fatal::UnableToInitialize, "eglChooseConfig");
 
-#	if BX_PLATFORM_ANDROID
+#	if BASE_PLATFORM_ANDROID
 
 			EGLint format;
 			eglGetConfigAttrib(m_display, m_config, EGL_NATIVE_VISUAL_ID, &format);
 			ANativeWindow_setBuffersGeometry( (ANativeWindow*)g_platformData.nwh, _width, _height, format);
 
-#	elif BX_PLATFORM_RPI
+#	elif BASE_PLATFORM_RPI
 			DISPMANX_DISPLAY_HANDLE_T dispmanDisplay = vc_dispmanx_display_open(0);
 			DISPMANX_UPDATE_HANDLE_T  dispmanUpdate  = vc_dispmanx_update_start(0);
 
@@ -326,7 +326,7 @@ EGL_IMPORT
 			nwh = &s_dispmanWindow;
 
 			vc_dispmanx_update_submit_sync(dispmanUpdate);
-#	endif // BX_PLATFORM_ANDROID
+#	endif // BASE_PLATFORM_ANDROID
 
 			if (headless)
 			{
@@ -345,59 +345,59 @@ EGL_IMPORT
 				m_surface = eglCreateWindowSurface(m_display, m_config, nwh, NULL);
 			}
 
-			BGFX_FATAL(m_surface != EGL_NO_SURFACE, Fatal::UnableToInitialize, "Failed to create surface.");
+			GRAPHICS_FATAL(m_surface != EGL_NO_SURFACE, Fatal::UnableToInitialize, "Failed to create surface.");
 
-			const bool hasEglKhrCreateContext = !bx::findIdentifierMatch(extensions, "EGL_KHR_create_context").isEmpty();
-			const bool hasEglKhrNoError       = !bx::findIdentifierMatch(extensions, "EGL_KHR_create_context_no_error").isEmpty();
+			const bool hasEglKhrCreateContext = !base::findIdentifierMatch(extensions, "EGL_KHR_create_context").isEmpty();
+			const bool hasEglKhrNoError       = !base::findIdentifierMatch(extensions, "EGL_KHR_create_context_no_error").isEmpty();
 
 			for (uint32_t ii = 0; ii < 2; ++ii)
 			{
-				bx::StaticMemoryBlockWriter writer(s_contextAttrs, sizeof(s_contextAttrs) );
+				base::StaticMemoryBlockWriter writer(s_contextAttrs, sizeof(s_contextAttrs) );
 
 				EGLint flags = 0;
 
-#	if BX_PLATFORM_RPI
-				BX_UNUSED(hasEglKhrCreateContext, hasEglKhrNoError);
+#	if BASE_PLATFORM_RPI
+				BASE_UNUSED(hasEglKhrCreateContext, hasEglKhrNoError);
 #	else
 				if (hasEglKhrCreateContext)
 				{
-					if (BX_ENABLED(BGFX_CONFIG_RENDERER_OPENGL) )
+					if (BASE_ENABLED(GRAPHICS_CONFIG_RENDERER_OPENGL) )
 					{
-						bx::write(&writer, EGLint(EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR), bx::ErrorAssert{});
-						bx::write(&writer, EGLint(EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR), bx::ErrorAssert{});
+						base::write(&writer, EGLint(EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR), base::ErrorAssert{});
+						base::write(&writer, EGLint(EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR), base::ErrorAssert{});
 					}
 
-					bx::write(&writer, EGLint(EGL_CONTEXT_MAJOR_VERSION_KHR), bx::ErrorAssert{});
-					bx::write(&writer, EGLint(glVersion / 10), bx::ErrorAssert{});
+					base::write(&writer, EGLint(EGL_CONTEXT_MAJOR_VERSION_KHR), base::ErrorAssert{});
+					base::write(&writer, EGLint(glVersion / 10), base::ErrorAssert{});
 
-					bx::write(&writer, EGLint(EGL_CONTEXT_MINOR_VERSION_KHR), bx::ErrorAssert{});
-					bx::write(&writer, EGLint(glVersion % 10), bx::ErrorAssert{});
+					base::write(&writer, EGLint(EGL_CONTEXT_MINOR_VERSION_KHR), base::ErrorAssert{});
+					base::write(&writer, EGLint(glVersion % 10), base::ErrorAssert{});
 
-					flags |= BGFX_CONFIG_DEBUG && hasEglKhrNoError ? 0
+					flags |= GRAPHICS_CONFIG_DEBUG && hasEglKhrNoError ? 0
 						| EGL_CONTEXT_FLAG_NO_ERROR_BIT_KHR
 						: 0
 						;
 
 					if (0 == ii)
 					{
-						flags |= BGFX_CONFIG_DEBUG ? 0
+						flags |= GRAPHICS_CONFIG_DEBUG ? 0
 							| EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR
 //							| EGL_OPENGL_ES3_BIT_KHR
 							: 0
 							;
 
-						bx::write(&writer, EGLint(EGL_CONTEXT_FLAGS_KHR), bx::ErrorAssert{} );
-						bx::write(&writer, flags, bx::ErrorAssert{});
+						base::write(&writer, EGLint(EGL_CONTEXT_FLAGS_KHR), base::ErrorAssert{} );
+						base::write(&writer, flags, base::ErrorAssert{});
 					}
 				}
 				else
-#	endif // BX_PLATFORM_RPI
+#	endif // BASE_PLATFORM_RPI
 				{
-					bx::write(&writer, EGLint(EGL_CONTEXT_CLIENT_VERSION), bx::ErrorAssert{} );
-					bx::write(&writer, EGLint(glVersion / 10), bx::ErrorAssert{} );
+					base::write(&writer, EGLint(EGL_CONTEXT_CLIENT_VERSION), base::ErrorAssert{} );
+					base::write(&writer, EGLint(glVersion / 10), base::ErrorAssert{} );
 				}
 
-				bx::write(&writer, EGLint(EGL_NONE), bx::ErrorAssert{} );
+				base::write(&writer, EGLint(EGL_NONE), base::ErrorAssert{} );
 
 				m_context = eglCreateContext(m_display, m_config, EGL_NO_CONTEXT, s_contextAttrs);
 				if (NULL != m_context)
@@ -405,13 +405,13 @@ EGL_IMPORT
 					break;
 				}
 
-				BX_TRACE("Failed to create EGL context with EGL_CONTEXT_FLAGS_KHR (%08x).", flags);
+				BASE_TRACE("Failed to create EGL context with EGL_CONTEXT_FLAGS_KHR (%08x).", flags);
 			}
 
-			BGFX_FATAL(m_context != EGL_NO_CONTEXT, Fatal::UnableToInitialize, "Failed to create context.");
+			GRAPHICS_FATAL(m_context != EGL_NO_CONTEXT, Fatal::UnableToInitialize, "Failed to create context.");
 
 			success = eglMakeCurrent(m_display, m_surface, m_surface, m_context);
-			BGFX_FATAL(success, Fatal::UnableToInitialize, "Failed to set context.");
+			GRAPHICS_FATAL(success, Fatal::UnableToInitialize, "Failed to set context.");
 			m_current = NULL;
 
 			eglSwapInterval(m_display, 0);
@@ -435,61 +435,61 @@ EGL_IMPORT
 
 		eglClose(m_eglLibrary);
 
-#	if BX_PLATFORM_RPI
+#	if BASE_PLATFORM_RPI
 		bcm_host_deinit();
-#	endif // BX_PLATFORM_RPI
+#	endif // BASE_PLATFORM_RPI
 	}
 
 	void GlContext::resize(uint32_t _width, uint32_t _height, uint32_t _flags)
 	{
-#	if BX_PLATFORM_ANDROID
+#	if BASE_PLATFORM_ANDROID
 		if (NULL != m_display)
 		{
 			EGLNativeWindowType nwh = (EGLNativeWindowType )g_platformData.nwh;
 			eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 			eglDestroySurface(m_display, m_surface);
 			m_surface = eglCreateWindowSurface(m_display, m_config, nwh, NULL);
-			BGFX_FATAL(m_surface != EGL_NO_SURFACE, Fatal::UnableToInitialize, "Failed to create surface.");
+			GRAPHICS_FATAL(m_surface != EGL_NO_SURFACE, Fatal::UnableToInitialize, "Failed to create surface.");
 			EGLBoolean success = eglMakeCurrent(m_display, m_surface, m_surface, m_context);
-			BGFX_FATAL(success, Fatal::UnableToInitialize, "Failed to set context.");
+			GRAPHICS_FATAL(success, Fatal::UnableToInitialize, "Failed to set context.");
 
 			EGLint format;
 			eglGetConfigAttrib(m_display, m_config, EGL_NATIVE_VISUAL_ID, &format);
 			ANativeWindow_setBuffersGeometry( (ANativeWindow*)g_platformData.nwh, _width, _height, format);
 		}
-#	elif BX_PLATFORM_EMSCRIPTEN
+#	elif BASE_PLATFORM_EMSCRIPTEN
 		EMSCRIPTEN_CHECK(emscripten_set_canvas_element_size(HTML5_TARGET_CANVAS_SELECTOR, _width, _height) );
 #	else
-		BX_UNUSED(_width, _height);
-#	endif // BX_PLATFORM_*
+		BASE_UNUSED(_width, _height);
+#	endif // BASE_PLATFORM_*
 
 		if (NULL != m_display)
 		{
-			bool vsync = !!(_flags&BGFX_RESET_VSYNC);
+			bool vsync = !!(_flags&GRAPHICS_RESET_VSYNC);
 			EGL_CHECK(eglSwapInterval(m_display, vsync ? 1 : 0) );
 		}
 	}
 
 	uint64_t GlContext::getCaps() const
 	{
-		return BX_ENABLED(0
-			| BX_PLATFORM_LINUX
-			| BX_PLATFORM_WINDOWS
-			| BX_PLATFORM_ANDROID
+		return BASE_ENABLED(0
+			| BASE_PLATFORM_LINUX
+			| BASE_PLATFORM_WINDOWS
+			| BASE_PLATFORM_ANDROID
 			)
-			? BGFX_CAPS_SWAP_CHAIN
+			? GRAPHICS_CAPS_SWAP_CHAIN
 			: 0
 			;
 	}
 
 	SwapChainGL* GlContext::createSwapChain(void* _nwh)
 	{
-		return BX_NEW(g_allocator, SwapChainGL)(m_display, m_config, m_context, (EGLNativeWindowType)_nwh);
+		return BASE_NEW(g_allocator, SwapChainGL)(m_display, m_config, m_context, (EGLNativeWindowType)_nwh);
 	}
 
 	void GlContext::destroySwapChain(SwapChainGL* _swapChain)
 	{
-		bx::deleteObject(g_allocator, _swapChain);
+		base::deleteObject(g_allocator, _swapChain);
 	}
 
 	void GlContext::swap(SwapChainGL* _swapChain)
@@ -531,28 +531,28 @@ EGL_IMPORT
 
 	void GlContext::import()
 	{
-		BX_TRACE("Import:");
+		BASE_TRACE("Import:");
 
-#	if BX_PLATFORM_WINDOWS || BX_PLATFORM_LINUX
-#		if BX_PLATFORM_WINDOWS
+#	if BASE_PLATFORM_WINDOWS || BASE_PLATFORM_LINUX
+#		if BASE_PLATFORM_WINDOWS
 #			define LIBRARY_NAME "libGL.dll"
-#		elif BX_PLATFORM_LINUX
-#			if BGFX_CONFIG_RENDERER_OPENGL
+#		elif BASE_PLATFORM_LINUX
+#			if GRAPHICS_CONFIG_RENDERER_OPENGL
 #				define LIBRARY_NAME "libGL.so.1"
 #			else
 #				define LIBRARY_NAME "libGLESv2.so.2"
 #			endif
 #		endif
 
-		void* lib = bx::dlopen(LIBRARY_NAME);
+		void* lib = base::dlopen(LIBRARY_NAME);
 
 #		define GL_EXTENSION(_optional, _proto, _func, _import)                           \
 			{                                                                            \
 				if (NULL == _func)                                                       \
 				{                                                                        \
-					_func = bx::dlsym<_proto>(lib, #_import);                            \
-					BX_TRACE("\t%p " #_func " (" #_import ")", _func);                   \
-					BGFX_FATAL(_optional || NULL != _func                                \
+					_func = base::dlsym<_proto>(lib, #_import);                            \
+					BASE_TRACE("\t%p " #_func " (" #_import ")", _func);                   \
+					GRAPHICS_FATAL(_optional || NULL != _func                                \
 						, Fatal::UnableToInitialize                                      \
 						, "Failed to create OpenGLES context. eglGetProcAddress(\"%s\")" \
 						, #_import);                                                     \
@@ -564,22 +564,22 @@ EGL_IMPORT
 				if (NULL == _func)                                                       \
 				{                                                                        \
 					_func = reinterpret_cast<_proto>(eglGetProcAddress(#_import) );      \
-					BX_TRACE("\t%p " #_func " (" #_import ")", _func);                   \
-					BGFX_FATAL(_optional || NULL != _func                                \
+					BASE_TRACE("\t%p " #_func " (" #_import ")", _func);                   \
+					GRAPHICS_FATAL(_optional || NULL != _func                                \
 						, Fatal::UnableToInitialize                                      \
 						, "Failed to create OpenGLES context. eglGetProcAddress(\"%s\")" \
 						, #_import);                                                     \
 				}                                                                        \
 			}
 
-#	endif // BX_PLATFORM_
+#	endif // BASE_PLATFORM_
 
 #	include "glimports.h"
 
 #	undef GL_EXTENSION
 	}
 
-} /* namespace gl */ } // namespace bgfx
+} /* namespace gl */ } // namespace graphics
 
-#	endif // BGFX_USE_EGL
-#endif // (BGFX_CONFIG_RENDERER_OPENGLES || BGFX_CONFIG_RENDERER_OPENGL)
+#	endif // GRAPHICS_USE_EGL
+#endif // (GRAPHICS_CONFIG_RENDERER_OPENGLES || GRAPHICS_CONFIG_RENDERER_OPENGL)

@@ -1,16 +1,16 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include "bgfx_p.h"
+#include "graphics_p.h"
 
-#if (BGFX_CONFIG_RENDERER_OPENGLES|BGFX_CONFIG_RENDERER_OPENGL)
+#if (GRAPHICS_CONFIG_RENDERER_OPENGLES|GRAPHICS_CONFIG_RENDERER_OPENGL)
 #	include "renderer_gl.h"
 
-#	if BGFX_USE_WGL
+#	if GRAPHICS_USE_WGL
 
-namespace bgfx { namespace gl
+namespace graphics { namespace gl
 {
 	PFNWGLGETPROCADDRESSPROC wglGetProcAddress;
 	PFNWGLMAKECURRENTPROC wglMakeCurrent;
@@ -50,7 +50,7 @@ namespace bgfx { namespace gl
 		{
 			wglMakeCurrent(m_hdc, m_context);
 			GLenum err = glGetError();
-			BX_WARN(0 == err, "wglMakeCurrent failed with GL error: 0x%04x.", err); BX_UNUSED(err);
+			BASE_WARN(0 == err, "wglMakeCurrent failed with GL error: 0x%04x.", err); BASE_UNUSED(err);
 		}
 
 		void swapBuffers()
@@ -66,7 +66,7 @@ namespace bgfx { namespace gl
 	static HGLRC createContext(HDC _hdc)
 	{
 		PIXELFORMATDESCRIPTOR pfd;
-		bx::memSet(&pfd, 0, sizeof(pfd) );
+		base::memSet(&pfd, 0, sizeof(pfd) );
 		pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 		pfd.nVersion = 1;
 		pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
@@ -78,11 +78,11 @@ namespace bgfx { namespace gl
 		pfd.iLayerType = PFD_MAIN_PLANE;
 
 		int pixelFormat = ChoosePixelFormat(_hdc, &pfd);
-		BGFX_FATAL(0 != pixelFormat, Fatal::UnableToInitialize, "ChoosePixelFormat failed!");
+		GRAPHICS_FATAL(0 != pixelFormat, Fatal::UnableToInitialize, "ChoosePixelFormat failed!");
 
 		DescribePixelFormat(_hdc, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
 
-		BX_TRACE("Pixel format:\n"
+		BASE_TRACE("Pixel format:\n"
 			"\tiPixelType %d\n"
 			"\tcColorBits %d\n"
 			"\tcAlphaBits %d\n"
@@ -97,61 +97,61 @@ namespace bgfx { namespace gl
 
 		int result;
 		result = SetPixelFormat(_hdc, pixelFormat, &pfd);
-		BGFX_FATAL(0 != result, Fatal::UnableToInitialize, "SetPixelFormat failed!");
+		GRAPHICS_FATAL(0 != result, Fatal::UnableToInitialize, "SetPixelFormat failed!");
 
 		HGLRC context = wglCreateContext(_hdc);
-		BGFX_FATAL(NULL != context, Fatal::UnableToInitialize, "wglCreateContext failed!");
+		GRAPHICS_FATAL(NULL != context, Fatal::UnableToInitialize, "wglCreateContext failed!");
 
 		result = wglMakeCurrent(_hdc, context);
-		BGFX_FATAL(0 != result, Fatal::UnableToInitialize, "wglMakeCurrent failed!");
+		GRAPHICS_FATAL(0 != result, Fatal::UnableToInitialize, "wglMakeCurrent failed!");
 
 		return context;
 	}
 
 	void GlContext::create(uint32_t /*_width*/, uint32_t /*_height*/, uint32_t /*_flags*/)
 	{
-		m_opengl32dll = bx::dlopen("opengl32.dll");
-		BGFX_FATAL(NULL != m_opengl32dll, Fatal::UnableToInitialize, "Failed to load opengl32.dll.");
+		m_opengl32dll = base::dlopen("opengl32.dll");
+		GRAPHICS_FATAL(NULL != m_opengl32dll, Fatal::UnableToInitialize, "Failed to load opengl32.dll.");
 
-		wglGetProcAddress = bx::dlsym<PFNWGLGETPROCADDRESSPROC>(m_opengl32dll, "wglGetProcAddress");
-		BGFX_FATAL(NULL != wglGetProcAddress, Fatal::UnableToInitialize, "Failed get wglGetProcAddress.");
+		wglGetProcAddress = base::dlsym<PFNWGLGETPROCADDRESSPROC>(m_opengl32dll, "wglGetProcAddress");
+		GRAPHICS_FATAL(NULL != wglGetProcAddress, Fatal::UnableToInitialize, "Failed get wglGetProcAddress.");
 
 		// If g_platformHooks.nwh is NULL, the assumption is that GL context was created
 		// by user (for example, using SDL, GLFW, etc.)
-		BX_WARN(NULL != g_platformData.nwh
-			, "bgfx::setPlatform with valid window is not called. This might "
+		BASE_WARN(NULL != g_platformData.nwh
+			, "graphics::setPlatform with valid window is not called. This might "
 				"be intentional when GL context is created by the user."
 			);
 
 		if (NULL != g_platformData.nwh && NULL != g_platformData.context )
 		{
 			// user has provided a context and a window
-			wglMakeCurrent = (PFNWGLMAKECURRENTPROC)bx::dlsym(m_opengl32dll, "wglMakeCurrent");
-			BGFX_FATAL(NULL != wglMakeCurrent, Fatal::UnableToInitialize, "Failed get wglMakeCurrent.");
+			wglMakeCurrent = (PFNWGLMAKECURRENTPROC)base::dlsym(m_opengl32dll, "wglMakeCurrent");
+			GRAPHICS_FATAL(NULL != wglMakeCurrent, Fatal::UnableToInitialize, "Failed get wglMakeCurrent.");
 
 			m_hdc = GetDC( (HWND)g_platformData.nwh);
-			BGFX_FATAL(NULL != m_hdc, Fatal::UnableToInitialize, "GetDC failed!");
+			GRAPHICS_FATAL(NULL != m_hdc, Fatal::UnableToInitialize, "GetDC failed!");
 
 			HGLRC context = (HGLRC)g_platformData.context;
 			int result = wglMakeCurrent(m_hdc, context );
-			BGFX_FATAL(0 != result, Fatal::UnableToInitialize, "wglMakeCurrent failed!");
+			GRAPHICS_FATAL(0 != result, Fatal::UnableToInitialize, "wglMakeCurrent failed!");
 
 			m_context = context;
 		}
 
 		if (NULL != g_platformData.nwh && NULL == g_platformData.context )
 		{
-			wglMakeCurrent = bx::dlsym<PFNWGLMAKECURRENTPROC>(m_opengl32dll, "wglMakeCurrent");
-			BGFX_FATAL(NULL != wglMakeCurrent, Fatal::UnableToInitialize, "Failed get wglMakeCurrent.");
+			wglMakeCurrent = base::dlsym<PFNWGLMAKECURRENTPROC>(m_opengl32dll, "wglMakeCurrent");
+			GRAPHICS_FATAL(NULL != wglMakeCurrent, Fatal::UnableToInitialize, "Failed get wglMakeCurrent.");
 
-			wglCreateContext = bx::dlsym<PFNWGLCREATECONTEXTPROC>(m_opengl32dll, "wglCreateContext");
-			BGFX_FATAL(NULL != wglCreateContext, Fatal::UnableToInitialize, "Failed get wglCreateContext.");
+			wglCreateContext = base::dlsym<PFNWGLCREATECONTEXTPROC>(m_opengl32dll, "wglCreateContext");
+			GRAPHICS_FATAL(NULL != wglCreateContext, Fatal::UnableToInitialize, "Failed get wglCreateContext.");
 
-			wglDeleteContext = bx::dlsym<PFNWGLDELETECONTEXTPROC>(m_opengl32dll, "wglDeleteContext");
-			BGFX_FATAL(NULL != wglDeleteContext, Fatal::UnableToInitialize, "Failed get wglDeleteContext.");
+			wglDeleteContext = base::dlsym<PFNWGLDELETECONTEXTPROC>(m_opengl32dll, "wglDeleteContext");
+			GRAPHICS_FATAL(NULL != wglDeleteContext, Fatal::UnableToInitialize, "Failed get wglDeleteContext.");
 
 			m_hdc = GetDC( (HWND)g_platformData.nwh);
-			BGFX_FATAL(NULL != m_hdc, Fatal::UnableToInitialize, "GetDC failed!");
+			GRAPHICS_FATAL(NULL != m_hdc, Fatal::UnableToInitialize, "GetDC failed!");
 
 			// Dummy window to peek into WGL functionality.
 			//
@@ -172,7 +172,7 @@ namespace bgfx { namespace gl
 				);
 
 			HDC hdc = GetDC(hwnd);
-			BGFX_FATAL(NULL != hdc, Fatal::UnableToInitialize, "GetDC failed!");
+			GRAPHICS_FATAL(NULL != hdc, Fatal::UnableToInitialize, "GetDC failed!");
 
 			HGLRC context = createContext(hdc);
 
@@ -184,7 +184,7 @@ namespace bgfx { namespace gl
 			if (NULL != wglGetExtensionsStringARB)
 			{
 				const char* extensions = (const char*)wglGetExtensionsStringARB(hdc);
-				BX_TRACE("WGL extensions:");
+				BASE_TRACE("WGL extensions:");
 				dumpExtensions(extensions);
 			}
 
@@ -226,7 +226,7 @@ namespace bgfx { namespace gl
 
 				DescribePixelFormat(m_hdc, m_pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &m_pfd);
 
-				BX_TRACE("Pixel format:\n"
+				BASE_TRACE("Pixel format:\n"
 					"\tiPixelType %d\n"
 					"\tcColorBits %d\n"
 					"\tcAlphaBits %d\n"
@@ -243,15 +243,15 @@ namespace bgfx { namespace gl
 				// When window is created by SDL and SDL_WINDOW_OPENGL is set, SetPixelFormat
 				// will fail. Just warn and continue. In case it failed for some other reason
 				// create context will fail and it will error out there.
-				BX_WARN(result, "SetPixelFormat failed (last err: 0x%08x)!", GetLastError() );
+				BASE_WARN(result, "SetPixelFormat failed (last err: 0x%08x)!", GetLastError() );
 
-				int32_t flags = BGFX_CONFIG_DEBUG ? WGL_CONTEXT_DEBUG_BIT_ARB : 0;
-				BX_UNUSED(flags);
+				int32_t flags = GRAPHICS_CONFIG_DEBUG ? WGL_CONTEXT_DEBUG_BIT_ARB : 0;
+				BASE_UNUSED(flags);
 				int32_t contextAttrs[9] =
 				{
-#if BGFX_CONFIG_RENDERER_OPENGL >= 31
-					WGL_CONTEXT_MAJOR_VERSION_ARB, BGFX_CONFIG_RENDERER_OPENGL / 10,
-					WGL_CONTEXT_MINOR_VERSION_ARB, BGFX_CONFIG_RENDERER_OPENGL % 10,
+#if GRAPHICS_CONFIG_RENDERER_OPENGL >= 31
+					WGL_CONTEXT_MAJOR_VERSION_ARB, GRAPHICS_CONFIG_RENDERER_OPENGL / 10,
+					WGL_CONTEXT_MINOR_VERSION_ARB, GRAPHICS_CONFIG_RENDERER_OPENGL % 10,
 					WGL_CONTEXT_FLAGS_ARB, flags,
 					WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 #else
@@ -259,7 +259,7 @@ namespace bgfx { namespace gl
 					WGL_CONTEXT_MINOR_VERSION_ARB, 1,
 					0, 0,
 					0, 0,
-#endif // BGFX_CONFIG_RENDERER_OPENGL >= 31
+#endif // GRAPHICS_CONFIG_RENDERER_OPENGL >= 31
 					0
 				};
 
@@ -270,10 +270,10 @@ namespace bgfx { namespace gl
 					contextAttrs[6] = WGL_CONTEXT_PROFILE_MASK_ARB == contextAttrs[6] ? 0 : contextAttrs[6];
 					m_context = wglCreateContextAttribsARB(m_hdc, 0, contextAttrs);
 				}
-				BGFX_FATAL(NULL != m_context, Fatal::UnableToInitialize, "Failed to create context 0x%08x.", GetLastError() );
+				GRAPHICS_FATAL(NULL != m_context, Fatal::UnableToInitialize, "Failed to create context 0x%08x.", GetLastError() );
 
-				BX_STATIC_ASSERT(sizeof(contextAttrs) == sizeof(m_contextAttrs) );
-				bx::memCopy(m_contextAttrs, contextAttrs, sizeof(contextAttrs) );
+				BASE_STATIC_ASSERT(sizeof(contextAttrs) == sizeof(m_contextAttrs) );
+				base::memCopy(m_contextAttrs, contextAttrs, sizeof(contextAttrs) );
 			}
 
 			wglMakeCurrent(NULL, NULL);
@@ -286,7 +286,7 @@ namespace bgfx { namespace gl
 			}
 
 			int result = wglMakeCurrent(m_hdc, m_context);
-			BGFX_FATAL(0 != result, Fatal::UnableToInitialize, "wglMakeCurrent failed!");
+			GRAPHICS_FATAL(0 != result, Fatal::UnableToInitialize, "wglMakeCurrent failed!");
 			m_current = NULL;
 
 			if (NULL != wglSwapIntervalEXT)
@@ -317,7 +317,7 @@ namespace bgfx { namespace gl
 			m_hdc = NULL;
 		}
 
-		bx::dlclose(m_opengl32dll);
+		base::dlclose(m_opengl32dll);
 		m_opengl32dll = NULL;
 	}
 
@@ -325,31 +325,31 @@ namespace bgfx { namespace gl
 	{
 		if (NULL != wglSwapIntervalEXT)
 		{
-			bool vsync = !!(_flags&BGFX_RESET_VSYNC);
+			bool vsync = !!(_flags&GRAPHICS_RESET_VSYNC);
 			wglSwapIntervalEXT(vsync ? 1 : 0);
 		}
 	}
 
 	uint64_t GlContext::getCaps() const
 	{
-		return BGFX_CAPS_SWAP_CHAIN;
+		return GRAPHICS_CAPS_SWAP_CHAIN;
 	}
 
 	SwapChainGL* GlContext::createSwapChain(void* _nwh)
 	{
-		SwapChainGL* swapChain = BX_NEW(g_allocator, SwapChainGL)(_nwh);
+		SwapChainGL* swapChain = BASE_NEW(g_allocator, SwapChainGL)(_nwh);
 
 		int result = SetPixelFormat(swapChain->m_hdc, m_pixelFormat, &m_pfd);
-		BX_WARN(result, "SetPixelFormat failed (last err: 0x%08x)!", GetLastError() ); BX_UNUSED(result);
+		BASE_WARN(result, "SetPixelFormat failed (last err: 0x%08x)!", GetLastError() ); BASE_UNUSED(result);
 
 		swapChain->m_context = wglCreateContextAttribsARB(swapChain->m_hdc, m_context, m_contextAttrs);
-		BX_ASSERT(NULL != swapChain->m_context, "Create swap chain failed: %x", glGetError() );
+		BASE_ASSERT(NULL != swapChain->m_context, "Create swap chain failed: %x", glGetError() );
 		return swapChain;
 	}
 
 	void GlContext::destroySwapChain(SwapChainGL*  _swapChain)
 	{
-		bx::deleteObject(g_allocator, _swapChain);
+		base::deleteObject(g_allocator, _swapChain);
 		wglMakeCurrent(m_hdc, m_context);
 	}
 
@@ -380,7 +380,7 @@ namespace bgfx { namespace gl
 			{
 				wglMakeCurrent(m_hdc, m_context);
 				GLenum err = glGetError();
-				BX_WARN(0 == err, "wglMakeCurrent failed with GL error: 0x%04x.", err); BX_UNUSED(err);
+				BASE_WARN(0 == err, "wglMakeCurrent failed with GL error: 0x%04x.", err); BASE_UNUSED(err);
 			}
 			else
 			{
@@ -391,7 +391,7 @@ namespace bgfx { namespace gl
 
 	void GlContext::import()
 	{
-		BX_TRACE("Import:");
+		BASE_TRACE("Import:");
 
 #	define GL_EXTENSION(_optional, _proto, _func, _import)                                     \
 		{                                                                                      \
@@ -400,14 +400,14 @@ namespace bgfx { namespace gl
 				_func = wglGetProc<_proto>(#_import);                                          \
 				if (NULL == _func)                                                             \
 				{                                                                              \
-					_func = bx::dlsym<_proto>(m_opengl32dll, #_import);                        \
-					BX_TRACE("    %p " #_func " (" #_import ")", _func);                       \
+					_func = base::dlsym<_proto>(m_opengl32dll, #_import);                        \
+					BASE_TRACE("    %p " #_func " (" #_import ")", _func);                       \
 				}                                                                              \
 				else                                                                           \
 				{                                                                              \
-					BX_TRACE("wgl %p " #_func " (" #_import ")", _func);                       \
+					BASE_TRACE("wgl %p " #_func " (" #_import ")", _func);                       \
 				}                                                                              \
-				BGFX_FATAL(BX_IGNORE_C4127(_optional) || NULL != _func                         \
+				GRAPHICS_FATAL(BASE_IGNORE_C4127(_optional) || NULL != _func                         \
 					, Fatal::UnableToInitialize                                                \
 					, "Failed to create OpenGL context. wglGetProcAddress(\"%s\")", #_import); \
 			}                                                                                  \
@@ -418,7 +418,7 @@ namespace bgfx { namespace gl
 #	undef GL_EXTENSION
 	}
 
-} } // namespace bgfx
+} } // namespace graphics
 
-#	endif // BGFX_USE_WGL
-#endif // (BGFX_CONFIG_RENDERER_OPENGLES|BGFX_CONFIG_RENDERER_OPENGL)
+#	endif // GRAPHICS_USE_WGL
+#endif // (GRAPHICS_CONFIG_RENDERER_OPENGLES|GRAPHICS_CONFIG_RENDERER_OPENGL)

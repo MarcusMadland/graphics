@@ -1,14 +1,14 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include "bgfx_p.h"
+#include "graphics_p.h"
 
-#if BGFX_CONFIG_RENDERER_OPENGLES
+#if GRAPHICS_CONFIG_RENDERER_OPENGLES
 #	include "renderer_gl.h"
 
-#	if BGFX_USE_HTML5
+#	if GRAPHICS_USE_HTML5
 
 #		include "emscripten.h"
 
@@ -18,7 +18,7 @@ extern "C" void* emscripten_GetProcAddress(const char *name_);
 extern "C" void* emscripten_webgl1_get_proc_address(const char *name_);
 extern "C" void* emscripten_webgl2_get_proc_address(const char *name_);
 
-namespace bgfx { namespace gl
+namespace graphics { namespace gl
 {
 
 #	define GL_IMPORT(_optional, _proto, _func, _import) _proto _func = NULL
@@ -31,7 +31,7 @@ namespace bgfx { namespace gl
 		SwapChainGL(int _context, const char* _canvas)
 			: m_context(_context)
 		{
-			m_canvas = (char*)bx::alloc(g_allocator, strlen(_canvas) + 1);
+			m_canvas = (char*)base::alloc(g_allocator, strlen(_canvas) + 1);
 			strcpy(m_canvas, _canvas);
 
 			makeCurrent();
@@ -45,7 +45,7 @@ namespace bgfx { namespace gl
 		~SwapChainGL()
 		{
 			EMSCRIPTEN_CHECK(emscripten_webgl_destroy_context(m_context) );
-			bx::free(g_allocator, m_canvas);
+			base::free(g_allocator, m_canvas);
 		}
 
 		void makeCurrent()
@@ -77,11 +77,11 @@ namespace bgfx { namespace gl
 			if (emscripten_webgl_get_context_attributes(context, &s_attrs) >= 0)
 			{
 				import(s_attrs.majorVersion);
-				m_primary = BX_NEW(g_allocator, SwapChainGL)(context, canvas);
+				m_primary = BASE_NEW(g_allocator, SwapChainGL)(context, canvas);
 			}
 			else
 			{
-				BX_TRACE("Invalid WebGL context. (Canvas handle: '%s', context handle: %d)", canvas, context);
+				BASE_TRACE("Invalid WebGL context. (Canvas handle: '%s', context handle: %d)", canvas, context);
 			}
 		}
 		else
@@ -107,7 +107,7 @@ namespace bgfx { namespace gl
 				m_current = NULL;
 			}
 
-			bx::deleteObject(g_allocator, m_primary);
+			base::deleteObject(g_allocator, m_primary);
 			m_primary = NULL;
 		}
 	}
@@ -148,7 +148,7 @@ namespace bgfx { namespace gl
 			{
 				EMSCRIPTEN_CHECK(emscripten_webgl_make_context_current(context) );
 
-				SwapChainGL* swapChain = BX_NEW(g_allocator, SwapChainGL)(context, canvas);
+				SwapChainGL* swapChain = BASE_NEW(g_allocator, SwapChainGL)(context, canvas);
 
 				import(version);
 
@@ -158,20 +158,20 @@ namespace bgfx { namespace gl
 			error = (int32_t)context;
 		}
 
-		BX_TRACE("Failed to create WebGL context. (Canvas handle: '%s', last attempt error %d)", canvas, error);
-		BX_UNUSED(error);
+		BASE_TRACE("Failed to create WebGL context. (Canvas handle: '%s', last attempt error %d)", canvas, error);
+		BASE_UNUSED(error);
 
 		return NULL;
 	}
 
 	uint64_t GlContext::getCaps() const
 	{
-		return BGFX_CAPS_SWAP_CHAIN;
+		return GRAPHICS_CAPS_SWAP_CHAIN;
 	}
 
 	void GlContext::destroySwapChain(SwapChainGL* _swapChain)
 	{
-		bx::deleteObject(g_allocator, _swapChain);
+		base::deleteObject(g_allocator, _swapChain);
 	}
 
 	void GlContext::swap(SwapChainGL* /* _swapChain */)
@@ -212,15 +212,15 @@ namespace bgfx { namespace gl
 
 	void GlContext::import(int _webGLVersion)
 	{
-		BX_TRACE("Import:");
+		BASE_TRACE("Import:");
 
 #	define GL_EXTENSION(_optional, _proto, _func, _import)                          \
 	{                                                                               \
 		if (NULL == _func)                                                          \
 		{                                                                           \
 			_func = getProcAddress<_proto>(_webGLVersion, #_import);                \
-			BX_TRACE("\t%p " #_func " (" #_import ")", _func);                      \
-			BGFX_FATAL(_optional || NULL != _func, Fatal::UnableToInitialize        \
+			BASE_TRACE("\t%p " #_func " (" #_import ")", _func);                      \
+			GRAPHICS_FATAL(_optional || NULL != _func, Fatal::UnableToInitialize        \
 				, "Failed to create WebGL/OpenGLES context. GetProcAddress(\"%s\")" \
 				, #_import                                                          \
 				);                                                                  \
@@ -233,7 +233,7 @@ namespace bgfx { namespace gl
 
 	}
 
-} /* namespace gl */ } // namespace bgfx
+} /* namespace gl */ } // namespace graphics
 
-#	endif // BGFX_USE_EGL
-#endif // (BGFX_CONFIG_RENDERER_OPENGLES || BGFX_CONFIG_RENDERER_OPENGL)
+#	endif // GRAPHICS_USE_EGL
+#endif // (GRAPHICS_CONFIG_RENDERER_OPENGLES || GRAPHICS_CONFIG_RENDERER_OPENGL)

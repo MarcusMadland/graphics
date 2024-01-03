@@ -6,7 +6,7 @@
 #ifndef BIMG_CONFIG_H_HEADER_GUARD
 #define BIMG_CONFIG_H_HEADER_GUARD
 
-#include <mapp/bx.h>
+#include <base/base.h>
 
 #ifndef BIMG_DECODE_ENABLE
 #	define BIMG_DECODE_ENABLE 1

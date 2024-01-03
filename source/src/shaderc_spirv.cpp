@@ -1,18 +1,18 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
 #include "shaderc.h"
 
 #if (0)
-BX_PRAGMA_DIAGNOSTIC_PUSH()
-BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4100) // error C4100: 'inclusionDepth' : unreferenced formal parameter
-BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4265) // error C4265: 'spv::spirvbin_t': class has virtual functions, but destructor is not virtual
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wattributes") // warning: attribute ignored
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wdeprecated-declarations") // warning: ‘MSLVertexAttr’ is deprecated
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wtype-limits") // warning: comparison of unsigned expression in ‘< 0’ is always false
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wshadow") // warning: declaration of 'userData' shadows a member of 'glslang::TShader::Includer::IncludeResult'
+BASE_PRAGMA_DIAGNOSTIC_PUSH()
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4100) // error C4100: 'inclusionDepth' : unreferenced formal parameter
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4265) // error C4265: 'spv::spirvbin_t': class has virtual functions, but destructor is not virtual
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wattributes") // warning: attribute ignored
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wdeprecated-declarations") // warning: ‘MSLVertexAttr’ is deprecated
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wtype-limits") // warning: comparison of unsigned expression in ‘< 0’ is always false
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wshadow") // warning: declaration of 'userData' shadows a member of 'glslang::TShader::Includer::IncludeResult'
 #define ENABLE_OPT 1
 #include <ShaderLang.h>
 #include <ResourceLimits.h>
@@ -23,12 +23,12 @@ BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wshadow") // warning: declaration of 'u
 #include <spirv_msl.hpp>
 #include <spirv_reflect.hpp>
 #include <spirv-tools/optimizer.hpp>
-BX_PRAGMA_DIAGNOSTIC_POP()
+BASE_PRAGMA_DIAGNOSTIC_POP()
 
-namespace bgfx
+namespace graphics
 {
-	static bx::DefaultAllocator s_allocator;
-	bx::AllocatorI* g_allocator = &s_allocator;
+	static base::DefaultAllocator s_allocator;
+	base::AllocatorI* g_allocator = &s_allocator;
 
 	struct TinyStlAllocator
 	{
@@ -38,19 +38,19 @@ namespace bgfx
 
 	void* TinyStlAllocator::static_allocate(size_t _bytes)
 	{
-		return bx::alloc(g_allocator, _bytes);
+		return base::alloc(g_allocator, _bytes);
 	}
 
 	void TinyStlAllocator::static_deallocate(void* _ptr, size_t /*_bytes*/)
 	{
 		if (NULL != _ptr)
 		{
-			bx::free(g_allocator, _ptr);
+			base::free(g_allocator, _ptr);
 		}
 	}
-} // namespace bgfx
+} // namespace graphics
 
-#define TINYSTL_ALLOCATOR bgfx::TinyStlAllocator
+#define TINYSTL_ALLOCATOR graphics::TinyStlAllocator
 #include <tinystl/allocator.h>
 #include <tinystl/string.h>
 #include <tinystl/unordered_map.h>
@@ -61,7 +61,7 @@ namespace stl = tinystl;
 #include "../../src/shader_spirv.h"
 #include "../../3rdparty/khronos/vulkan-local/vulkan.h"
 
-namespace bgfx { namespace spirv
+namespace graphics { namespace spirv
 {
 	const TBuiltInResource resourceLimits =
 	{
@@ -181,92 +181,92 @@ namespace bgfx { namespace spirv
 		},
 	};
 
-	bgfx::TextureComponentType::Enum SpirvCrossBaseTypeToFormatType(spirv_cross::SPIRType::BaseType spirvBaseType, bool depth)
+	graphics::TextureComponentType::Enum SpirvCrossBaseTypeToFormatType(spirv_cross::SPIRType::BaseType spirvBaseType, bool depth)
 	{
 		if (depth)
-			return bgfx::TextureComponentType::Depth;
+			return graphics::TextureComponentType::Depth;
 
 		switch (spirvBaseType)
 		{
 		case spirv_cross::SPIRType::Float:
-			return bgfx::TextureComponentType::Float;
+			return graphics::TextureComponentType::Float;
 		case spirv_cross::SPIRType::Int:
-			return bgfx::TextureComponentType::Int;
+			return graphics::TextureComponentType::Int;
 		case spirv_cross::SPIRType::UInt:
-			return bgfx::TextureComponentType::Uint;
+			return graphics::TextureComponentType::Uint;
 		default:
-		    return bgfx::TextureComponentType::Float;
+		    return graphics::TextureComponentType::Float;
 		}
 	}
 
-	bgfx::TextureDimension::Enum SpirvDimToTextureViewDimension(spv::Dim _dim, bool _arrayed)
+	graphics::TextureDimension::Enum SpirvDimToTextureViewDimension(spv::Dim _dim, bool _arrayed)
 	{
 		switch (_dim)
 		{
 		case spv::Dim::Dim1D:
-			return bgfx::TextureDimension::Dimension1D;
+			return graphics::TextureDimension::Dimension1D;
 		case spv::Dim::Dim2D:
 			return _arrayed
-				? bgfx::TextureDimension::Dimension2DArray
-				: bgfx::TextureDimension::Dimension2D
+				? graphics::TextureDimension::Dimension2DArray
+				: graphics::TextureDimension::Dimension2D
 				;
 		case spv::Dim::Dim3D:
-			return bgfx::TextureDimension::Dimension3D;
+			return graphics::TextureDimension::Dimension3D;
 		case spv::Dim::DimCube:
 			return _arrayed
-				? bgfx::TextureDimension::DimensionCubeArray
-				: bgfx::TextureDimension::DimensionCube
+				? graphics::TextureDimension::DimensionCubeArray
+				: graphics::TextureDimension::DimensionCube
 				;
 		default:
-			BX_ASSERT(false, "Unknown texture dimension %d", _dim);
-			return bgfx::TextureDimension::Dimension2D;
+			BASE_ASSERT(false, "Unknown texture dimension %d", _dim);
+			return graphics::TextureDimension::Dimension2D;
 		}
 	}
 
-	static bgfx::TextureFormat::Enum s_textureFormats[] =
+	static graphics::TextureFormat::Enum s_textureFormats[] =
 	{
-		bgfx::TextureFormat::Unknown,   // spv::ImageFormatUnknown = 0
-		bgfx::TextureFormat::RGBA32F,   // spv::ImageFormatRgba32f = 1
-		bgfx::TextureFormat::RGBA16F,   // spv::ImageFormatRgba16f = 2
-		bgfx::TextureFormat::R32F,      // spv::ImageFormatR32f = 3
-		bgfx::TextureFormat::RGBA8,     // spv::ImageFormatRgba8 = 4
-		bgfx::TextureFormat::RGBA8S,    // spv::ImageFormatRgba8Snorm = 5
-		bgfx::TextureFormat::RG32F,     // spv::ImageFormatRg32f = 6
-		bgfx::TextureFormat::RG16F,     // spv::ImageFormatRg16f = 7
-		bgfx::TextureFormat::RG11B10F,  // spv::ImageFormatR11fG11fB10f = 8
-		bgfx::TextureFormat::R16F,      // spv::ImageFormatR16f = 9
-		bgfx::TextureFormat::RGBA16,    // spv::ImageFormatRgba16 = 10
-		bgfx::TextureFormat::RGB10A2,   // spv::ImageFormatRgb10A2 = 11
-		bgfx::TextureFormat::RG16,      // spv::ImageFormatRg16 = 12
-		bgfx::TextureFormat::RG8,       // spv::ImageFormatRg8 = 13
-		bgfx::TextureFormat::R16,       // spv::ImageFormatR16 = 14
-		bgfx::TextureFormat::R8,        // spv::ImageFormatR8 = 15
-		bgfx::TextureFormat::RGBA16S,   // spv::ImageFormatRgba16Snorm = 16
-		bgfx::TextureFormat::RG16S,     // spv::ImageFormatRg16Snorm = 17
-		bgfx::TextureFormat::RG8S,      // spv::ImageFormatRg8Snorm = 18
-		bgfx::TextureFormat::R16S,      // spv::ImageFormatR16Snorm = 19
-		bgfx::TextureFormat::R8S,       // spv::ImageFormatR8Snorm = 20
-		bgfx::TextureFormat::RGBA32I,   // spv::ImageFormatRgba32i = 21
-		bgfx::TextureFormat::RGBA16I,   // spv::ImageFormatRgba16i = 22
-		bgfx::TextureFormat::RGBA8I,    // spv::ImageFormatRgba8i = 23
-		bgfx::TextureFormat::R32I,      // spv::ImageFormatR32i = 24
-		bgfx::TextureFormat::RG32I,     // spv::ImageFormatRg32i = 25
-		bgfx::TextureFormat::RG16I,     // spv::ImageFormatRg16i = 26
-		bgfx::TextureFormat::RG8I,      // spv::ImageFormatRg8i = 27
-		bgfx::TextureFormat::R16I,      // spv::ImageFormatR16i = 28
-		bgfx::TextureFormat::R8I,       // spv::ImageFormatR8i = 29
-		bgfx::TextureFormat::RGBA32U,   // spv::ImageFormatRgba32ui = 30
-		bgfx::TextureFormat::RGBA16U,   // spv::ImageFormatRgba16ui = 31
-		bgfx::TextureFormat::RGBA8U,    // spv::ImageFormatRgba8ui = 32
-		bgfx::TextureFormat::R32U,      // spv::ImageFormatR32ui = 33
-		bgfx::TextureFormat::Unknown,   // spv::ImageFormatRgb10a2ui = 34
-		bgfx::TextureFormat::RG32U,     // spv::ImageFormatRg32ui = 35
-		bgfx::TextureFormat::RG16U,     // spv::ImageFormatRg16ui = 36
-		bgfx::TextureFormat::RG8U,      // spv::ImageFormatRg8ui = 37
-		bgfx::TextureFormat::R16U,      // spv::ImageFormatR16ui = 38
-		bgfx::TextureFormat::R8U,       // spv::ImageFormatR8ui = 39
-		bgfx::TextureFormat::Unknown,   // spv::ImageFormatR64ui = 40
-		bgfx::TextureFormat::Unknown,   // spv::ImageFormatR64i = 41
+		graphics::TextureFormat::Unknown,   // spv::ImageFormatUnknown = 0
+		graphics::TextureFormat::RGBA32F,   // spv::ImageFormatRgba32f = 1
+		graphics::TextureFormat::RGBA16F,   // spv::ImageFormatRgba16f = 2
+		graphics::TextureFormat::R32F,      // spv::ImageFormatR32f = 3
+		graphics::TextureFormat::RGBA8,     // spv::ImageFormatRgba8 = 4
+		graphics::TextureFormat::RGBA8S,    // spv::ImageFormatRgba8Snorm = 5
+		graphics::TextureFormat::RG32F,     // spv::ImageFormatRg32f = 6
+		graphics::TextureFormat::RG16F,     // spv::ImageFormatRg16f = 7
+		graphics::TextureFormat::RG11B10F,  // spv::ImageFormatR11fG11fB10f = 8
+		graphics::TextureFormat::R16F,      // spv::ImageFormatR16f = 9
+		graphics::TextureFormat::RGBA16,    // spv::ImageFormatRgba16 = 10
+		graphics::TextureFormat::RGB10A2,   // spv::ImageFormatRgb10A2 = 11
+		graphics::TextureFormat::RG16,      // spv::ImageFormatRg16 = 12
+		graphics::TextureFormat::RG8,       // spv::ImageFormatRg8 = 13
+		graphics::TextureFormat::R16,       // spv::ImageFormatR16 = 14
+		graphics::TextureFormat::R8,        // spv::ImageFormatR8 = 15
+		graphics::TextureFormat::RGBA16S,   // spv::ImageFormatRgba16Snorm = 16
+		graphics::TextureFormat::RG16S,     // spv::ImageFormatRg16Snorm = 17
+		graphics::TextureFormat::RG8S,      // spv::ImageFormatRg8Snorm = 18
+		graphics::TextureFormat::R16S,      // spv::ImageFormatR16Snorm = 19
+		graphics::TextureFormat::R8S,       // spv::ImageFormatR8Snorm = 20
+		graphics::TextureFormat::RGBA32I,   // spv::ImageFormatRgba32i = 21
+		graphics::TextureFormat::RGBA16I,   // spv::ImageFormatRgba16i = 22
+		graphics::TextureFormat::RGBA8I,    // spv::ImageFormatRgba8i = 23
+		graphics::TextureFormat::R32I,      // spv::ImageFormatR32i = 24
+		graphics::TextureFormat::RG32I,     // spv::ImageFormatRg32i = 25
+		graphics::TextureFormat::RG16I,     // spv::ImageFormatRg16i = 26
+		graphics::TextureFormat::RG8I,      // spv::ImageFormatRg8i = 27
+		graphics::TextureFormat::R16I,      // spv::ImageFormatR16i = 28
+		graphics::TextureFormat::R8I,       // spv::ImageFormatR8i = 29
+		graphics::TextureFormat::RGBA32U,   // spv::ImageFormatRgba32ui = 30
+		graphics::TextureFormat::RGBA16U,   // spv::ImageFormatRgba16ui = 31
+		graphics::TextureFormat::RGBA8U,    // spv::ImageFormatRgba8ui = 32
+		graphics::TextureFormat::R32U,      // spv::ImageFormatR32ui = 33
+		graphics::TextureFormat::Unknown,   // spv::ImageFormatRgb10a2ui = 34
+		graphics::TextureFormat::RG32U,     // spv::ImageFormatRg32ui = 35
+		graphics::TextureFormat::RG16U,     // spv::ImageFormatRg16ui = 36
+		graphics::TextureFormat::RG8U,      // spv::ImageFormatRg8ui = 37
+		graphics::TextureFormat::R16U,      // spv::ImageFormatR16ui = 38
+		graphics::TextureFormat::R8U,       // spv::ImageFormatR8ui = 39
+		graphics::TextureFormat::Unknown,   // spv::ImageFormatR64ui = 40
+		graphics::TextureFormat::Unknown,   // spv::ImageFormatR64i = 41
 	};
 
 	static EShLanguage getLang(char _p)
@@ -301,19 +301,19 @@ namespace bgfx { namespace spirv
 		"a_texcoord6",
 		"a_texcoord7",
 	};
-	BX_STATIC_ASSERT(bgfx::Attrib::Count == BX_COUNTOF(s_attribName) );
+	BASE_STATIC_ASSERT(graphics::Attrib::Count == BASE_COUNTOF(s_attribName) );
 
-	bgfx::Attrib::Enum toAttribEnum(const bx::StringView& _name)
+	graphics::Attrib::Enum toAttribEnum(const base::StringView& _name)
 	{
 		for (uint8_t ii = 0; ii < Attrib::Count; ++ii)
 		{
-			if (0 == bx::strCmp(s_attribName[ii], _name) )
+			if (0 == base::strCmp(s_attribName[ii], _name) )
 			{
-				return bgfx::Attrib::Enum(ii);
+				return graphics::Attrib::Enum(ii);
 			}
 		}
 
-		return bgfx::Attrib::Count;
+		return graphics::Attrib::Count;
 	}
 
 	static const char* s_samplerTypes[] =
@@ -332,14 +332,14 @@ namespace bgfx { namespace spirv
 		"BgfxSampler2DMS",
 	};
 
-	static uint16_t writeUniformArray(bx::WriterI* _shaderWriter, const UniformArray& uniforms, bool isFragmentShader)
+	static uint16_t writeUniformArray(base::WriterI* _shaderWriter, const UniformArray& uniforms, bool isFragmentShader)
 	{
 		uint16_t size = 0;
 
-		bx::ErrorAssert err;
+		base::ErrorAssert err;
 
 		uint16_t count = uint16_t(uniforms.size());
-		bx::write(_shaderWriter, count, &err);
+		base::write(_shaderWriter, count, &err);
 
 		uint32_t fragmentBit = isFragmentShader ? kUniformFragmentBit : 0;
 
@@ -349,21 +349,21 @@ namespace bgfx { namespace spirv
 
 			if ( (un.type & ~kUniformMask) > UniformType::End)
 			{
-				size = bx::max(size, (uint16_t)(un.regIndex + un.regCount*16) );
+				size = base::max(size, (uint16_t)(un.regIndex + un.regCount*16) );
 			}
 
 			uint8_t nameSize = (uint8_t)un.name.size();
-			bx::write(_shaderWriter, nameSize, &err);
-			bx::write(_shaderWriter, un.name.c_str(), nameSize, &err);
-			bx::write(_shaderWriter, uint8_t(un.type | fragmentBit), &err);
-			bx::write(_shaderWriter, un.num, &err);
-			bx::write(_shaderWriter, un.regIndex, &err);
-			bx::write(_shaderWriter, un.regCount, &err);
-			bx::write(_shaderWriter, un.texComponent, &err);
-			bx::write(_shaderWriter, un.texDimension, &err);
-			bx::write(_shaderWriter, un.texFormat, &err);
+			base::write(_shaderWriter, nameSize, &err);
+			base::write(_shaderWriter, un.name.c_str(), nameSize, &err);
+			base::write(_shaderWriter, uint8_t(un.type | fragmentBit), &err);
+			base::write(_shaderWriter, un.num, &err);
+			base::write(_shaderWriter, un.regIndex, &err);
+			base::write(_shaderWriter, un.regCount, &err);
+			base::write(_shaderWriter, un.texComponent, &err);
+			base::write(_shaderWriter, un.texDimension, &err);
+			base::write(_shaderWriter, un.texFormat, &err);
 
-			BX_TRACE("%s, %s, %d, %d, %d"
+			BASE_TRACE("%s, %s, %d, %d, %d"
 				, un.name.c_str()
 				, getUniformTypeName(UniformType::Enum(un.type & ~kUniformMask))
 				, un.num
@@ -389,7 +389,7 @@ namespace bgfx { namespace spirv
 			case 1613:
 				return SPV_ENV_VULKAN_1_3;
 			default:
-				BX_ASSERT(0, "Unknown SPIR-V version requested. Returning SPV_ENV_VULKAN_1_0 as default.");
+				BASE_ASSERT(0, "Unknown SPIR-V version requested. Returning SPV_ENV_VULKAN_1_0 as default.");
 				return SPV_ENV_VULKAN_1_0;
 		}
 	}
@@ -408,7 +408,7 @@ namespace bgfx { namespace spirv
 			case 1613:
 				return glslang::EShTargetVulkan_1_3;
 			default:
-				BX_ASSERT(0, "Unknown SPIR-V version requested. Returning EShTargetVulkan_1_0 as default.");
+				BASE_ASSERT(0, "Unknown SPIR-V version requested. Returning EShTargetVulkan_1_0 as default.");
 				return glslang::EShTargetVulkan_1_0;
 		}
 	}
@@ -428,7 +428,7 @@ namespace bgfx { namespace spirv
 			case 1613:
 				return glslang::EShTargetSpv_1_6;
 			default:
-				BX_ASSERT(0, "Unknown SPIR-V version requested. Returning EShTargetSpv_1_0 as default.");
+				BASE_ASSERT(0, "Unknown SPIR-V version requested. Returning EShTargetSpv_1_0 as default.");
 				return glslang::EShTargetSpv_1_0;
 		}
 	}
@@ -439,18 +439,18 @@ namespace bgfx { namespace spirv
 	/// The value is 100.
 	constexpr int s_GLSL_VULKAN_CLIENT_VERSION = 100;
 
-	static bool compile(const Options& _options, uint32_t _version, const std::string& _code, bx::WriterI* _shaderWriter, bx::WriterI* _messageWriter, bool _firstPass)
+	static bool compile(const Options& _options, uint32_t _version, const std::string& _code, base::WriterI* _shaderWriter, base::WriterI* _messageWriter, bool _firstPass)
 	{
-		BX_UNUSED(_version);
+		BASE_UNUSED(_version);
 
-		bx::ErrorAssert messageErr;
+		base::ErrorAssert messageErr;
 
 		glslang::InitializeProcess();
 
 		EShLanguage stage = getLang(_options.shaderType);
 		if (EShLangCount == stage)
 		{
-			bx::write(_messageWriter, &messageErr, "Error: Unknown shader type '%c'.\n", _options.shaderType);
+			base::write(_messageWriter, &messageErr, "Error: Unknown shader type '%c'.\n", _options.shaderType);
 			return false;
 		}
 
@@ -480,7 +480,7 @@ namespace bgfx { namespace spirv
 		const char* shaderStrings[] = { _code.c_str() };
 		shader->setStrings(
 			  shaderStrings
-			, BX_COUNTOF(shaderStrings)
+			, BASE_COUNTOF(shaderStrings)
 			);
 		bool compiled = shader->parse(&resourceLimits
 			, 110
@@ -501,7 +501,7 @@ namespace bgfx { namespace spirv
 				int32_t start   = 0;
 				int32_t end     = INT32_MAX;
 
-				bx::StringView err = bx::strFind(log, "ERROR:");
+				base::StringView err = base::strFind(log, "ERROR:");
 
 				bool found = false;
 
@@ -516,13 +516,13 @@ namespace bgfx { namespace spirv
 
 				if (found)
 				{
-					start = bx::uint32_imax(1, line-10);
+					start = base::uint32_imax(1, line-10);
 					end   = start + 20;
 				}
 
 				printCode(_code.c_str(), line, start, end, column);
 
-				bx::write(_messageWriter, &messageErr, "%s\n", log);
+				base::write(_messageWriter, &messageErr, "%s\n", log);
 			}
 		}
 		else
@@ -538,7 +538,7 @@ namespace bgfx { namespace spirv
 				const char* log = program->getInfoLog();
 				if (NULL != log)
 				{
-					bx::write(_messageWriter, &messageErr, "%s\n", log);
+					base::write(_messageWriter, &messageErr, "%s\n", log);
 				}
 			}
 			else
@@ -557,14 +557,14 @@ namespace bgfx { namespace spirv
 					};
 					std::vector<Uniform> uniforms;
 
-					bx::LineReader reader(_code.c_str() );
+					base::LineReader reader(_code.c_str() );
 					while (!reader.isDone() )
 					{
-						bx::StringView strLine = reader.next();
+						base::StringView strLine = reader.next();
 
 						bool moved = false;
 
-						bx::StringView str = strFind(strLine, "uniform ");
+						base::StringView str = strFind(strLine, "uniform ");
 						if (!str.isEmpty() )
 						{
 							bool found = false;
@@ -573,9 +573,9 @@ namespace bgfx { namespace spirv
 
 							// add to samplers
 
-							for (uint32_t ii = 0; ii < BX_COUNTOF(s_samplerTypes); ++ii)
+							for (uint32_t ii = 0; ii < BASE_COUNTOF(s_samplerTypes); ++ii)
 							{
-								if (!bx::findIdentifierMatch(strLine, s_samplerTypes[ii]).isEmpty() )
+								if (!base::findIdentifierMatch(strLine, s_samplerTypes[ii]).isEmpty() )
 								{
 									found = true;
 									sampler = true;
@@ -592,7 +592,7 @@ namespace bgfx { namespace spirv
 									// included in the uniform blob that the application must upload
 									// we can't just remove them, because unused functions might still reference
 									// them and cause a compile error when they're gone
-									if (!bx::findIdentifierMatch(strLine, program->getUniformName(ii) ).isEmpty() )
+									if (!base::findIdentifierMatch(strLine, program->getUniformName(ii) ).isEmpty() )
 									{
 										found = true;
 										name = program->getUniformName(ii);
@@ -656,7 +656,7 @@ namespace bgfx { namespace spirv
 						Uniform un;
 						un.name = program->getUniformName(ii);
 
-						if (bx::hasSuffix(un.name.c_str(), ".@data") )
+						if (base::hasSuffix(un.name.c_str(), ".@data") )
 						{
 							continue;
 						}
@@ -699,7 +699,7 @@ namespace bgfx { namespace spirv
 					program->dumpReflection();
 				}
 
-				BX_UNUSED(spv::MemorySemanticsAllMemory);
+				BASE_UNUSED(spv::MemorySemanticsAllMemory);
 
 				glslang::TIntermediate* intermediate = program->getIntermediate(stage);
 				std::vector<uint32_t> spirv;
@@ -718,7 +718,7 @@ namespace bgfx { namespace spirv
 					, const char* m
 					)
 				{
-					bx::write(_messageWriter, &messageErr, "Error: %s\n", m);
+					base::write(_messageWriter, &messageErr, "Error: %s\n", m);
 				};
 
 				opt.SetMessageConsumer(print_msg_to_stderr);
@@ -754,7 +754,7 @@ namespace bgfx { namespace spirv
 						std::string name = refl.get_name(resource.id);
 
 						if (name.size() > 7
-						&&  0 == bx::strCmp(name.c_str() + name.length() - 7, "Texture") )
+						&&  0 == base::strCmp(name.c_str() + name.length() - 7, "Texture") )
 						{
 							name = name.substr(0, name.length() - 7);
 						}
@@ -821,7 +821,7 @@ namespace bgfx { namespace spirv
 						uniforms.push_back(un);
 					}
 
-					bx::Error err;
+					base::Error err;
 
 					// Loop through the storage buffer, and extract the uniform names:
 					for (auto& resource : resourcesrefl.storage_buffers)
@@ -848,28 +848,28 @@ namespace bgfx { namespace spirv
 					uint16_t size = writeUniformArray(_shaderWriter, uniforms, _options.shaderType == 'f');
 
 					uint32_t shaderSize = (uint32_t)spirv.size() * sizeof(uint32_t);
-					bx::write(_shaderWriter, shaderSize, &err);
-					bx::write(_shaderWriter, spirv.data(), shaderSize, &err);
+					base::write(_shaderWriter, shaderSize, &err);
+					base::write(_shaderWriter, spirv.data(), shaderSize, &err);
 					uint8_t nul = 0;
-					bx::write(_shaderWriter, nul, &err);
+					base::write(_shaderWriter, nul, &err);
 
 					const uint8_t numAttr = (uint8_t)program->getNumLiveAttributes();
-					bx::write(_shaderWriter, numAttr, &err);
+					base::write(_shaderWriter, numAttr, &err);
 
 					for (uint8_t ii = 0; ii < numAttr; ++ii)
 					{
-						bgfx::Attrib::Enum attr = toAttribEnum(program->getAttributeName(ii) );
-						if (bgfx::Attrib::Count != attr)
+						graphics::Attrib::Enum attr = toAttribEnum(program->getAttributeName(ii) );
+						if (graphics::Attrib::Count != attr)
 						{
-							bx::write(_shaderWriter, bgfx::attribToId(attr), &err);
+							base::write(_shaderWriter, graphics::attribToId(attr), &err);
 						}
 						else
 						{
-							bx::write(_shaderWriter, uint16_t(UINT16_MAX), &err);
+							base::write(_shaderWriter, uint16_t(UINT16_MAX), &err);
 						}
 					}
 
-					bx::write(_shaderWriter, size, &err);
+					base::write(_shaderWriter, size, &err);
 				}
 			}
 		}
@@ -884,17 +884,17 @@ namespace bgfx { namespace spirv
 
 } // namespace spirv
 
-	bool compileSPIRVShader(const Options& _options, uint32_t _version, const std::string& _code, bx::WriterI* _shaderWriter, bx::WriterI* _messageWriter)
+	bool compileSPIRVShader(const Options& _options, uint32_t _version, const std::string& _code, base::WriterI* _shaderWriter, base::WriterI* _messageWriter)
 	{
 		return spirv::compile(_options, _version, _code, _shaderWriter, _messageWriter, true);
 	}
 
-} // namespace bgfx
+} // namespace graphics
 #else
 namespace shaderc 
 {
 	// @todo Implement SPIRV support
-	bool compileSPIRVShader(const Options& _options, uint32_t _version, const std::string& _code, bx::WriterI* _shaderWriter, bx::WriterI* _messageWriter)
+	bool compileSPIRVShader(const Options& _options, uint32_t _version, const std::string& _code, base::WriterI* _shaderWriter, base::WriterI* _messageWriter)
 	{
 		return false;
 	}

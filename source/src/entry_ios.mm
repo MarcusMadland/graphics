@@ -1,11 +1,11 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
 #include "entry_p.h"
 
-#if ENTRY_CONFIG_USE_NATIVE && BX_PLATFORM_IOS
+#if ENTRY_CONFIG_USE_NATIVE && BASE_PLATFORM_IOS
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
@@ -17,19 +17,19 @@
 #   define HAS_METAL_SDK
 #endif
 
-#include <bgfx/platform.h>
+#include <graphics/platform.h>
 
-#include <mapp/uint32_t.h>
-#include <mapp/thread.h>
+#include <base/uint32_t.h>
+#include <base/thread.h>
 
-namespace mrender
+namespace entry
 {
 	struct MainThreadEntry
 	{
 		int m_argc;
 		const char* const* m_argv;
 
-		static int32_t threadFunc(bx::Thread* _thread, void* _userData);
+		static int32_t threadFunc(base::Thread* _thread, void* _userData);
 	};
 
 	static WindowHandle s_defaultWindow = { 0 };
@@ -39,13 +39,13 @@ namespace mrender
 		Context(uint32_t _width, uint32_t _height)
 		{
 			static const char* const argv[] = { "ios" };
-			m_mte.m_argc = BX_COUNTOF(argv);
+			m_mte.m_argc = BASE_COUNTOF(argv);
 			m_mte.m_argv = argv;
 
 			m_eventQueue.postSizeEvent(s_defaultWindow, _width, _height);
 
 			// Prevent render thread creation.
-			bgfx::renderFrame();
+			graphics::renderFrame();
 
 			m_thread.init(MainThreadEntry::threadFunc, &m_mte);
 		}
@@ -56,7 +56,7 @@ namespace mrender
 		}
 
 		MainThreadEntry m_mte;
-		bx::Thread m_thread;
+		base::Thread m_thread;
 		void* m_window;
 
 		EventQueue m_eventQueue;
@@ -64,9 +64,9 @@ namespace mrender
 
 	static Context* s_ctx;
 
-	int32_t MainThreadEntry::threadFunc(bx::Thread* _thread, void* _userData)
+	int32_t MainThreadEntry::threadFunc(base::Thread* _thread, void* _userData)
 	{
-		BX_UNUSED(_thread);
+		BASE_UNUSED(_thread);
 
 		CFBundleRef mainBundle = CFBundleGetMainBundle();
 		if (mainBundle != nil)
@@ -106,44 +106,44 @@ namespace mrender
 
 	WindowHandle createWindow(int32_t _x, int32_t _y, uint32_t _width, uint32_t _height, uint32_t _flags, const char* _title)
 	{
-		BX_UNUSED(_x, _y, _width, _height, _flags, _title);
+		BASE_UNUSED(_x, _y, _width, _height, _flags, _title);
 		WindowHandle handle = { UINT16_MAX };
 		return handle;
 	}
 
 	void destroyWindow(WindowHandle _handle)
 	{
-		BX_UNUSED(_handle);
+		BASE_UNUSED(_handle);
 	}
 
 	void setWindowPos(WindowHandle _handle, int32_t _x, int32_t _y)
 	{
-		BX_UNUSED(_handle, _x, _y);
+		BASE_UNUSED(_handle, _x, _y);
 	}
 
 	void setWindowSize(WindowHandle _handle, uint32_t _width, uint32_t _height)
 	{
-		BX_UNUSED(_handle, _width, _height);
+		BASE_UNUSED(_handle, _width, _height);
 	}
 
 	void setWindowTitle(WindowHandle _handle, const char* _title)
 	{
-		BX_UNUSED(_handle, _title);
+		BASE_UNUSED(_handle, _title);
 	}
 
 	void setWindowFlags(WindowHandle _handle, uint32_t _flags, bool _enabled)
 	{
-		BX_UNUSED(_handle, _flags, _enabled);
+		BASE_UNUSED(_handle, _flags, _enabled);
 	}
 
 	void toggleFullscreen(WindowHandle _handle)
 	{
-		BX_UNUSED(_handle);
+		BASE_UNUSED(_handle);
 	}
 
 	void setMouseLock(WindowHandle _handle, bool _lock)
 	{
-		BX_UNUSED(_handle, _lock);
+		BASE_UNUSED(_handle, _lock);
 	}
 
 	void* getNativeWindowHandle(WindowHandle _handle)
@@ -161,9 +161,9 @@ namespace mrender
 		return NULL;
 	}
 
-} // namespace mrender
+} // namespace graphics
 
-using namespace mrender;
+using namespace graphics;
 
 @interface ViewController : UIViewController
 @end
@@ -245,12 +245,12 @@ using namespace mrender;
 
 - (void)renderFrame
 {
-	bgfx::renderFrame();
+	graphics::renderFrame();
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
-	BX_UNUSED(touches);
+	BASE_UNUSED(touches);
 	UITouch *touch = [[event allTouches] anyObject];
 	CGPoint touchLocation = [touch locationInView:self];
 	touchLocation.x *= self.contentScaleFactor;
@@ -262,7 +262,7 @@ using namespace mrender;
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
 {
-	BX_UNUSED(touches);
+	BASE_UNUSED(touches);
 	UITouch *touch = [[event allTouches] anyObject];
 	CGPoint touchLocation = [touch locationInView:self];
 	touchLocation.x *= self.contentScaleFactor;
@@ -273,7 +273,7 @@ using namespace mrender;
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
 {
-	BX_UNUSED(touches);
+	BASE_UNUSED(touches);
 	UITouch *touch = [[event allTouches] anyObject];
 	CGPoint touchLocation = [touch locationInView:self];
 	touchLocation.x *= self.contentScaleFactor;
@@ -284,7 +284,7 @@ using namespace mrender;
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
 {
-	BX_UNUSED(touches);
+	BASE_UNUSED(touches);
 	UITouch *touch = [[event allTouches] anyObject];
 	CGPoint touchLocation = [touch locationInView:self];
 	touchLocation.x *= self.contentScaleFactor;
@@ -313,7 +313,7 @@ using namespace mrender;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-	BX_UNUSED(application, launchOptions);
+	BASE_UNUSED(application, launchOptions);
 
 	CGRect rect = [ [UIScreen mainScreen] bounds];
 	m_window = [ [UIWindow alloc] initWithFrame: rect];
@@ -339,33 +339,33 @@ using namespace mrender;
 
 - (void)applicationWillResignActive:(UIApplication *)application
 {
-	BX_UNUSED(application);
+	BASE_UNUSED(application);
 	s_ctx->m_eventQueue.postSuspendEvent(s_defaultWindow, Suspend::WillSuspend);
 	[m_view stop];
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application
 {
-	BX_UNUSED(application);
+	BASE_UNUSED(application);
 	s_ctx->m_eventQueue.postSuspendEvent(s_defaultWindow, Suspend::DidSuspend);
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application
 {
-	BX_UNUSED(application);
+	BASE_UNUSED(application);
 	s_ctx->m_eventQueue.postSuspendEvent(s_defaultWindow, Suspend::WillResume);
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
-	BX_UNUSED(application);
+	BASE_UNUSED(application);
 	s_ctx->m_eventQueue.postSuspendEvent(s_defaultWindow, Suspend::DidResume);
 	[m_view start];
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application
 {
-	BX_UNUSED(application);
+	BASE_UNUSED(application);
 	[m_view stop];
 }
 
@@ -386,4 +386,4 @@ int main(int _argc, const char* const* _argv)
 	return exitCode;
 }
 
-#endif // BX_PLATFORM_IOS
+#endif // BASE_PLATFORM_IOS

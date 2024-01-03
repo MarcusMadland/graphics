@@ -1,15 +1,15 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include "bgfx_p.h"
+#include "graphics_p.h"
 
-namespace bgfx { namespace agc
+namespace graphics { namespace agc
 {
 	RendererContextI* rendererCreate(const Init& _init)
 	{
-		BX_UNUSED(_init);
+		BASE_UNUSED(_init);
 		return NULL;
 	}
 
@@ -17,4 +17,4 @@ namespace bgfx { namespace agc
 	{
 	}
 
-} /* namespace agc */ } // namespace bgfx
+} /* namespace agc */ } // namespace graphics

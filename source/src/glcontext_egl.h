@@ -1,12 +1,12 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_GLCONTEXT_EGL_H_HEADER_GUARD
-#define BGFX_GLCONTEXT_EGL_H_HEADER_GUARD
+#ifndef GRAPHICS_GLCONTEXT_EGL_H_HEADER_GUARD
+#define GRAPHICS_GLCONTEXT_EGL_H_HEADER_GUARD
 
-#if BGFX_USE_EGL
+#if GRAPHICS_USE_EGL
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -24,7 +24,7 @@
 #	undef Status
 #endif // defined(Status)
 
-namespace bgfx { namespace gl
+namespace graphics { namespace gl
 {
 	struct SwapChainGL;
 
@@ -65,8 +65,8 @@ namespace bgfx { namespace gl
 		// true when MSAA is handled by the context instead of using MSAA FBO
 		bool m_msaaContext;
 	};
-} /* namespace gl */ } // namespace bgfx
+} /* namespace gl */ } // namespace graphics
 
-#endif // BGFX_USE_EGL
+#endif // GRAPHICS_USE_EGL
 
-#endif // BGFX_GLCONTEXT_EGL_H_HEADER_GUARD
+#endif // GRAPHICS_GLCONTEXT_EGL_H_HEADER_GUARD

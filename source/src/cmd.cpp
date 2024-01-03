@@ -1,18 +1,18 @@
 /*
  * Copyright 2010-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include <mapp/allocator.h>
-#include <mapp/commandline.h>
-#include <mapp/hash.h>
-#include <mapp/string.h>
+#include <base/allocator.h>
+#include <base/commandline.h>
+#include <base/hash.h>
+#include <base/string.h>
 
-#include "mrender/dbg.h"
-#include "mrender/cmd.h"
+#include "graphics/dbg.h"
+#include "graphics/cmd.h"
 #include "entry_p.h"
 
-#include <mapp/allocator.h>
+#include <base/allocator.h>
 #include <string>
 #include <unordered_map>
 
@@ -28,8 +28,8 @@ struct CmdContext
 
 	void add(const char* _name, ConsoleFn _fn, void* _userData)
 	{
-		const uint32_t cmd = bx::hash<bx::HashMurmur2A>(_name, (uint32_t)bx::strLen(_name) );
-		BX_ASSERT(m_lookup.end() == m_lookup.find(cmd), "Command \"%s\" already exist.", _name);
+		const uint32_t cmd = base::hash<base::HashMurmur2A>(_name, (uint32_t)base::strLen(_name) );
+		BASE_ASSERT(m_lookup.end() == m_lookup.find(cmd), "Command \"%s\" already exist.", _name);
 
 		Func fn = { _fn, _userData };
 		m_lookup.insert(std::make_pair(cmd, fn) );
@@ -37,7 +37,7 @@ struct CmdContext
 
 	void remove(const char* _name)
 	{
-		const uint32_t cmd = bx::hash<bx::HashMurmur2A>(_name, (uint32_t)bx::strLen(_name) );
+		const uint32_t cmd = base::hash<base::HashMurmur2A>(_name, (uint32_t)base::strLen(_name) );
 
 		CmdLookup::iterator it = m_lookup.find(cmd);
 		if (it != m_lookup.end() )
@@ -48,17 +48,17 @@ struct CmdContext
 
 	void exec(const char* _cmd)
 	{
-		for (bx::StringView next(_cmd); !next.isEmpty(); _cmd = next.getPtr() )
+		for (base::StringView next(_cmd); !next.isEmpty(); _cmd = next.getPtr() )
 		{
 			char commandLine[1024];
 			uint32_t size = sizeof(commandLine);
 			int argc;
 			char* argv[64];
-			next = bx::tokenizeCommandLine(_cmd, commandLine, size, argc, argv, BX_COUNTOF(argv), '\n');
+			next = base::tokenizeCommandLine(_cmd, commandLine, size, argc, argv, BASE_COUNTOF(argv), '\n');
 			if (argc > 0)
 			{
 				int err = -1;
-				uint32_t cmd = bx::hash<bx::HashMurmur2A>(argv[0], (uint32_t)bx::strLen(argv[0]) );
+				uint32_t cmd = base::hash<base::HashMurmur2A>(argv[0], (uint32_t)base::strLen(argv[0]) );
 				CmdLookup::iterator it = m_lookup.find(cmd);
 				if (it != m_lookup.end() )
 				{
@@ -103,12 +103,12 @@ static CmdContext* s_cmdContext;
 
 void cmdInit()
 {
-	s_cmdContext = BX_NEW(mrender::getAllocator(), CmdContext);
+	s_cmdContext = BASE_NEW(entry::getAllocator(), CmdContext);
 }
 
 void cmdShutdown()
 {
-	bx::deleteObject(mrender::getAllocator(), s_cmdContext);
+	base::deleteObject(entry::getAllocator(), s_cmdContext);
 }
 
 void cmdAdd(const char* _name, ConsoleFn _fn, void* _userData)
@@ -127,7 +127,7 @@ void cmdExec(const char* _format, ...)
 
 	va_list argList;
 	va_start(argList, _format);
-	bx::vsnprintf(tmp, BX_COUNTOF(tmp), _format, argList);
+	base::vsnprintf(tmp, BASE_COUNTOF(tmp), _format, argList);
 	va_end(argList);
 
 	s_cmdContext->exec(tmp);

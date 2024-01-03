@@ -1,9 +1,9 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include "bgfx.cpp"
+#include "graphics.cpp"
 #include "debug_renderdoc.cpp"
 #include "dxgi.cpp"
 #include "glcontext_egl.cpp"

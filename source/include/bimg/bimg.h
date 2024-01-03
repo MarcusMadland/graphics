@@ -11,14 +11,14 @@
 
 #define BIMG_API_VERSION UINT32_C(7)
 
-namespace bx
+namespace base
 {
 	struct AllocatorI;
 	class  Error;
 	struct ReaderSeekerI;
 	struct WriterI;
 
-} // namespace bx
+} // namespace base
 
 namespace bimg
 {
@@ -41,7 +41,7 @@ namespace bimg
 	///
 	/// @attention Availability depends on Caps (see: formats).
 	///
-	/// @attention C99 equivalent is `bgfx_texture_format_t`.
+	/// @attention C99 equivalent is `graphics_texture_format_t`.
 	///
 	struct TextureFormat
 	{
@@ -172,7 +172,7 @@ namespace bimg
 
 	/// Texture info.
 	///
-	/// @attention C99 equivalent is `bgfx_texture_info_t`.
+	/// @attention C99 equivalent is `graphics_texture_info_t`.
 	///
 	struct TextureInfo
 	{
@@ -189,7 +189,7 @@ namespace bimg
 
 	struct ImageContainer
 	{
-		bx::AllocatorI* m_allocator;
+		base::AllocatorI* m_allocator;
 		void*           m_data;
 
 		TextureFormat::Enum m_format;
@@ -442,7 +442,7 @@ namespace bimg
 
 	///
 	bool imageConvert(
-		  bx::AllocatorI* _allocator
+		  base::AllocatorI* _allocator
 		, void* _dst
 		, TextureFormat::Enum _dstFormat
 		, const void* _src
@@ -454,7 +454,7 @@ namespace bimg
 
 	///
 	ImageContainer* imageConvert(
-		  bx::AllocatorI* _allocator
+		  base::AllocatorI* _allocator
 		, TextureFormat::Enum _dstFormat
 		, const void* _src
 		, uint32_t _size
@@ -462,7 +462,7 @@ namespace bimg
 
 	///
 	ImageContainer* imageConvert(
-		  bx::AllocatorI* _allocator
+		  base::AllocatorI* _allocator
 		, TextureFormat::Enum _dstFormat
 		, const ImageContainer& _input
 		, bool _convertMips = true
@@ -470,7 +470,7 @@ namespace bimg
 
 	///
 	ImageContainer* imageAlloc(
-		  bx::AllocatorI* _allocator
+		  base::AllocatorI* _allocator
 		, TextureFormat::Enum _format
 		, uint16_t _width
 		, uint16_t _height
@@ -488,64 +488,64 @@ namespace bimg
 
 	///
 	int32_t imageWriteTga(
-		  bx::WriterI* _writer
+		  base::WriterI* _writer
 		, uint32_t _width
 		, uint32_t _height
 		, uint32_t _srcPitch
 		, const void* _src
 		, bool _grayscale
 		, bool _yflip
-		, bx::Error* _err = NULL
+		, base::Error* _err = NULL
 		);
 
 	///
 	int32_t imageWritePng(
-		  bx::WriterI* _writer
+		  base::WriterI* _writer
 		, uint32_t _width
 		, uint32_t _height
 		, uint32_t _srcPitch
 		, const void* _src
 		, TextureFormat::Enum _format
 		, bool _yflip
-		, bx::Error* _err = NULL
+		, base::Error* _err = NULL
 		);
 
 	///
 	int32_t imageWriteExr(
-		  bx::WriterI* _writer
+		  base::WriterI* _writer
 		, uint32_t _width
 		, uint32_t _height
 		, uint32_t _srcPitch
 		, const void* _src
 		, TextureFormat::Enum _format
 		, bool _yflip
-		, bx::Error* _err
+		, base::Error* _err
 		);
 
 	///
 	int32_t imageWriteHdr(
-		  bx::WriterI* _writer
+		  base::WriterI* _writer
 		, uint32_t _width
 		, uint32_t _height
 		, uint32_t _srcPitch
 		, const void* _src
 		, TextureFormat::Enum _format
 		, bool _yflip
-		, bx::Error* _err
+		, base::Error* _err
 		);
 
 	///
 	int32_t imageWriteDds(
-		  bx::WriterI* _writer
+		  base::WriterI* _writer
 		, ImageContainer& _imageContainer
 		, const void* _data
 		, uint32_t _size
-		, bx::Error* _err
+		, base::Error* _err
 		);
 
 	///
 	int32_t imageWriteKtx(
-		  bx::WriterI* _writer
+		  base::WriterI* _writer
 		, TextureFormat::Enum _format
 		, bool _cubeMap
 		, uint32_t _width
@@ -555,23 +555,23 @@ namespace bimg
 		, uint32_t _numLayers
 		, bool _srgb
 		, const void* _src
-		, bx::Error* _err = NULL
+		, base::Error* _err = NULL
 		);
 
 	///
 	int32_t imageWriteKtx(
-		  bx::WriterI* _writer
+		  base::WriterI* _writer
 		, ImageContainer& _imageContainer
 		, const void* _data
 		, uint32_t _size
-		, bx::Error* _err = NULL
+		, base::Error* _err = NULL
 		);
 
 	///
 	bool imageParse(
 		  ImageContainer& _imageContainer
-		, bx::ReaderSeekerI* _reader
-		, bx::Error* _err
+		, base::ReaderSeekerI* _reader
+		, base::Error* _err
 		);
 
 	///
@@ -579,44 +579,44 @@ namespace bimg
 		  ImageContainer& _imageContainer
 		, const void* _data
 		, uint32_t _size
-		, bx::Error* _err = NULL
+		, base::Error* _err = NULL
 		);
 
 	///
 	ImageContainer* imageParseDds(
-		  bx::AllocatorI* _allocator
+		  base::AllocatorI* _allocator
 		, const void* _src
 		, uint32_t _size
-		, bx::Error* _err
+		, base::Error* _err
 		);
 
 	///
 	ImageContainer* imageParseKtx(
-		  bx::AllocatorI* _allocator
+		  base::AllocatorI* _allocator
 		, const void* _src
 		, uint32_t _size
-		, bx::Error* _err
+		, base::Error* _err
 		);
 
 	///
 	ImageContainer* imageParsePvr3(
-		  bx::AllocatorI* _allocator
+		  base::AllocatorI* _allocator
 		, const void* _src
 		, uint32_t _size
-		, bx::Error* _err
+		, base::Error* _err
 		);
 
 	///
 	ImageContainer* imageParseGnf(
-		  bx::AllocatorI* _allocator
+		  base::AllocatorI* _allocator
 		, const void* _src
 		, uint32_t _size
-		, bx::Error* _err
+		, base::Error* _err
 		);
 
 	///
 	void imageDecodeToR8(
-		  bx::AllocatorI* _allocator
+		  base::AllocatorI* _allocator
 		, void* _dst
 		, const void* _src
 		, uint32_t _width
@@ -628,7 +628,7 @@ namespace bimg
 
 	///
 	void imageDecodeToBgra8(
-		  bx::AllocatorI* _allocator
+		  base::AllocatorI* _allocator
 		, void* _dst
 		, const void* _src
 		, uint32_t _width
@@ -639,7 +639,7 @@ namespace bimg
 
 	///
 	void imageDecodeToRgba8(
-		  bx::AllocatorI* _allocator
+		  base::AllocatorI* _allocator
 		, void* _dst
 		, const void* _src
 		, uint32_t _width
@@ -650,7 +650,7 @@ namespace bimg
 
 	///
 	void imageDecodeToRgba32f(
-		  bx::AllocatorI* _allocator
+		  base::AllocatorI* _allocator
 		, void* _dst
 		, const void* _src
 		, uint32_t _width

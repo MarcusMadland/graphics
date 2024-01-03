@@ -1,33 +1,33 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_RENDERER_VK_H_HEADER_GUARD
-#define BGFX_RENDERER_VK_H_HEADER_GUARD
+#ifndef GRAPHICS_RENDERER_VK_H_HEADER_GUARD
+#define GRAPHICS_RENDERER_VK_H_HEADER_GUARD
 
-#if BX_PLATFORM_ANDROID
+#if BASE_PLATFORM_ANDROID
 #	define VK_USE_PLATFORM_ANDROID_KHR
 #	define KHR_SURFACE_EXTENSION_NAME VK_KHR_ANDROID_SURFACE_EXTENSION_NAME
 #	define VK_IMPORT_INSTANCE_PLATFORM VK_IMPORT_INSTANCE_ANDROID
-#elif BX_PLATFORM_LINUX
+#elif BASE_PLATFORM_LINUX
 #	define VK_USE_PLATFORM_XLIB_KHR
 #	define VK_USE_PLATFORM_XCB_KHR
 //#	define VK_USE_PLATFORM_WAYLAND_KHR
 #	define KHR_SURFACE_EXTENSION_NAME VK_KHR_XCB_SURFACE_EXTENSION_NAME
 #	define VK_IMPORT_INSTANCE_PLATFORM VK_IMPORT_INSTANCE_LINUX
-#elif BX_PLATFORM_WINDOWS
+#elif BASE_PLATFORM_WINDOWS
 #	define VK_USE_PLATFORM_WIN32_KHR
 #	define KHR_SURFACE_EXTENSION_NAME  VK_KHR_WIN32_SURFACE_EXTENSION_NAME
 #	define VK_IMPORT_INSTANCE_PLATFORM VK_IMPORT_INSTANCE_WINDOWS
-#elif BX_PLATFORM_OSX
+#elif BASE_PLATFORM_OSX
 #	define VK_USE_PLATFORM_MACOS_MVK
 #	define KHR_SURFACE_EXTENSION_NAME  VK_MVK_MACOS_SURFACE_EXTENSION_NAME
 #	define VK_IMPORT_INSTANCE_PLATFORM VK_IMPORT_INSTANCE_MACOS
 #else
 #	define KHR_SURFACE_EXTENSION_NAME ""
 #	define VK_IMPORT_INSTANCE_PLATFORM
-#endif // BX_PLATFORM_*
+#endif // BASE_PLATFORM_*
 
 #define VK_NO_STDINT_H
 #define VK_NO_PROTOTYPES
@@ -238,21 +238,21 @@
 			VK_DESTROY_FUNC(SwapchainKHR);        \
 
 #define _VK_CHECK(_check, _call)                                                                                \
-				BX_MACRO_BLOCK_BEGIN                                                                            \
-					/*BX_TRACE(#_call);*/                                                                       \
+				BASE_MACRO_BLOCK_BEGIN                                                                            \
+					/*BASE_TRACE(#_call);*/                                                                       \
 					VkResult vkresult = _call;                                                                  \
 					_check(VK_SUCCESS == vkresult, #_call "; VK error 0x%x: %s", vkresult, getName(vkresult) ); \
-				BX_MACRO_BLOCK_END
+				BASE_MACRO_BLOCK_END
 
-#if BGFX_CONFIG_DEBUG
-#	define VK_CHECK(_call) _VK_CHECK(BX_ASSERT, _call)
+#if GRAPHICS_CONFIG_DEBUG
+#	define VK_CHECK(_call) _VK_CHECK(BASE_ASSERT, _call)
 #else
 #	define VK_CHECK(_call) _call
-#endif // BGFX_CONFIG_DEBUG
+#endif // GRAPHICS_CONFIG_DEBUG
 
-#if BGFX_CONFIG_DEBUG_ANNOTATION
-#	define BGFX_VK_BEGIN_DEBUG_UTILS_LABEL(_name, _abgr)         \
-		BX_MACRO_BLOCK_BEGIN                                     \
+#if GRAPHICS_CONFIG_DEBUG_ANNOTATION
+#	define GRAPHICS_VK_BEGIN_DEBUG_UTILS_LABEL(_name, _abgr)         \
+		BASE_MACRO_BLOCK_BEGIN                                     \
 			VkDebugUtilsLabelEXT dul;                            \
 			dul.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT; \
 			dul.pNext = NULL;                                    \
@@ -262,36 +262,36 @@
 			dul.color[2] = ((_abgr >> 8)  & 0xff) / 255.0f;      \
 			dul.color[3] = ((_abgr >> 0)  & 0xff) / 255.0f;      \
 			vkCmdBeginDebugUtilsLabelEXT(m_commandBuffer, &dul); \
-		BX_MACRO_BLOCK_END
+		BASE_MACRO_BLOCK_END
 
-#	define BGFX_VK_END_DEBUG_UTILS_LABEL()               \
-		BX_MACRO_BLOCK_BEGIN                             \
+#	define GRAPHICS_VK_END_DEBUG_UTILS_LABEL()               \
+		BASE_MACRO_BLOCK_BEGIN                             \
 			vkCmdEndDebugUtilsLabelEXT(m_commandBuffer); \
-		BX_MACRO_BLOCK_END
+		BASE_MACRO_BLOCK_END
 #else
-#	define BGFX_VK_BEGIN_DEBUG_UTILS_LABEL(_view, _abgr) BX_UNUSED(_view, _abgr)
-#	define BGFX_VK_END_DEBUG_UTILS_LABEL() BX_NOOP()
-#endif // BGFX_CONFIG_DEBUG_ANNOTATION
+#	define GRAPHICS_VK_BEGIN_DEBUG_UTILS_LABEL(_view, _abgr) BASE_UNUSED(_view, _abgr)
+#	define GRAPHICS_VK_END_DEBUG_UTILS_LABEL() BASE_NOOP()
+#endif // GRAPHICS_CONFIG_DEBUG_ANNOTATION
 
-#define BGFX_VK_PROFILER_BEGIN(_view, _abgr)                      \
-	BX_MACRO_BLOCK_BEGIN                                          \
-		BGFX_VK_BEGIN_DEBUG_UTILS_LABEL(s_viewName[view], _abgr); \
-		BGFX_PROFILER_BEGIN(s_viewName[view], _abgr);             \
-	BX_MACRO_BLOCK_END
+#define GRAPHICS_VK_PROFILER_BEGIN(_view, _abgr)                      \
+	BASE_MACRO_BLOCK_BEGIN                                          \
+		GRAPHICS_VK_BEGIN_DEBUG_UTILS_LABEL(s_viewName[view], _abgr); \
+		GRAPHICS_PROFILER_BEGIN(s_viewName[view], _abgr);             \
+	BASE_MACRO_BLOCK_END
 
-#define BGFX_VK_PROFILER_BEGIN_LITERAL(_name, _abgr)   \
-	BX_MACRO_BLOCK_BEGIN                               \
-		BGFX_VK_BEGIN_DEBUG_UTILS_LABEL(_name, _abgr); \
-		BGFX_PROFILER_BEGIN_LITERAL("" _name, _abgr);  \
-	BX_MACRO_BLOCK_END
+#define GRAPHICS_VK_PROFILER_BEGIN_LITERAL(_name, _abgr)   \
+	BASE_MACRO_BLOCK_BEGIN                               \
+		GRAPHICS_VK_BEGIN_DEBUG_UTILS_LABEL(_name, _abgr); \
+		GRAPHICS_PROFILER_BEGIN_LITERAL("" _name, _abgr);  \
+	BASE_MACRO_BLOCK_END
 
-#define BGFX_VK_PROFILER_END()           \
-	BX_MACRO_BLOCK_BEGIN                 \
-		BGFX_PROFILER_END();             \
-		BGFX_VK_END_DEBUG_UTILS_LABEL(); \
-	BX_MACRO_BLOCK_END
+#define GRAPHICS_VK_PROFILER_END()           \
+	BASE_MACRO_BLOCK_BEGIN                 \
+		GRAPHICS_PROFILER_END();             \
+		GRAPHICS_VK_END_DEBUG_UTILS_LABEL(); \
+	BASE_MACRO_BLOCK_END
 
-namespace bgfx { namespace vk
+namespace graphics { namespace vk
 {
 
 #define VK_DESTROY_FUNC(_name)                                   \
@@ -305,7 +305,7 @@ namespace bgfx { namespace vk
 		::Vk##_name* operator &() { return &vk; }                \
 		const ::Vk##_name* operator &() const { return &vk; }    \
 	};                                                           \
-	BX_STATIC_ASSERT(sizeof(::Vk##_name) == sizeof(Vk##_name) ); \
+	BASE_STATIC_ASSERT(sizeof(::Vk##_name) == sizeof(Vk##_name) ); \
 	void vkDestroy(Vk##_name&);                                  \
 	void release(Vk##_name&)
 VK_DESTROY
@@ -400,7 +400,7 @@ VK_DESTROY_FUNC(DescriptorSet);
 			: m_buffer(VK_NULL_HANDLE)
 			, m_deviceMem(VK_NULL_HANDLE)
 			, m_size(0)
-			, m_flags(BGFX_BUFFER_NONE)
+			, m_flags(GRAPHICS_BUFFER_NONE)
 			, m_dynamic(false)
 		{
 		}
@@ -445,7 +445,7 @@ VK_DESTROY_FUNC(DescriptorSet);
 
 	struct BindInfo
 	{
-		UniformHandle uniformHandle = BGFX_INVALID_HANDLE;
+		UniformHandle uniformHandle = GRAPHICS_INVALID_HANDLE;
 		BindType::Enum type;
 		uint32_t binding;
 		uint32_t samplerBinding;
@@ -489,14 +489,14 @@ VK_DESTROY_FUNC(DescriptorSet);
 		uint8_t m_numPredefined;
 		uint8_t m_numAttrs;
 
-		BindInfo m_bindInfo[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
+		BindInfo m_bindInfo[GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS];
 
-		TextureBindInfo m_textures[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
+		TextureBindInfo m_textures[GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS];
 		uint8_t m_numTextures;
 
 		uint32_t m_uniformBinding;
 		uint16_t m_numBindings;
-		VkDescriptorSetLayoutBinding m_bindings[2 * BGFX_CONFIG_MAX_TEXTURE_SAMPLERS + 1];
+		VkDescriptorSetLayoutBinding m_bindings[2 * GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS + 1];
 
 		bool m_oldBindingModel;
 	};
@@ -517,9 +517,9 @@ VK_DESTROY_FUNC(DescriptorSet);
 		const ShaderVK* m_vsh;
 		const ShaderVK* m_fsh;
 
-		BindInfo m_bindInfo[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
+		BindInfo m_bindInfo[GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS];
 
-		TextureBindInfo m_textures[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
+		TextureBindInfo m_textures[GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS];
 		uint8_t m_numTextures;
 
 		PredefinedUniform m_predefined[PredefinedUniform::Count * 2];
@@ -532,7 +532,7 @@ VK_DESTROY_FUNC(DescriptorSet);
 	struct TimerQueryVK
 	{
 		TimerQueryVK()
-			: m_control(BX_COUNTOF(m_query) )
+			: m_control(BASE_COUNTOF(m_query) )
 		{
 		}
 
@@ -568,20 +568,20 @@ VK_DESTROY_FUNC(DescriptorSet);
 
 		uint64_t m_frequency;
 
-		Result m_result[BGFX_CONFIG_MAX_VIEWS+1];
-		Query m_query[BGFX_CONFIG_MAX_VIEWS*4];
+		Result m_result[GRAPHICS_CONFIG_MAX_VIEWS+1];
+		Query m_query[GRAPHICS_CONFIG_MAX_VIEWS*4];
 
 		VkBuffer m_readback;
 		VkDeviceMemory m_readbackMemory;
 		VkQueryPool m_queryPool;
 		const uint64_t* m_queryResult;
-		bx::RingBufferControl m_control;
+		base::RingBufferControl m_control;
 	};
 
 	struct OcclusionQueryVK
 	{
 		OcclusionQueryVK()
-			: m_control(BX_COUNTOF(m_handle) )
+			: m_control(BASE_COUNTOF(m_handle) )
 		{
 		}
 
@@ -593,13 +593,13 @@ VK_DESTROY_FUNC(DescriptorSet);
 		void resolve(Frame* _render);
 		void invalidate(OcclusionQueryHandle _handle);
 
-		OcclusionQueryHandle m_handle[BGFX_CONFIG_MAX_OCCLUSION_QUERIES];
+		OcclusionQueryHandle m_handle[GRAPHICS_CONFIG_MAX_OCCLUSION_QUERIES];
 
 		VkBuffer m_readback;
 		VkDeviceMemory m_readbackMemory;
 		VkQueryPool m_queryPool;
 		const uint32_t* m_queryResult;
-		bx::RingBufferControl m_control;
+		base::RingBufferControl m_control;
 	};
 
 	struct ReadbackVK
@@ -680,7 +680,7 @@ VK_DESTROY_FUNC(DescriptorSet);
 		static VkImageAspectFlags getAspectMask(VkFormat _format);
 	};
 
-	constexpr uint32_t kMaxBackBuffers = bx::max(BGFX_CONFIG_MAX_BACK_BUFFERS, 10);
+	constexpr uint32_t kMaxBackBuffers = base::max(GRAPHICS_CONFIG_MAX_BACK_BUFFERS, 10);
 
 	struct SwapChainVK
 	{
@@ -789,21 +789,21 @@ VK_DESTROY_FUNC(DescriptorSet);
 
 		bool isRenderable() const;
 
-		TextureHandle m_texture[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
+		TextureHandle m_texture[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
 		TextureHandle m_depth;
 		uint32_t m_width;
 		uint32_t m_height;
 		uint16_t m_denseIdx;
 		uint8_t m_num;
 		uint8_t m_numTh;
-		Attachment m_attachment[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
+		Attachment m_attachment[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
 
 		SwapChainVK m_swapChain;
 		void* m_nwh;
 		bool m_needPresent;
 		bool m_needResolve;
 
-		VkImageView m_textureImageViews[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
+		VkImageView m_textureImageViews[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
 		VkFramebuffer m_framebuffer;
 		VkRenderPass m_renderPass;
 		MsaaSamplerVK m_sampler;
@@ -848,13 +848,13 @@ VK_DESTROY_FUNC(DescriptorSet);
 			VkFence m_fence = VK_NULL_HANDLE;
 		};
 
-		CommandList m_commandList[BGFX_CONFIG_MAX_FRAME_LATENCY];
+		CommandList m_commandList[GRAPHICS_CONFIG_MAX_FRAME_LATENCY];
 
 		uint32_t             m_numWaitSemaphores;
-		VkSemaphore          m_waitSemaphores[BGFX_CONFIG_MAX_FRAME_BUFFERS];
-		VkPipelineStageFlags m_waitSemaphoreStages[BGFX_CONFIG_MAX_FRAME_BUFFERS];
+		VkSemaphore          m_waitSemaphores[GRAPHICS_CONFIG_MAX_FRAME_BUFFERS];
+		VkPipelineStageFlags m_waitSemaphoreStages[GRAPHICS_CONFIG_MAX_FRAME_BUFFERS];
 		uint32_t             m_numSignalSemaphores;
-		VkSemaphore          m_signalSemaphores[BGFX_CONFIG_MAX_FRAME_BUFFERS];
+		VkSemaphore          m_signalSemaphores[GRAPHICS_CONFIG_MAX_FRAME_BUFFERS];
 
 		struct Resource
 		{
@@ -863,7 +863,7 @@ VK_DESTROY_FUNC(DescriptorSet);
 		};
 
 		typedef stl::vector<Resource> ResourceArray;
-		ResourceArray m_release[BGFX_CONFIG_MAX_FRAME_LATENCY];
+		ResourceArray m_release[GRAPHICS_CONFIG_MAX_FRAME_LATENCY];
 
 	private:
 		template<typename Ty>
@@ -875,6 +875,6 @@ VK_DESTROY_FUNC(DescriptorSet);
 		}
 	};
 
-} /* namespace bgfx */ } // namespace vk
+} /* namespace graphics */ } // namespace vk
 
-#endif // BGFX_RENDERER_VK_H_HEADER_GUARD
+#endif // GRAPHICS_RENDERER_VK_H_HEADER_GUARD

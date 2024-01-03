@@ -1,11 +1,11 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#include "bgfx_p.h"
+#include "graphics_p.h"
 
-namespace bgfx { namespace noop
+namespace graphics { namespace noop
 {
 	struct RendererContextNOOP : public RendererContextI
 	{
@@ -13,52 +13,52 @@ namespace bgfx { namespace noop
 		{
 			// Pretend all features are available.
 			g_caps.supported = 0
-				| BGFX_CAPS_ALPHA_TO_COVERAGE
-				| BGFX_CAPS_BLEND_INDEPENDENT
-				| BGFX_CAPS_COMPUTE
-				| BGFX_CAPS_CONSERVATIVE_RASTER
-				| BGFX_CAPS_DRAW_INDIRECT
-				| BGFX_CAPS_FRAGMENT_DEPTH
-				| BGFX_CAPS_FRAGMENT_ORDERING
-				| BGFX_CAPS_GRAPHICS_DEBUGGER
-				| BGFX_CAPS_HIDPI
-				| BGFX_CAPS_INDEX32
-				| BGFX_CAPS_INSTANCING
-				| BGFX_CAPS_OCCLUSION_QUERY
-				| BGFX_CAPS_RENDERER_MULTITHREADED
-				| BGFX_CAPS_SWAP_CHAIN
-				| BGFX_CAPS_TEXTURE_2D_ARRAY
-				| BGFX_CAPS_TEXTURE_3D
-				| BGFX_CAPS_TEXTURE_BLIT
-				| BGFX_CAPS_TEXTURE_COMPARE_ALL
-				| BGFX_CAPS_TEXTURE_COMPARE_LEQUAL
-				| BGFX_CAPS_TEXTURE_CUBE_ARRAY
-				| BGFX_CAPS_TEXTURE_READ_BACK
-				| BGFX_CAPS_VERTEX_ATTRIB_HALF
-				| BGFX_CAPS_VERTEX_ATTRIB_UINT10
+				| GRAPHICS_CAPS_ALPHA_TO_COVERAGE
+				| GRAPHICS_CAPS_BLEND_INDEPENDENT
+				| GRAPHICS_CAPS_COMPUTE
+				| GRAPHICS_CAPS_CONSERVATIVE_RASTER
+				| GRAPHICS_CAPS_DRAW_INDIRECT
+				| GRAPHICS_CAPS_FRAGMENT_DEPTH
+				| GRAPHICS_CAPS_FRAGMENT_ORDERING
+				| GRAPHICS_CAPS_GRAPHICS_DEBUGGER
+				| GRAPHICS_CAPS_HIDPI
+				| GRAPHICS_CAPS_INDEX32
+				| GRAPHICS_CAPS_INSTANCING
+				| GRAPHICS_CAPS_OCCLUSION_QUERY
+				| GRAPHICS_CAPS_RENDERER_MULTITHREADED
+				| GRAPHICS_CAPS_SWAP_CHAIN
+				| GRAPHICS_CAPS_TEXTURE_2D_ARRAY
+				| GRAPHICS_CAPS_TEXTURE_3D
+				| GRAPHICS_CAPS_TEXTURE_BLIT
+				| GRAPHICS_CAPS_TEXTURE_COMPARE_ALL
+				| GRAPHICS_CAPS_TEXTURE_COMPARE_LEQUAL
+				| GRAPHICS_CAPS_TEXTURE_CUBE_ARRAY
+				| GRAPHICS_CAPS_TEXTURE_READ_BACK
+				| GRAPHICS_CAPS_VERTEX_ATTRIB_HALF
+				| GRAPHICS_CAPS_VERTEX_ATTRIB_UINT10
 				;
 
 			// Pretend all features are available for all texture formats.
 			for (uint32_t formatIdx = 0; formatIdx < TextureFormat::Count; ++formatIdx)
 			{
 				g_caps.formats[formatIdx] = 0
-					| BGFX_CAPS_FORMAT_TEXTURE_NONE
-					| BGFX_CAPS_FORMAT_TEXTURE_2D
-					| BGFX_CAPS_FORMAT_TEXTURE_2D_SRGB
-					| BGFX_CAPS_FORMAT_TEXTURE_2D_EMULATED
-					| BGFX_CAPS_FORMAT_TEXTURE_3D
-					| BGFX_CAPS_FORMAT_TEXTURE_3D_SRGB
-					| BGFX_CAPS_FORMAT_TEXTURE_3D_EMULATED
-					| BGFX_CAPS_FORMAT_TEXTURE_CUBE
-					| BGFX_CAPS_FORMAT_TEXTURE_CUBE_SRGB
-					| BGFX_CAPS_FORMAT_TEXTURE_CUBE_EMULATED
-					| BGFX_CAPS_FORMAT_TEXTURE_VERTEX
-					| BGFX_CAPS_FORMAT_TEXTURE_IMAGE_READ
-					| BGFX_CAPS_FORMAT_TEXTURE_IMAGE_WRITE
-					| BGFX_CAPS_FORMAT_TEXTURE_FRAMEBUFFER
-					| BGFX_CAPS_FORMAT_TEXTURE_FRAMEBUFFER_MSAA
-					| BGFX_CAPS_FORMAT_TEXTURE_MSAA
-					| BGFX_CAPS_FORMAT_TEXTURE_MIP_AUTOGEN
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_NONE
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_2D
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_2D_SRGB
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_2D_EMULATED
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_3D
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_3D_SRGB
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_3D_EMULATED
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_CUBE
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_CUBE_SRGB
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_CUBE_EMULATED
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_VERTEX
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_IMAGE_READ
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_IMAGE_WRITE
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_FRAMEBUFFER
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_FRAMEBUFFER_MSAA
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_MSAA
+					| GRAPHICS_CAPS_FORMAT_TEXTURE_MIP_AUTOGEN
 					;
 			}
 
@@ -66,8 +66,8 @@ namespace bgfx { namespace noop
 			g_caps.limits.maxTextureSize     = 16384;
 			g_caps.limits.maxTextureLayers   = 2048;
 			g_caps.limits.maxComputeBindings = g_caps.limits.maxTextureSamplers;
-			g_caps.limits.maxFBAttachments   = BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS;
-			g_caps.limits.maxVertexStreams   = BGFX_CONFIG_MAX_VERTEX_STREAMS;
+			g_caps.limits.maxFBAttachments   = GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS;
+			g_caps.limits.maxVertexStreams   = GRAPHICS_CONFIG_MAX_VERTEX_STREAMS;
 		}
 
 		~RendererContextNOOP()
@@ -81,7 +81,7 @@ namespace bgfx { namespace noop
 
 		const char* getRendererName() const override
 		{
-			return BGFX_RENDERER_NOOP_NAME;
+			return GRAPHICS_RENDERER_NOOP_NAME;
 		}
 
 		bool isDeviceRemoved() override
@@ -241,8 +241,8 @@ namespace bgfx { namespace noop
 
 		void submit(Frame* _render, ClearQuad& /*_clearQuad*/, TextVideoMemBlitter& /*_textVideoMemBlitter*/) override
 		{
-			const int64_t timerFreq = bx::getHPFrequency();
-			const int64_t timeBegin = bx::getHPCounter();
+			const int64_t timerFreq = base::getHPFrequency();
+			const int64_t timeBegin = base::getHPCounter();
 
 			Stats& perfStats = _render->m_perfStats;
 			perfStats.cpuTimeBegin  = timeBegin;
@@ -254,7 +254,7 @@ namespace bgfx { namespace noop
 			perfStats.gpuTimerFreq  = 1000000000;
 			perfStats.gpuFrameNum   = 0;
 
-			bx::memSet(perfStats.numPrims, 0, sizeof(perfStats.numPrims) );
+			base::memSet(perfStats.numPrims, 0, sizeof(perfStats.numPrims) );
 
 			perfStats.gpuMemoryMax  = -INT64_MAX;
 			perfStats.gpuMemoryUsed = -INT64_MAX;
@@ -273,14 +273,14 @@ namespace bgfx { namespace noop
 
 	RendererContextI* rendererCreate(const Init& _init)
 	{
-		BX_UNUSED(_init);
-		s_renderNOOP = BX_NEW(g_allocator, RendererContextNOOP);
+		BASE_UNUSED(_init);
+		s_renderNOOP = BASE_NEW(g_allocator, RendererContextNOOP);
 		return s_renderNOOP;
 	}
 
 	void rendererDestroy()
 	{
-		bx::deleteObject(g_allocator, s_renderNOOP);
+		base::deleteObject(g_allocator, s_renderNOOP);
 		s_renderNOOP = NULL;
 	}
-} /* namespace noop */ } // namespace bgfx
+} /* namespace noop */ } // namespace graphics

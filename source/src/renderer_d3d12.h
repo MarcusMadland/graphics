@@ -1,24 +1,24 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_RENDERER_D3D12_H_HEADER_GUARD
-#define BGFX_RENDERER_D3D12_H_HEADER_GUARD
+#ifndef GRAPHICS_RENDERER_D3D12_H_HEADER_GUARD
+#define GRAPHICS_RENDERER_D3D12_H_HEADER_GUARD
 
-#define USE_D3D12_DYNAMIC_LIB (BX_PLATFORM_WINDOWS || BX_PLATFORM_LINUX)
+#define USE_D3D12_DYNAMIC_LIB (BASE_PLATFORM_WINDOWS || BASE_PLATFORM_LINUX)
 
 #include <sal.h>
 #include <unknwn.h>
 
-#if BX_PLATFORM_LINUX || BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
+#if BASE_PLATFORM_LINUX || BASE_PLATFORM_WINDOWS || BASE_PLATFORM_WINRT
 #   include <d3d12.h>
 #else
-#   if !BGFX_CONFIG_DEBUG
+#   if !GRAPHICS_CONFIG_DEBUG
 #      define D3DCOMPILE_NO_DEBUG 1
-#   endif // !BGFX_CONFIG_DEBUG
+#   endif // !GRAPHICS_CONFIG_DEBUG
 #   include <d3d12_x.h>
-#endif // BX_PLATFORM_XBOXONE
+#endif // BASE_PLATFORM_XBOXONE
 
 #if defined(__MINGW32__) // BK - temp workaround for MinGW until I nuke d3dx12 usage.
 extern "C++" {
@@ -47,20 +47,20 @@ extern "C++" {
 #include "nvapi.h"
 #include "dxgi.h"
 
-#if BGFX_CONFIG_DEBUG_ANNOTATION && !BX_PLATFORM_LINUX
-#	if BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
+#if GRAPHICS_CONFIG_DEBUG_ANNOTATION && !BASE_PLATFORM_LINUX
+#	if BASE_PLATFORM_WINDOWS || BASE_PLATFORM_WINRT
 typedef struct PIXEventsThreadInfo* (WINAPI* PFN_PIX_GET_THREAD_INFO)();
 typedef uint64_t                    (WINAPI* PFN_PIX_EVENTS_REPLACE_BLOCK)(bool _getEarliestTime);
 
-extern PFN_PIX_GET_THREAD_INFO      bgfx_PIXGetThreadInfo;
-extern PFN_PIX_EVENTS_REPLACE_BLOCK bgfx_PIXEventsReplaceBlock;
+extern PFN_PIX_GET_THREAD_INFO      graphics_PIXGetThreadInfo;
+extern PFN_PIX_EVENTS_REPLACE_BLOCK graphics_PIXEventsReplaceBlock;
 
-#		define PIXGetThreadInfo      bgfx_PIXGetThreadInfo
-#		define PIXEventsReplaceBlock bgfx_PIXEventsReplaceBlock
+#		define PIXGetThreadInfo      graphics_PIXGetThreadInfo
+#		define PIXEventsReplaceBlock graphics_PIXEventsReplaceBlock
 #	else
-extern "C" struct PIXEventsThreadInfo* WINAPI bgfx_PIXGetThreadInfo();
-extern "C" uint64_t                    WINAPI bgfx_PIXEventsReplaceBlock(bool _getEarliestTime);
-#	endif // BX_PLATFORM_WINDOWS
+extern "C" struct PIXEventsThreadInfo* WINAPI graphics_PIXGetThreadInfo();
+extern "C" uint64_t                    WINAPI graphics_PIXEventsReplaceBlock(bool _getEarliestTime);
+#	endif // BASE_PLATFORM_WINDOWS
 
 #	include <pix3.h>
 
@@ -72,30 +72,30 @@ extern "C" uint64_t                    WINAPI bgfx_PIXEventsReplaceBlock(bool _g
 #	define PIX3_SETMARKER(_commandList, _color, _name)  _PIX3_SETMARKER(_commandList, _color, _name)
 #	define PIX3_ENDEVENT(_commandList)                  _PIX3_ENDEVENT(_commandList)
 #else
-#	define PIX3_BEGINEVENT(_commandList, _color, _name) BX_UNUSED(_commandList, _color, _name)
-#	define PIX3_SETMARKER(_commandList, _color, _name)  BX_UNUSED(_commandList, _color, _name)
-#	define PIX3_ENDEVENT(_commandList)                  BX_UNUSED(_commandList)
-#endif // BGFX_CONFIG_DEBUG_ANNOTATION
+#	define PIX3_BEGINEVENT(_commandList, _color, _name) BASE_UNUSED(_commandList, _color, _name)
+#	define PIX3_SETMARKER(_commandList, _color, _name)  BASE_UNUSED(_commandList, _color, _name)
+#	define PIX3_ENDEVENT(_commandList)                  BASE_UNUSED(_commandList)
+#endif // GRAPHICS_CONFIG_DEBUG_ANNOTATION
 
-#define BGFX_D3D12_PROFILER_BEGIN(_view, _abgr)                   \
-	BX_MACRO_BLOCK_BEGIN                                          \
+#define GRAPHICS_D3D12_PROFILER_BEGIN(_view, _abgr)                   \
+	BASE_MACRO_BLOCK_BEGIN                                          \
 		PIX3_BEGINEVENT(m_commandList, _abgr, s_viewName[_view]); \
-		BGFX_PROFILER_BEGIN(s_viewName[view], _abgr);             \
-	BX_MACRO_BLOCK_END
+		GRAPHICS_PROFILER_BEGIN(s_viewName[view], _abgr);             \
+	BASE_MACRO_BLOCK_END
 
-#define BGFX_D3D12_PROFILER_BEGIN_LITERAL(_name, _abgr)           \
-	BX_MACRO_BLOCK_BEGIN                                          \
+#define GRAPHICS_D3D12_PROFILER_BEGIN_LITERAL(_name, _abgr)           \
+	BASE_MACRO_BLOCK_BEGIN                                          \
 		PIX3_BEGINEVENT(m_commandList, _abgr, "" _name);          \
-		BGFX_PROFILER_BEGIN_LITERAL("" _name, _abgr);             \
-	BX_MACRO_BLOCK_END
+		GRAPHICS_PROFILER_BEGIN_LITERAL("" _name, _abgr);             \
+	BASE_MACRO_BLOCK_END
 
-#define BGFX_D3D12_PROFILER_END()     \
-	BX_MACRO_BLOCK_BEGIN              \
-		BGFX_PROFILER_END();          \
+#define GRAPHICS_D3D12_PROFILER_END()     \
+	BASE_MACRO_BLOCK_BEGIN              \
+		GRAPHICS_PROFILER_END();          \
 		PIX3_ENDEVENT(m_commandList); \
-	BX_MACRO_BLOCK_END
+	BASE_MACRO_BLOCK_END
 
-namespace bgfx { namespace d3d12
+namespace graphics { namespace d3d12
 {
 	typedef HRESULT (WINAPI* PFN_D3D12_ENABLE_EXPERIMENTAL_FEATURES)(uint32_t _numFeatures, const IID* _iids, void* _configurationStructs, uint32_t* _configurationStructSizes);
 
@@ -183,7 +183,7 @@ namespace bgfx { namespace d3d12
 
 	private:
 		ID3D12DescriptorHeap* m_heap;
-		bx::HandleAlloc* m_handleAlloc;
+		base::HandleAlloc* m_handleAlloc;
 		D3D12_CPU_DESCRIPTOR_HANDLE m_cpuHandle;
 		D3D12_GPU_DESCRIPTOR_HANDLE m_gpuHandle;
 		uint32_t m_incrementSize;
@@ -196,7 +196,7 @@ namespace bgfx { namespace d3d12
 			: m_ptr(NULL)
 			, m_state(D3D12_RESOURCE_STATE_COMMON)
 			, m_size(0)
-			, m_flags(BGFX_BUFFER_NONE)
+			, m_flags(GRAPHICS_BUFFER_NONE)
 			, m_dynamic(false)
 		{
 		}
@@ -277,16 +277,16 @@ namespace bgfx { namespace d3d12
 
 		void create(const ShaderD3D12* _vsh, const ShaderD3D12* _fsh)
 		{
-			BX_ASSERT(NULL != _vsh->m_code, "Vertex shader doesn't exist.");
+			BASE_ASSERT(NULL != _vsh->m_code, "Vertex shader doesn't exist.");
 			m_vsh = _vsh;
-			bx::memCopy(&m_predefined[0], _vsh->m_predefined, _vsh->m_numPredefined*sizeof(PredefinedUniform));
+			base::memCopy(&m_predefined[0], _vsh->m_predefined, _vsh->m_numPredefined*sizeof(PredefinedUniform));
 			m_numPredefined = _vsh->m_numPredefined;
 
 			if (NULL != _fsh)
 			{
-				BX_ASSERT(NULL != _fsh->m_code, "Fragment shader doesn't exist.");
+				BASE_ASSERT(NULL != _fsh->m_code, "Fragment shader doesn't exist.");
 				m_fsh = _fsh;
-				bx::memCopy(&m_predefined[m_numPredefined], _fsh->m_predefined, _fsh->m_numPredefined*sizeof(PredefinedUniform));
+				base::memCopy(&m_predefined[m_numPredefined], _fsh->m_predefined, _fsh->m_numPredefined*sizeof(PredefinedUniform));
 				m_numPredefined += _fsh->m_numPredefined;
 			}
 		}
@@ -321,8 +321,8 @@ namespace bgfx { namespace d3d12
 			, m_state(D3D12_RESOURCE_STATE_COMMON)
 			, m_numMips(0)
 		{
-			bx::memSet(&m_srvd, 0, sizeof(m_srvd) );
-			bx::memSet(&m_uavd, 0, sizeof(m_uavd) );
+			base::memSet(&m_srvd, 0, sizeof(m_srvd) );
+			base::memSet(&m_uavd, 0, sizeof(m_uavd) );
 		}
 
 		void* create(const Memory* _mem, uint64_t _flags, uint8_t _skip);
@@ -363,7 +363,7 @@ namespace bgfx { namespace d3d12
 			, m_state(D3D12_RESOURCE_STATE_PRESENT)
 			, m_needPresent(false)
 		{
-			m_depth.idx = bgfx::kInvalidHandle;
+			m_depth.idx = graphics::kInvalidHandle;
 		}
 
 		void create(uint8_t _num, const Attachment* _attachment);
@@ -376,7 +376,7 @@ namespace bgfx { namespace d3d12
 		void clear(ID3D12GraphicsCommandList* _commandList, const Clear& _clear, const float _palette[][4], const D3D12_RECT* _rect = NULL, uint32_t _num = 0);
 		D3D12_RESOURCE_STATES setState(ID3D12GraphicsCommandList* _commandList, uint8_t _idx, D3D12_RESOURCE_STATES _state);
 
-		TextureHandle m_texture[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
+		TextureHandle m_texture[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
 		TextureHandle m_depth;
 		Dxgi::SwapChainI* m_swapChain;
 		void* m_nwh;
@@ -385,7 +385,7 @@ namespace bgfx { namespace d3d12
 		uint16_t m_denseIdx;
 		uint8_t m_num;
 		uint8_t m_numTh;
-		Attachment m_attachment[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
+		Attachment m_attachment[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
 		D3D12_RESOURCE_STATES m_state;
 		bool m_needPresent;
 	};
@@ -395,9 +395,9 @@ namespace bgfx { namespace d3d12
 		CommandQueueD3D12()
 			: m_currentFence(0)
 			, m_completedFence(0)
-			, m_control(BX_COUNTOF(m_commandList) )
+			, m_control(BASE_COUNTOF(m_commandList) )
 		{
-			BX_STATIC_ASSERT(BX_COUNTOF(m_commandList) == BX_COUNTOF(m_release) );
+			BASE_STATIC_ASSERT(BASE_COUNTOF(m_commandList) == BASE_COUNTOF(m_release) );
 		}
 
 		void init(ID3D12Device* _device);
@@ -423,7 +423,7 @@ namespace bgfx { namespace d3d12
 		CommandList m_commandList[256];
 		typedef stl::vector<ID3D12Resource*> ResourceArray;
 		ResourceArray m_release[256];
-		bx::RingBufferControl m_control;
+		base::RingBufferControl m_control;
 	};
 
 	struct BatchD3D12
@@ -442,7 +442,7 @@ namespace bgfx { namespace d3d12
 			, m_minIndirect(0)
 			, m_flushPerBatch(0)
 		{
-			bx::memSet(m_num, 0, sizeof(m_num) );
+			base::memSet(m_num, 0, sizeof(m_num) );
 		}
 
 		~BatchD3D12()
@@ -479,14 +479,14 @@ namespace bgfx { namespace d3d12
 
 		struct DrawIndirectCommand
 		{
-			D3D12_VERTEX_BUFFER_VIEW vbv[BGFX_CONFIG_MAX_VERTEX_STREAMS + 1 /* instanced buffer */];
+			D3D12_VERTEX_BUFFER_VIEW vbv[GRAPHICS_CONFIG_MAX_VERTEX_STREAMS + 1 /* instanced buffer */];
 			D3D12_GPU_VIRTUAL_ADDRESS cbv;
 			D3D12_DRAW_ARGUMENTS args;
 		};
 
 		struct DrawIndexedIndirectCommand
 		{
-			D3D12_VERTEX_BUFFER_VIEW vbv[BGFX_CONFIG_MAX_VERTEX_STREAMS + 1 /* instanced buffer */];
+			D3D12_VERTEX_BUFFER_VIEW vbv[GRAPHICS_CONFIG_MAX_VERTEX_STREAMS + 1 /* instanced buffer */];
 			D3D12_INDEX_BUFFER_VIEW ibv;
 			D3D12_GPU_VIRTUAL_ADDRESS cbv;
 			D3D12_DRAW_INDEXED_ARGUMENTS args;
@@ -511,7 +511,7 @@ namespace bgfx { namespace d3d12
 	struct TimerQueryD3D12
 	{
 		TimerQueryD3D12()
-			: m_control(BX_COUNTOF(m_query) )
+			: m_control(BASE_COUNTOF(m_query) )
 		{
 		}
 
@@ -547,19 +547,19 @@ namespace bgfx { namespace d3d12
 
 		uint64_t m_frequency;
 
-		Result m_result[BGFX_CONFIG_MAX_VIEWS+1];
-		Query m_query[BGFX_CONFIG_MAX_VIEWS*4];
+		Result m_result[GRAPHICS_CONFIG_MAX_VIEWS+1];
+		Query m_query[GRAPHICS_CONFIG_MAX_VIEWS*4];
 
 		ID3D12Resource*  m_readback;
 		ID3D12QueryHeap* m_queryHeap;
 		uint64_t* m_queryResult;
-		bx::RingBufferControl m_control;
+		base::RingBufferControl m_control;
 	};
 
 	struct OcclusionQueryD3D12
 	{
 		OcclusionQueryD3D12()
-			: m_control(BX_COUNTOF(m_handle) )
+			: m_control(BASE_COUNTOF(m_handle) )
 		{
 		}
 
@@ -571,11 +571,11 @@ namespace bgfx { namespace d3d12
 
 		ID3D12Resource*  m_readback;
 		ID3D12QueryHeap* m_queryHeap;
-		OcclusionQueryHandle m_handle[BGFX_CONFIG_MAX_OCCLUSION_QUERIES];
+		OcclusionQueryHandle m_handle[GRAPHICS_CONFIG_MAX_OCCLUSION_QUERIES];
 		uint64_t* m_result;
-		bx::RingBufferControl m_control;
+		base::RingBufferControl m_control;
 	};
 
-} /* namespace d3d12 */ } // namespace bgfx
+} /* namespace d3d12 */ } // namespace graphics
 
-#endif // BGFX_RENDERER_D3D12_H_HEADER_GUARD
+#endif // GRAPHICS_RENDERER_D3D12_H_HEADER_GUARD

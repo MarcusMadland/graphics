@@ -1,14 +1,14 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_SHADER_DX9BC_H
-#define BGFX_SHADER_DX9BC_H
+#ifndef GRAPHICS_SHADER_DX9BC_H
+#define GRAPHICS_SHADER_DX9BC_H
 
-#include <mapp/readerwriter.h>
+#include <base/readerwriter.h>
 
-namespace bgfx
+namespace graphics
 {
 	struct Dx9bcOpcode
 	{
@@ -232,8 +232,8 @@ namespace bgfx
 		int32_t value[4];
 	};
 
-	int32_t read(bx::ReaderI* _reader, Dx9bcInstruction& _instruction, bx::Error* _err);
-	int32_t write(bx::WriterI* _writer, const Dx9bcInstruction& _instruction, bx::Error* _err);
+	int32_t read(base::ReaderI* _reader, Dx9bcInstruction& _instruction, base::Error* _err);
+	int32_t write(base::WriterI* _writer, const Dx9bcInstruction& _instruction, base::Error* _err);
 	int32_t toString(char* _out, int32_t _size, const Dx9bcInstruction& _instruction);
 
 	struct Dx9bcShader
@@ -243,8 +243,8 @@ namespace bgfx
 		stl::vector<uint8_t> byteCode;
 	};
 
-	int32_t read(bx::ReaderSeekerI* _reader, Dx9bcShader& _shader, bx::Error* _err);
-	int32_t write(bx::WriterI* _writer, const Dx9bcShader& _shader, bx::Error* _err);
+	int32_t read(base::ReaderSeekerI* _reader, Dx9bcShader& _shader, base::Error* _err);
+	int32_t write(base::WriterI* _writer, const Dx9bcShader& _shader, base::Error* _err);
 
 	struct Dx9bc
 	{
@@ -254,15 +254,15 @@ namespace bgfx
 		Dx9bcShader shader;
 	};
 
-	int32_t read(bx::ReaderSeekerI* _reader, Dx9bc& _dx9bc, bx::Error* _err);
-	int32_t write(bx::WriterSeekerI* _writer, const Dx9bc& _dx9bc, bx::Error* _err);
+	int32_t read(base::ReaderSeekerI* _reader, Dx9bc& _dx9bc, base::Error* _err);
+	int32_t write(base::WriterSeekerI* _writer, const Dx9bc& _dx9bc, base::Error* _err);
 
 	typedef bool (*Dx9bcParseFn)(uint32_t _offset, const Dx9bcInstruction& _instruction, void* _userData);
-	void parse(const Dx9bcShader& _src, Dx9bcParseFn _fn, void* _userData, bx::Error* _err = NULL);
+	void parse(const Dx9bcShader& _src, Dx9bcParseFn _fn, void* _userData, base::Error* _err = NULL);
 
 	typedef void (*Dx9bcFilterFn)(Dx9bcInstruction& _instruction, void* _userData);
-	void filter(Dx9bcShader& _dst, const Dx9bcShader& _src, Dx9bcFilterFn _fn, void* _userData, bx::Error* _err = NULL);
+	void filter(Dx9bcShader& _dst, const Dx9bcShader& _src, Dx9bcFilterFn _fn, void* _userData, base::Error* _err = NULL);
 
-} // namespace bgfx
+} // namespace graphics
 
-#endif // BGFX_SHADER_DX9BC_H
+#endif // GRAPHICS_SHADER_DX9BC_H

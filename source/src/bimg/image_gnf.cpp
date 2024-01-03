@@ -7,21 +7,21 @@
 
 namespace bimg
 {
-	bool imageParseGnf(ImageContainer& _imageContainer, bx::ReaderSeekerI* _reader, bx::Error* _err)
+	bool imageParseGnf(ImageContainer& _imageContainer, base::ReaderSeekerI* _reader, base::Error* _err)
 	{
-		BX_UNUSED(_imageContainer, _reader, _err);
-		BX_ERROR_SET(_err, BIMG_ERROR, "GNF: not supported.");
+		BASE_UNUSED(_imageContainer, _reader, _err);
+		BASE_ERROR_SET(_err, BIMG_ERROR, "GNF: not supported.");
 		return false;
 	}
 
-	ImageContainer* imageParseGnf(bx::AllocatorI* _allocator, const void* _src, uint32_t _size, bx::Error* _err)
+	ImageContainer* imageParseGnf(base::AllocatorI* _allocator, const void* _src, uint32_t _size, base::Error* _err)
 	{
-		BX_UNUSED(_allocator);
+		BASE_UNUSED(_allocator);
 
-		bx::MemoryReader reader(_src, _size);
+		base::MemoryReader reader(_src, _size);
 
 		uint32_t magic;
-		bx::read(&reader, magic, bx::ErrorIgnore{});
+		base::read(&reader, magic, base::ErrorIgnore{});
 
 		ImageContainer imageContainer;
 		if (BIMG_CHUNK_MAGIC_GNF != magic
@@ -30,7 +30,7 @@ namespace bimg
 			return NULL;
 		}
 
-		BX_ERROR_SET(_err, BIMG_ERROR, "GNF: not supported.");
+		BASE_ERROR_SET(_err, BIMG_ERROR, "GNF: not supported.");
 		return NULL;
 	}
 

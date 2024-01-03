@@ -1,47 +1,47 @@
 /*
  * Copyright 2011-2015 Attila Kocsis, Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_RENDERER_METAL_H_HEADER_GUARD
-#define BGFX_RENDERER_METAL_H_HEADER_GUARD
+#ifndef GRAPHICS_RENDERER_METAL_H_HEADER_GUARD
+#define GRAPHICS_RENDERER_METAL_H_HEADER_GUARD
 
-#include "bgfx_p.h"
+#include "graphics_p.h"
 
-#if BGFX_CONFIG_RENDERER_METAL
+#if GRAPHICS_CONFIG_RENDERER_METAL
 
 #import <QuartzCore/CAMetalLayer.h>
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
 
-#if BX_PLATFORM_IOS
+#if BASE_PLATFORM_IOS
 #	import <UIKit/UIKit.h>
-#endif // BX_PLATFORM_*
+#endif // BASE_PLATFORM_*
 
-#define BGFX_MTL_PROFILER_BEGIN(_view, _abgr)         \
-	BX_MACRO_BLOCK_BEGIN                              \
-		BGFX_PROFILER_BEGIN(s_viewName[view], _abgr); \
-	BX_MACRO_BLOCK_END
+#define GRAPHICS_MTL_PROFILER_BEGIN(_view, _abgr)         \
+	BASE_MACRO_BLOCK_BEGIN                              \
+		GRAPHICS_PROFILER_BEGIN(s_viewName[view], _abgr); \
+	BASE_MACRO_BLOCK_END
 
-#define BGFX_MTL_PROFILER_BEGIN_LITERAL(_name, _abgr) \
-	BX_MACRO_BLOCK_BEGIN                              \
-		BGFX_PROFILER_BEGIN_LITERAL("" _name, _abgr); \
-	BX_MACRO_BLOCK_END
+#define GRAPHICS_MTL_PROFILER_BEGIN_LITERAL(_name, _abgr) \
+	BASE_MACRO_BLOCK_BEGIN                              \
+		GRAPHICS_PROFILER_BEGIN_LITERAL("" _name, _abgr); \
+	BASE_MACRO_BLOCK_END
 
-#define BGFX_MTL_PROFILER_END() \
-	BX_MACRO_BLOCK_BEGIN        \
-		BGFX_PROFILER_END();    \
-	BX_MACRO_BLOCK_END
+#define GRAPHICS_MTL_PROFILER_END() \
+	BASE_MACRO_BLOCK_BEGIN        \
+		GRAPHICS_PROFILER_END();    \
+	BASE_MACRO_BLOCK_END
 
-namespace bgfx { namespace mtl
+namespace graphics { namespace mtl
 {
 	//runtime os check
 	inline bool iOSVersionEqualOrGreater(const char* _version)
 	{
-#if BX_PLATFORM_IOS
+#if BASE_PLATFORM_IOS
 		return ([[[UIDevice currentDevice] systemVersion] compare:@(_version) options:NSNumericSearch] != NSOrderedAscending);
 #else
-		BX_UNUSED(_version);
+		BASE_UNUSED(_version);
 		return false;
 #endif
 	}
@@ -52,12 +52,12 @@ namespace bgfx { namespace mtl
 		, NSInteger _patchVersion
 		)
 	{
-#if BX_PLATFORM_OSX
+#if BASE_PLATFORM_OSX
 		NSOperatingSystemVersion v = [[NSProcessInfo processInfo] operatingSystemVersion];
 		return (v.majorVersion<<16) + (v.minorVersion<<8) + v.patchVersion >=
 		(_majorVersion<<16) + (_minorVersion<<8) + _patchVersion;
 #else
-		BX_UNUSED(_majorVersion, _minorVersion, _patchVersion);
+		BASE_UNUSED(_majorVersion, _minorVersion, _patchVersion);
 		return false;
 #endif
 	}
@@ -129,7 +129,7 @@ namespace bgfx { namespace mtl
 			[m_obj generateMipmapsForTexture:_texture];
 		}
 
-#if BX_PLATFORM_OSX
+#if BASE_PLATFORM_OSX
 		void synchronizeTexture(id<MTLTexture> _texture, NSUInteger _slice, NSUInteger _level)
 		{
 			[m_obj synchronizeTexture:_texture slice:_slice level:_level];
@@ -139,7 +139,7 @@ namespace bgfx { namespace mtl
 		{
 			[m_obj synchronizeResource:_resource];
 		}
-#endif  // BX_PLATFORM_OSX
+#endif  // BASE_PLATFORM_OSX
 
 		void endEncoding()
 		{
@@ -285,7 +285,7 @@ namespace bgfx { namespace mtl
 		{
 			NSError* error;
 			id<MTLLibrary> lib =  [m_obj newLibraryWithData:(dispatch_data_t)_data error:&error];
-			BX_WARN(NULL == error
+			BASE_WARN(NULL == error
 				, "newLibraryWithData failed: %s"
 				, [error.localizedDescription cStringUsingEncoding:NSASCIIStringEncoding]
 				);
@@ -296,7 +296,7 @@ namespace bgfx { namespace mtl
 		{
 			NSError* error;
 			id<MTLLibrary> lib = [m_obj newLibraryWithSource:@(_source) options:nil error:&error];
-			BX_WARN(NULL == error
+			BASE_WARN(NULL == error
 				, "Shader compilation failed: %s"
 				, [error.localizedDescription cStringUsingEncoding:NSASCIIStringEncoding]
 				);
@@ -344,7 +344,7 @@ namespace bgfx { namespace mtl
 		{
 			NSError* error;
 			id <MTLRenderPipelineState> state = [m_obj newRenderPipelineStateWithDescriptor:_descriptor error:&error];
-			BX_WARN(NULL == error
+			BASE_WARN(NULL == error
 				, "newRenderPipelineStateWithDescriptor failed: %s"
 				, [error.localizedDescription cStringUsingEncoding:NSASCIIStringEncoding]
 				);
@@ -360,7 +360,7 @@ namespace bgfx { namespace mtl
 			NSError* error;
 			id <MTLRenderPipelineState> state = [m_obj newRenderPipelineStateWithDescriptor:_descriptor options:_options reflection:_reflection error:&error];
 
-			BX_WARN(NULL == error
+			BASE_WARN(NULL == error
 				, "newRenderPipelineStateWithDescriptor failed: %s"
 				, [error.localizedDescription cStringUsingEncoding:NSASCIIStringEncoding]
 				);
@@ -377,7 +377,7 @@ namespace bgfx { namespace mtl
 			NSError* error;
 			id <MTLComputePipelineState> state = [m_obj newComputePipelineStateWithFunction:_computeFunction options:_options reflection:_reflection error:&error];
 
-			BX_WARN(NULL == error
+			BASE_WARN(NULL == error
 				, "newComputePipelineStateWithFunction failed: %s"
 				, [error.localizedDescription cStringUsingEncoding:NSASCIIStringEncoding]
 				);
@@ -386,7 +386,7 @@ namespace bgfx { namespace mtl
 
 		bool supportsTextureSampleCount(int sampleCount)
 		{
-			if (BX_ENABLED(BX_PLATFORM_IOS) && !iOSVersionEqualOrGreater("9.0.0") )
+			if (BASE_ENABLED(BASE_PLATFORM_IOS) && !iOSVersionEqualOrGreater("9.0.0") )
 				return sampleCount == 1 || sampleCount == 2 ||  sampleCount == 4;
 			else
 				return [m_obj supportsTextureSampleCount:sampleCount];
@@ -394,11 +394,11 @@ namespace bgfx { namespace mtl
 
 		bool depth24Stencil8PixelFormatSupported()
 		{
-#if BX_PLATFORM_IOS
+#if BASE_PLATFORM_IOS
 			return false;
 #else
 			return m_obj.depth24Stencil8PixelFormatSupported;
-#endif // BX_PLATFORM_IOS
+#endif // BASE_PLATFORM_IOS
 		}
 	MTL_CLASS_END
 
@@ -730,10 +730,10 @@ namespace bgfx { namespace mtl
 	}
 
 #define MTL_RELEASE(_obj) \
-	BX_MACRO_BLOCK_BEGIN  \
+	BASE_MACRO_BLOCK_BEGIN  \
 		[_obj release];   \
 		_obj = NULL;      \
-	BX_MACRO_BLOCK_END
+	BASE_MACRO_BLOCK_END
 
 	// end of c++ wrapper
 
@@ -791,7 +791,7 @@ namespace bgfx { namespace mtl
 	struct BufferMtl
 	{
 		BufferMtl()
-			: m_flags(BGFX_BUFFER_NONE)
+			: m_flags(GRAPHICS_BUFFER_NONE)
 			, m_dynamic(NULL)
 		{
 		}
@@ -805,7 +805,7 @@ namespace bgfx { namespace mtl
 
 			if (NULL != m_dynamic)
 			{
-				bx::deleteObject(g_allocator, m_dynamic);
+				base::deleteObject(g_allocator, m_dynamic);
 				m_dynamic = NULL;
 			}
 		}
@@ -868,7 +868,7 @@ namespace bgfx { namespace mtl
 
 		uint8_t  m_used[Attrib::Count+1]; // dense
 		uint32_t m_attributes[Attrib::Count]; // sparse
-		uint32_t m_instanceData[BGFX_CONFIG_MAX_INSTANCE_DATA_COUNT+1];
+		uint32_t m_instanceData[GRAPHICS_CONFIG_MAX_INSTANCE_DATA_COUNT+1];
 
 		const ShaderMtl* m_vsh;
 		const ShaderMtl* m_fsh;
@@ -892,7 +892,7 @@ namespace bgfx { namespace mtl
 				m_numThreads[0] = 1;
 				m_numThreads[1] = 1;
 				m_numThreads[2] = 1;
-				for(uint32_t i=0; i<BGFX_CONFIG_MAX_TEXTURE_SAMPLERS; ++i)
+				for(uint32_t i=0; i<GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS; ++i)
 					m_bindingTypes[i] = 0;
 			}
 
@@ -927,7 +927,7 @@ namespace bgfx { namespace mtl
 			BindToVertexShader   = 1 << 0,
 			BindToFragmentShader = 1 << 1,
 		};
-		uint8_t m_bindingTypes[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
+		uint8_t m_bindingTypes[GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS];
 
 		uint16_t 	m_numThreads[3];
 
@@ -940,7 +940,7 @@ namespace bgfx { namespace mtl
 
 	void release(PipelineStateMtl* _ptr)
 	{
-		bx::deleteObject(g_allocator, _ptr);
+		base::deleteObject(g_allocator, _ptr);
 	}
 
 	struct TextureMtl
@@ -963,7 +963,7 @@ namespace bgfx { namespace mtl
 			, m_depth(0)
 			, m_numMips(0)
 		{
-			for(uint32_t ii = 0; ii < BX_COUNTOF(m_ptrMips); ++ii)
+			for(uint32_t ii = 0; ii < BASE_COUNTOF(m_ptrMips); ++ii)
 			{
 				m_ptrMips[ii] = NULL;
 			}
@@ -973,7 +973,7 @@ namespace bgfx { namespace mtl
 
 		void destroy()
 		{
-			if (0 == (m_flags & BGFX_SAMPLER_INTERNAL_SHARED))
+			if (0 == (m_flags & GRAPHICS_SAMPLER_INTERNAL_SHARED))
 			{
 				MTL_RELEASE(m_ptr);
 				MTL_RELEASE(m_ptrMsaa);
@@ -988,7 +988,7 @@ namespace bgfx { namespace mtl
 		void overrideInternal(uintptr_t _ptr)
 		{
 			destroy();
-			m_flags |= BGFX_SAMPLER_INTERNAL_SHARED;
+			m_flags |= GRAPHICS_SAMPLER_INTERNAL_SHARED;
 			m_ptr = id<MTLTexture>(_ptr);
 		}
 
@@ -1006,7 +1006,7 @@ namespace bgfx { namespace mtl
 			  uint8_t _stage
 			, bool _vertex
 			, bool _fragment
-			, uint32_t _flags = BGFX_SAMPLER_INTERNAL_DEFAULT
+			, uint32_t _flags = GRAPHICS_SAMPLER_INTERNAL_DEFAULT
 			, uint8_t _mip = UINT8_MAX
 			);
 
@@ -1093,9 +1093,9 @@ namespace bgfx { namespace mtl
 
 		uint32_t m_pixelFormatHash;
 
-		TextureHandle m_colorHandle[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
+		TextureHandle m_colorHandle[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
 		TextureHandle m_depthHandle;
-		Attachment m_colorAttachment[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
+		Attachment m_colorAttachment[GRAPHICS_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
 		Attachment m_depthAttachment;
 		uint8_t m_num; // number of color handles
 	};
@@ -1116,7 +1116,7 @@ namespace bgfx { namespace mtl
 		void release(NSObject* _ptr);
 		void consume();
 
-		bx::Semaphore m_framesSemaphore;
+		base::Semaphore m_framesSemaphore;
 
 		CommandQueue  m_commandQueue;
 		CommandBuffer m_activeCommandBuffer;
@@ -1124,7 +1124,7 @@ namespace bgfx { namespace mtl
 		int m_releaseWriteIndex;
 		int m_releaseReadIndex;
 		typedef stl::vector<NSObject*> ResourceArray;
-		ResourceArray m_release[BGFX_CONFIG_MAX_FRAME_LATENCY];
+		ResourceArray m_release[GRAPHICS_CONFIG_MAX_FRAME_LATENCY];
 	};
 
 	struct TimerQueryMtl
@@ -1162,14 +1162,14 @@ namespace bgfx { namespace mtl
 		uint64_t m_elapsed;
 		uint64_t m_frequency;
 
-		Result m_result[BGFX_CONFIG_MAX_VIEWS+1];
-		bx::RingBufferControl m_control;
+		Result m_result[GRAPHICS_CONFIG_MAX_VIEWS+1];
+		base::RingBufferControl m_control;
 	};
 
 	struct OcclusionQueryMTL
 	{
 		OcclusionQueryMTL()
-			: m_control(BX_COUNTOF(m_query) )
+			: m_control(BASE_COUNTOF(m_query) )
 		{
 		}
 
@@ -1186,12 +1186,12 @@ namespace bgfx { namespace mtl
 		};
 
 		Buffer m_buffer;
-		Query m_query[BGFX_CONFIG_MAX_OCCLUSION_QUERIES];
-		bx::RingBufferControl m_control;
+		Query m_query[GRAPHICS_CONFIG_MAX_OCCLUSION_QUERIES];
+		base::RingBufferControl m_control;
 	};
 
-} /* namespace metal */ } // namespace bgfx
+} /* namespace metal */ } // namespace graphics
 
-#endif // BGFX_CONFIG_RENDERER_METAL
+#endif // GRAPHICS_CONFIG_RENDERER_METAL
 
-#endif // BGFX_RENDERER_METAL_H_HEADER_GUARD
+#endif // GRAPHICS_RENDERER_METAL_H_HEADER_GUARD

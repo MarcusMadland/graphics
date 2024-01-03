@@ -1,19 +1,19 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
 #include "shaderc.h"
 
 #if (0)
 
-BX_PRAGMA_DIAGNOSTIC_PUSH()
-BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4100) // error C4100: 'inclusionDepth' : unreferenced formal parameter
-BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4265) // error C4265: 'spv::spirvbin_t': class has virtual functions, but destructor is not virtual
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wattributes") // warning: attribute ignored
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wdeprecated-declarations") // warning: ‘MSLVertexAttr’ is deprecated
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wtype-limits") // warning: comparison of unsigned expression in ‘< 0’ is always false
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wshadow") // warning: declaration of 'userData' shadows a member of 'glslang::TShader::Includer::IncludeResult'
+BASE_PRAGMA_DIAGNOSTIC_PUSH()
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4100) // error C4100: 'inclusionDepth' : unreferenced formal parameter
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4265) // error C4265: 'spv::spirvbin_t': class has virtual functions, but destructor is not virtual
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wattributes") // warning: attribute ignored
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wdeprecated-declarations") // warning: ‘MSLVertexAttr’ is deprecated
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wtype-limits") // warning: comparison of unsigned expression in ‘< 0’ is always false
+BASE_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wshadow") // warning: declaration of 'userData' shadows a member of 'glslang::TShader::Includer::IncludeResult'
 #define ENABLE_OPT 1
 #include <ShaderLang.h>
 #include <ResourceLimits.h>
@@ -23,9 +23,9 @@ BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wshadow") // warning: declaration of 'u
 #include <spirv_msl.hpp>
 #include <spirv_reflect.hpp>
 #include <spirv-tools/optimizer.hpp>
-BX_PRAGMA_DIAGNOSTIC_POP()
+BASE_PRAGMA_DIAGNOSTIC_POP()
 
-namespace bgfx
+namespace graphics
 {
 	struct TinyStlAllocator
 	{
@@ -33,9 +33,9 @@ namespace bgfx
 		static void static_deallocate(void* _ptr, size_t /*_bytes*/);
 	};
 
-} // namespace bgfx
+} // namespace graphics
 
-#define TINYSTL_ALLOCATOR bgfx::TinyStlAllocator
+#define TINYSTL_ALLOCATOR graphics::TinyStlAllocator
 #include <tinystl/allocator.h>
 #include <tinystl/string.h>
 #include <tinystl/unordered_map.h>
@@ -44,7 +44,7 @@ namespace stl = tinystl;
 
 #include "../../src/shader.h"
 
-namespace bgfx { 
+namespace graphics { 
 namespace metal
 {
 	const TBuiltInResource resourceLimits =
@@ -197,19 +197,19 @@ namespace metal
 		"a_texcoord6",
 		"a_texcoord7",
 	};
-	BX_STATIC_ASSERT(bgfx::Attrib::Count == BX_COUNTOF(s_attribName) );
+	BASE_STATIC_ASSERT(graphics::Attrib::Count == BASE_COUNTOF(s_attribName) );
 
-	bgfx::Attrib::Enum toAttribEnum(const bx::StringView& _name)
+	graphics::Attrib::Enum toAttribEnum(const base::StringView& _name)
 	{
 		for (uint8_t ii = 0; ii < Attrib::Count; ++ii)
 		{
-			if (0 == bx::strCmp(s_attribName[ii], _name) )
+			if (0 == base::strCmp(s_attribName[ii], _name) )
 			{
-				return bgfx::Attrib::Enum(ii);
+				return graphics::Attrib::Enum(ii);
 			}
 		}
 
-		return bgfx::Attrib::Count;
+		return graphics::Attrib::Count;
 	}
 
 	static const char* s_samplerTypes[] =
@@ -228,14 +228,14 @@ namespace metal
 		"BgfxSampler2DMS",
 	};
 
-	static uint16_t writeUniformArray(bx::WriterI* _shaderWriter, const UniformArray& uniforms, bool isFragmentShader)
+	static uint16_t writeUniformArray(base::WriterI* _shaderWriter, const UniformArray& uniforms, bool isFragmentShader)
 	{
 		uint16_t size = 0;
 
-		bx::ErrorAssert err;
+		base::ErrorAssert err;
 
 		uint16_t count = uint16_t(uniforms.size());
-		bx::write(_shaderWriter, count, &err);
+		base::write(_shaderWriter, count, &err);
 
 		uint32_t fragmentBit = isFragmentShader ? kUniformFragmentBit : 0;
 		for (uint16_t ii = 0; ii < count; ++ii)
@@ -245,17 +245,17 @@ namespace metal
 			size += un.regCount*16;
 
 			uint8_t nameSize = (uint8_t)un.name.size();
-			bx::write(_shaderWriter, nameSize, &err);
-			bx::write(_shaderWriter, un.name.c_str(), nameSize, &err);
-			bx::write(_shaderWriter, uint8_t(un.type | fragmentBit), &err);
-			bx::write(_shaderWriter, un.num, &err);
-			bx::write(_shaderWriter, un.regIndex, &err);
-			bx::write(_shaderWriter, un.regCount, &err);
-			bx::write(_shaderWriter, un.texComponent, &err);
-			bx::write(_shaderWriter, un.texDimension, &err);
-			bx::write(_shaderWriter, un.texFormat, &err);
+			base::write(_shaderWriter, nameSize, &err);
+			base::write(_shaderWriter, un.name.c_str(), nameSize, &err);
+			base::write(_shaderWriter, uint8_t(un.type | fragmentBit), &err);
+			base::write(_shaderWriter, un.num, &err);
+			base::write(_shaderWriter, un.regIndex, &err);
+			base::write(_shaderWriter, un.regCount, &err);
+			base::write(_shaderWriter, un.texComponent, &err);
+			base::write(_shaderWriter, un.texDimension, &err);
+			base::write(_shaderWriter, un.texFormat, &err);
 
-			BX_TRACE("%s, %s, %d, %d, %d"
+			BASE_TRACE("%s, %s, %d, %d, %d"
 				, un.name.c_str()
 				, getUniformTypeName(un.type)
 				, un.num
@@ -266,18 +266,18 @@ namespace metal
 		return size;
 	}
 
-	static bool compile(const Options& _options, uint32_t _version, const std::string& _code, bx::WriterI* _shaderWriter, bx::WriterI* _messageWriter, bool _firstPass)
+	static bool compile(const Options& _options, uint32_t _version, const std::string& _code, base::WriterI* _shaderWriter, base::WriterI* _messageWriter, bool _firstPass)
 	{
-		BX_UNUSED(_version);
+		BASE_UNUSED(_version);
 
-		bx::ErrorAssert messageErr;
+		base::ErrorAssert messageErr;
 
 		glslang::InitializeProcess();
 
 		EShLanguage stage = getLang(_options.shaderType);
 		if (EShLangCount == stage)
 		{
-			bx::write(_messageWriter, &messageErr, "Error: Unknown shader type '%c'.\n", _options.shaderType);
+			base::write(_messageWriter, &messageErr, "Error: Unknown shader type '%c'.\n", _options.shaderType);
 			return false;
 		}
 
@@ -301,7 +301,7 @@ namespace metal
 		const char* shaderStrings[] = { _code.c_str() };
 		shader->setStrings(
 			  shaderStrings
-			, BX_COUNTOF(shaderStrings)
+			, BASE_COUNTOF(shaderStrings)
 			);
 		bool compiled = shader->parse(&resourceLimits
 			, 110
@@ -322,7 +322,7 @@ namespace metal
 				int32_t start   = 0;
 				int32_t end     = INT32_MAX;
 
-				bx::StringView err = bx::strFind(log, "ERROR:");
+				base::StringView err = base::strFind(log, "ERROR:");
 
 				bool found = false;
 
@@ -337,13 +337,13 @@ namespace metal
 
 				if (found)
 				{
-					start = bx::uint32_imax(1, line-10);
+					start = base::uint32_imax(1, line-10);
 					end   = start + 20;
 				}
 
 				printCode(_code.c_str(), line, start, end, column);
 
-				bx::write(_messageWriter, &messageErr, "%s\n", log);
+				base::write(_messageWriter, &messageErr, "%s\n", log);
 			}
 		}
 		else
@@ -359,7 +359,7 @@ namespace metal
 				const char* log = program->getInfoLog();
 				if (NULL != log)
 				{
-					bx::write(_messageWriter, &messageErr, "%s\n", log);
+					base::write(_messageWriter, &messageErr, "%s\n", log);
 				}
 			}
 			else
@@ -370,29 +370,29 @@ namespace metal
 				{
 					// first time through, we just find unused uniforms and get rid of them
 					std::string output;
-					bx::Error err;
-					bx::LineReader reader(_code.c_str() );
+					base::Error err;
+					base::LineReader reader(_code.c_str() );
 					while (!reader.isDone() )
 					{
-						bx::StringView strLine = reader.next();
-						bx::StringView str = strFind(strLine, "uniform ");
+						base::StringView strLine = reader.next();
+						base::StringView str = strFind(strLine, "uniform ");
 
 						if (!str.isEmpty() )
 						{
 							// If the line declares a uniform, merge all next
 							// lines until we encounter a semicolon.
-							bx::StringView lineEnd = strFind(strLine, ";");
+							base::StringView lineEnd = strFind(strLine, ";");
 							while (lineEnd.isEmpty() && !reader.isDone()) {
-								bx::StringView nextLine = reader.next();
+								base::StringView nextLine = reader.next();
 								strLine.set(strLine.getPtr(), nextLine.getTerm());
 								lineEnd = strFind(nextLine, ";");
 							}
 
 							bool found = false;
 
-							for (uint32_t ii = 0; ii < BX_COUNTOF(s_samplerTypes); ++ii)
+							for (uint32_t ii = 0; ii < BASE_COUNTOF(s_samplerTypes); ++ii)
 							{
-								if (!bx::findIdentifierMatch(strLine, s_samplerTypes[ii]).isEmpty() )
+								if (!base::findIdentifierMatch(strLine, s_samplerTypes[ii]).isEmpty() )
 								{
 									found = true;
 									break;
@@ -408,7 +408,7 @@ namespace metal
 									// included in the uniform blob that the application must upload
 									// we can't just remove them, because unused functions might still reference
 									// them and cause a compile error when they're gone
-									if (!bx::findIdentifierMatch(strLine, program->getUniformName(ii) ).isEmpty() )
+									if (!base::findIdentifierMatch(strLine, program->getUniformName(ii) ).isEmpty() )
 									{
 										found = true;
 										break;
@@ -452,7 +452,7 @@ namespace metal
 						Uniform un;
 						un.name = program->getUniformName(ii);
 
-						if (bx::hasSuffix(un.name.c_str(), ".@data") )
+						if (base::hasSuffix(un.name.c_str(), ".@data") )
 						{
 							continue;
 						}
@@ -491,7 +491,7 @@ namespace metal
 					program->dumpReflection();
 				}
 
-				BX_UNUSED(spv::MemorySemanticsAllMemory);
+				BASE_UNUSED(spv::MemorySemanticsAllMemory);
 
 				glslang::TIntermediate* intermediate = program->getIntermediate(stage);
 				std::vector<uint32_t> spirv;
@@ -510,7 +510,7 @@ namespace metal
 					, const char* m
 					)
 				{
-					bx::write(_messageWriter, &messageErr, "Error: %s\n", m);
+					base::write(_messageWriter, &messageErr, "Error: %s\n", m);
 				};
 
 				opt.SetMessageConsumer(print_msg_to_stderr);
@@ -544,7 +544,7 @@ namespace metal
 					for (auto& resource : resourcesrefl.separate_images)
 					{
 						std::string name = refl.get_name(resource.id);
-						if (name.size() > 7 && 0 == bx::strCmp(name.c_str() + name.length() - 7, "Texture"))
+						if (name.size() > 7 && 0 == base::strCmp(name.c_str() + name.length() - 7, "Texture"))
 						{
 							name = name.substr(0, name.length() - 7);
 						}
@@ -562,9 +562,9 @@ namespace metal
 
 					uint16_t size = writeUniformArray(_shaderWriter, uniforms, _options.shaderType == 'f');
 
-					bx::Error err;
+					base::Error err;
 
-					if (_version == BX_MAKEFOURCC('M', 'T', 'L', 0) )
+					if (_version == BASE_MAKEFOURCC('M', 'T', 'L', 0) )
 					{
 						spirv_cross::CompilerMSL msl(std::move(spirv) );
 
@@ -620,7 +620,7 @@ namespace metal
 						for (auto& resource : resources.separate_images)
 						{
 							std::string name = msl.get_name(resource.id);
-							if (name.size() > 7 && 0 == bx::strCmp(name.c_str() + name.length() - 7, "Texture") )
+							if (name.size() > 7 && 0 == base::strCmp(name.c_str() + name.length() - 7, "Texture") )
 							{
 								msl.set_name(resource.id, name.substr(0, name.length() - 7) );
 							}
@@ -649,17 +649,17 @@ namespace metal
 
 						std::string source = msl.compile();
 
-						// fix https://github.com/bkaradzic/bgfx/issues/2822
+						// fix https://github.com/bkaradzic/graphics/issues/2822
 						// insert struct member which declares point size, defaulted to 1
 						if ('v' == _options.shaderType)
 						{
-							const bx::StringView xlatMtlMainOut("xlatMtlMain_out\n{");
+							const base::StringView xlatMtlMainOut("xlatMtlMain_out\n{");
 							size_t pos = source.find(xlatMtlMainOut.getPtr() );
 
 							if (pos != std::string::npos)
 							{
 								pos += xlatMtlMainOut.getLength();
-								source.insert(pos, "\n\tfloat bgfx_metal_pointSize [[point_size]] = 1;");
+								source.insert(pos, "\n\tfloat graphics_metal_pointSize [[point_size]] = 1;");
 							}
 						}
 
@@ -671,42 +671,42 @@ namespace metal
 									  spv::ExecutionMode::ExecutionModeLocalSize
 									, i
 									);
-								bx::write(_shaderWriter, dim, &err);
+								base::write(_shaderWriter, dim, &err);
 							}
 						}
 
 						uint32_t shaderSize = (uint32_t)source.size();
-						bx::write(_shaderWriter, shaderSize, &err);
-						bx::write(_shaderWriter, source.c_str(), shaderSize, &err);
+						base::write(_shaderWriter, shaderSize, &err);
+						base::write(_shaderWriter, source.c_str(), shaderSize, &err);
 						uint8_t nul = 0;
-						bx::write(_shaderWriter, nul, &err);
+						base::write(_shaderWriter, nul, &err);
 					}
 					else
 					{
 						uint32_t shaderSize = (uint32_t)spirv.size() * sizeof(uint32_t);
-						bx::write(_shaderWriter, shaderSize, &err);
-						bx::write(_shaderWriter, spirv.data(), shaderSize, &err);
+						base::write(_shaderWriter, shaderSize, &err);
+						base::write(_shaderWriter, spirv.data(), shaderSize, &err);
 						uint8_t nul = 0;
-						bx::write(_shaderWriter, nul, &err);
+						base::write(_shaderWriter, nul, &err);
 					}
 					//
 					const uint8_t numAttr = (uint8_t)program->getNumLiveAttributes();
-					bx::write(_shaderWriter, numAttr, &err);
+					base::write(_shaderWriter, numAttr, &err);
 
 					for (uint8_t ii = 0; ii < numAttr; ++ii)
 					{
-						bgfx::Attrib::Enum attr = toAttribEnum(program->getAttributeName(ii) );
-						if (bgfx::Attrib::Count != attr)
+						graphics::Attrib::Enum attr = toAttribEnum(program->getAttributeName(ii) );
+						if (graphics::Attrib::Count != attr)
 						{
-							bx::write(_shaderWriter, bgfx::attribToId(attr), &err);
+							base::write(_shaderWriter, graphics::attribToId(attr), &err);
 						}
 						else
 						{
-							bx::write(_shaderWriter, uint16_t(UINT16_MAX), &err);
+							base::write(_shaderWriter, uint16_t(UINT16_MAX), &err);
 						}
 					}
 
-					bx::write(_shaderWriter, size, &err);
+					base::write(_shaderWriter, size, &err);
 				}
 			}
 		}
@@ -721,17 +721,17 @@ namespace metal
 
 } // namespace metal
 
-	bool compileMetalShader(const Options& _options, uint32_t _version, const std::string& _code, bx::WriterI* _shaderWriter, bx::WriterI* _messageWriter)
+	bool compileMetalShader(const Options& _options, uint32_t _version, const std::string& _code, base::WriterI* _shaderWriter, base::WriterI* _messageWriter)
 	{
 		return metal::compile(_options, _version, _code, _shaderWriter, _messageWriter, true);
 	}
-} // namespace bgfx
+} // namespace graphics
 
 #else
 namespace shaderc
 {
 	// @todo Implement Metal support
-	bool compileMetalShader(const Options& _options, uint32_t _version, const std::string& _code, bx::WriterI* _shaderWriter, bx::WriterI* _messageWriter)
+	bool compileMetalShader(const Options& _options, uint32_t _version, const std::string& _code, base::WriterI* _shaderWriter, base::WriterI* _messageWriter)
 	{
 		return false;
 	}

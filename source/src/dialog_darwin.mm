@@ -1,17 +1,17 @@
 /*
  * Copyright 2019-2019 Attila Kocsis. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
 #include "entry_p.h"
-#if BX_PLATFORM_OSX
+#if BASE_PLATFORM_OSX
 
-#include <mapp/allocator.h>
-#include <mapp/filepath.h>
-#include <mapp/string.h>
-#include <mapp/readerwriter.h>
-#include <mapp/process.h>
-#include <mapp/semaphore.h>
+#include <base/allocator.h>
+#include <base/filepath.h>
+#include <base/string.h>
+#include <base/readerwriter.h>
+#include <base/process.h>
+#include <base/semaphore.h>
 
 #import <AppKit/AppKit.h>
 
@@ -20,18 +20,18 @@
 class Split
 {
 public:
-	Split(const bx::StringView& _str, char _ch)
+	Split(const base::StringView& _str, char _ch)
 		: m_str(_str)
-		, m_token(_str.getPtr(), bx::strFind(_str, _ch).getPtr() )
+		, m_token(_str.getPtr(), base::strFind(_str, _ch).getPtr() )
 		, m_ch(_ch)
 	{
 	}
 
-	bx::StringView next()
+	base::StringView next()
 	{
-		bx::StringView result = m_token;
-		m_token = bx::strTrim(
-			  bx::StringView(m_token.getTerm()+1, bx::strFind(bx::StringView(m_token.getTerm()+1, m_str.getTerm() ), m_ch).getPtr())
+		base::StringView result = m_token;
+		m_token = base::strTrim(
+			  base::StringView(m_token.getTerm()+1, base::strFind(base::StringView(m_token.getTerm()+1, m_str.getTerm() ), m_ch).getPtr())
 			, " \t\n"
 			);
 		return result;
@@ -43,38 +43,38 @@ public:
 	}
 
 private:
-	const bx::StringView& m_str;
-	bx::StringView m_token;
+	const base::StringView& m_str;
+	base::StringView m_token;
 	char m_ch;
 };
 
 bool openFileSelectionDialog(
-	  bx::FilePath& _inOutFilePath
+	  base::FilePath& _inOutFilePath
 	, FileSelectionDialogType::Enum _type
-	, const bx::StringView& _title
-	, const bx::StringView& _filter
+	, const base::StringView& _title
+	, const base::StringView& _filter
 	)
 {
 	NSMutableArray* fileTypes = [NSMutableArray arrayWithCapacity:10];
 
-	for (bx::LineReader lr(_filter); !lr.isDone();)
+	for (base::LineReader lr(_filter); !lr.isDone();)
 	{
-		const bx::StringView line = lr.next();
-		const bx::StringView sep  = bx::strFind(line, '|');
+		const base::StringView line = lr.next();
+		const base::StringView sep  = base::strFind(line, '|');
 
 		if (!sep.isEmpty() )
 		{
-			for (Split split(bx::strTrim(bx::StringView(sep.getPtr()+1, line.getTerm() ), " "), ' ')
+			for (Split split(base::strTrim(base::StringView(sep.getPtr()+1, line.getTerm() ), " "), ' ')
 				; !split.isDone()
 				;
 				)
 			{
-				const bx::StringView token = split.next();
+				const base::StringView token = split.next();
 
 				if (token.getLength() >= 3
 				&&  token.getPtr()[0] == '*'
 				&&  token.getPtr()[1] == '.'
-				&&  bx::isAlphaNum(token.getPtr()[2]) )
+				&&  base::isAlphaNum(token.getPtr()[2]) )
 				{
 					NSString* extension = [[NSString alloc] initWithBytes:token.getPtr()+2 length:token.getLength()-2 encoding:NSASCIIStringEncoding];
 					[fileTypes addObject: extension];
@@ -126,8 +126,8 @@ bool openFileSelectionDialog(
 	}
 	else
 	{
-		bx::Semaphore semaphore;
-		bx::Semaphore* psemaphore = &semaphore;
+		base::Semaphore semaphore;
+		base::Semaphore* psemaphore = &semaphore;
 
 		CFRunLoopPerformBlock(
 			  [[NSRunLoop mainRunLoop] getCFRunLoop]
@@ -149,4 +149,4 @@ bool openFileSelectionDialog(
 	return false;
 }
 
-#endif // BX_PLATFORM_OSX
+#endif // BASE_PLATFORM_OSX

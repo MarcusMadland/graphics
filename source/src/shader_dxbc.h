@@ -1,16 +1,16 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_SHADER_DXBC_H
-#define BGFX_SHADER_DXBC_H
+#ifndef GRAPHICS_SHADER_DXBC_H
+#define GRAPHICS_SHADER_DXBC_H
 
-#include <mapp/readerwriter.h>
+#include <base/readerwriter.h>
 
-#define DXBC_CHUNK_HEADER BX_MAKEFOURCC('D', 'X', 'B', 'C')
+#define DXBC_CHUNK_HEADER BASE_MAKEFOURCC('D', 'X', 'B', 'C')
 
-namespace bgfx
+namespace graphics
 {
 	struct DxbcOpcode
 	{
@@ -574,9 +574,9 @@ namespace bgfx
 			, modifier(DxbcOperandModifier::None)
 			, numAddrModes(0)
 		{
-			bx::memSet(addrMode, 0, sizeof(addrMode) );
-			bx::memSet(regIndex, 0, sizeof(regIndex) );
-			bx::memSet(un.imm64, 0, sizeof(un.imm64) );
+			base::memSet(addrMode, 0, sizeof(addrMode) );
+			base::memSet(regIndex, 0, sizeof(regIndex) );
+			base::memSet(un.imm64, 0, sizeof(un.imm64) );
 		}
 
 		DxbcOperandType::Enum type;
@@ -670,8 +670,8 @@ namespace bgfx
 		stl::vector<uint32_t>     customData;
 	};
 
-	int32_t read(bx::ReaderI* _reader, DxbcInstruction& _instruction, bx::Error* _err);
-	int32_t write(bx::WriterI* _writer, const DxbcInstruction& _instruction, bx::Error* _err);
+	int32_t read(base::ReaderI* _reader, DxbcInstruction& _instruction, base::Error* _err);
+	int32_t write(base::WriterI* _writer, const DxbcInstruction& _instruction, base::Error* _err);
 	int32_t toString(char* _out, int32_t _size, const DxbcInstruction& _instruction);
 
 	struct DxbcSignature
@@ -694,8 +694,8 @@ namespace bgfx
 		stl::vector<Element> elements;
 	};
 
-	int32_t read(bx::ReaderSeekerI* _reader, DxbcSignature& _signature, bx::Error* _err);
-	int32_t write(bx::WriterI* _writer, const DxbcSignature& _signature, bx::Error* _err);
+	int32_t read(base::ReaderSeekerI* _reader, DxbcSignature& _signature, base::Error* _err);
+	int32_t write(base::WriterI* _writer, const DxbcSignature& _signature, base::Error* _err);
 
 	struct DxbcShader
 	{
@@ -725,14 +725,14 @@ namespace bgfx
 		stl::vector<uint8_t> statCode;
 	};
 
-	int32_t read(bx::ReaderSeekerI* _reader, DxbcShader& _shader, bx::Error* _err);
-	int32_t write(bx::WriterI* _writer, const DxbcShader& _shader, bx::Error* _err);
+	int32_t read(base::ReaderSeekerI* _reader, DxbcShader& _shader, base::Error* _err);
+	int32_t write(base::WriterI* _writer, const DxbcShader& _shader, base::Error* _err);
 
 	typedef bool (*DxbcParseFn)(uint32_t _offset, const DxbcInstruction& _instruction, void* _userData);
-	void parse(const DxbcShader& _src, DxbcParseFn _fn, void* _userData, bx::Error* _err = NULL);
+	void parse(const DxbcShader& _src, DxbcParseFn _fn, void* _userData, base::Error* _err = NULL);
 
 	typedef void (*DxbcFilterFn)(DxbcInstruction& _instruction, void* _userData);
-	void filter(DxbcShader& _dst, const DxbcShader& _src, DxbcFilterFn _fn, void* _userData, bx::Error* _err = NULL);
+	void filter(DxbcShader& _dst, const DxbcShader& _src, DxbcFilterFn _fn, void* _userData, base::Error* _err = NULL);
 
 #define DXBC_MAX_CHUNKS 32
 
@@ -758,12 +758,12 @@ namespace bgfx
 		uint32_t chunksFourcc[DXBC_MAX_CHUNKS];
 	};
 
-	int32_t read(bx::ReaderSeekerI* _reader, DxbcContext& _dxbc, bx::Error* _err);
-	int32_t write(bx::WriterSeekerI* _writer, const DxbcContext& _dxbc, bx::Error* _err);
+	int32_t read(base::ReaderSeekerI* _reader, DxbcContext& _dxbc, base::Error* _err);
+	int32_t write(base::WriterSeekerI* _writer, const DxbcContext& _dxbc, base::Error* _err);
 
 	/// Calculate DXBC hash from data.
 	void dxbcHash(const void* _data, uint32_t _size, void* _digest);
 
-} // namespace bgfx
+} // namespace graphics
 
-#endif // BGFX_SHADER_DXBC_H
+#endif // GRAPHICS_SHADER_DXBC_H

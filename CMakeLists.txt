@@ -4,16 +4,16 @@ if(POLICY CMP0072)
 endif()
 
 if(NOT APPLE)
-	set(MRENDER_AMALGAMATED_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/source/src/amalgamated.cpp)
+	set(GRAPHICS_AMALGAMATED_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/source/src/amalgamated.cpp)
 else()
-	set(MRENDER_AMALGAMATED_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/source/src/amalgamated.mm)
+	set(GRAPHICS_AMALGAMATED_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/source/src/amalgamated.mm)
 endif()
 
 # Sources
 set(FCPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fcpp)
 file(
 	GLOB_RECURSE
-	MRENDER_SOURCES
+	GRAPHICS_SOURCES
 
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/source/src/**.cpp
@@ -32,7 +32,7 @@ file(
 )
 
 # Solution Filters
-foreach(_source IN ITEMS ${MRENDER_SOURCES})
+foreach(_source IN ITEMS ${GRAPHICS_SOURCES})
 	if (IS_ABSOLUTE "${_source}")
             file(RELATIVE_PATH _source_rel "${CMAKE_CURRENT_SOURCE_DIR}" "${_source}")
         else()
@@ -47,69 +47,69 @@ endforeach()
 set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/source/src/amalgamated.cpp PROPERTIES HEADER_FILE_ONLY ON)
 set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/source/src/amalgamated.mm PROPERTIES HEADER_FILE_ONLY ON)
 
-# Create the mrender target
-if(MRENDER_LIBRARY_TYPE STREQUAL STATIC)
-	add_library(mrender STATIC ${MRENDER_SOURCES})
+# Create the graphics target
+if(GRAPHICS_LIBRARY_TYPE STREQUAL STATIC)
+	add_library(graphics STATIC ${GRAPHICS_SOURCES})
 else()
-	add_library(mrender SHARED ${MRENDER_SOURCES})
-	target_compile_definitions(mrender PUBLIC MRENDER_SHARED_LIB_BUILD=1)
+	add_library(graphics SHARED ${GRAPHICS_SOURCES})
+	target_compile_definitions(graphics PUBLIC GRAPHICS_SHARED_LIB_BUILD=1)
 endif()
 
 if(EMSCRIPTEN)
-	target_link_options(mrender PUBLIC "-sMAX_WEBGL_VERSION=2")
+	target_link_options(graphics PUBLIC "-sMAX_WEBGL_VERSION=2")
 endif()
 
-if(NOT ${MRENDER_OPENGL_VERSION} STREQUAL "")
-	target_compile_definitions(mrender PRIVATE MRENDER_CONFIG_RENDERER_OPENGL_MIN_VERSION=${MRENDER_OPENGL_VERSION})
+if(NOT ${GRAPHICS_OPENGL_VERSION} STREQUAL "")
+	target_compile_definitions(graphics PRIVATE GRAPHICS_CONFIG_RENDERER_OPENGL_MIN_VERSION=${GRAPHICS_OPENGL_VERSION})
 endif()
 
-if(NOT ${MRENDER_OPENGLES_VERSION} STREQUAL "")
-	target_compile_definitions(mrender PRIVATE MRENDER_CONFIG_RENDERER_OPENGLES_MIN_VERSION=${MRENDER_OPENGLES_VERSION})
+if(NOT ${GRAPHICS_OPENGLES_VERSION} STREQUAL "")
+	target_compile_definitions(graphics PRIVATE GRAPHICS_CONFIG_RENDERER_OPENGLES_MIN_VERSION=${GRAPHICS_OPENGLES_VERSION})
 endif()
 
-if(NOT ${MRENDER_CONFIG_DEFAULT_MAX_ENCODERS} STREQUAL "")
+if(NOT ${GRAPHICS_CONFIG_DEFAULT_MAX_ENCODERS} STREQUAL "")
 	target_compile_definitions(
-		mrender
+		graphics
 		PUBLIC
-			"MRENDER_CONFIG_DEFAULT_MAX_ENCODERS=$<IF:$<BOOL:${MRENDER_CONFIG_MULTITHREADED}>,${MRENDER_CONFIG_DEFAULT_MAX_ENCODERS},1>"
+			"GRAPHICS_CONFIG_DEFAULT_MAX_ENCODERS=$<IF:$<BOOL:${GRAPHICS_CONFIG_MULTITHREADED}>,${GRAPHICS_CONFIG_DEFAULT_MAX_ENCODERS},1>"
 	)
 endif()
 
-set(MRENDER_CONFIG_OPTIONS "")
+set(GRAPHICS_CONFIG_OPTIONS "")
 list(
 	APPEND
-	MRENDER_CONFIG_OPTIONS
-	"MRENDER_CONFIG_MAX_DRAW_CALLS"
-	"MRENDER_CONFIG_MAX_VIEWS"
-	"MRENDER_CONFIG_MAX_FRAME_BUFFERS"
-	"MRENDER_CONFIG_MAX_VERTEX_LAYOUTS"
-	"MRENDER_CONFIG_MAX_VERTEX_BUFFERS"
-	"MRENDER_CONFIG_MAX_DYNAMIC_VERTEX_BUFFERS"
-	"MRENDER_CONFIG_MAX_INDEX_BUFFERS"
-	"MRENDER_CONFIG_MAX_DYNAMIC_INDEX_BUFFERS"
-	"MRENDER_CONFIG_MAX_TEXTURES"
-	"MRENDER_CONFIG_MAX_TEXTURE_SAMPLERS"
-	"MRENDER_CONFIG_MAX_SHADERS"
-	"MRENDER_CONFIG_SORT_KEY_NUM_BITS_PROGRAM"
+	GRAPHICS_CONFIG_OPTIONS
+	"GRAPHICS_CONFIG_MAX_DRAW_CALLS"
+	"GRAPHICS_CONFIG_MAX_VIEWS"
+	"GRAPHICS_CONFIG_MAX_FRAME_BUFFERS"
+	"GRAPHICS_CONFIG_MAX_VERTEX_LAYOUTS"
+	"GRAPHICS_CONFIG_MAX_VERTEX_BUFFERS"
+	"GRAPHICS_CONFIG_MAX_DYNAMIC_VERTEX_BUFFERS"
+	"GRAPHICS_CONFIG_MAX_INDEX_BUFFERS"
+	"GRAPHICS_CONFIG_MAX_DYNAMIC_INDEX_BUFFERS"
+	"GRAPHICS_CONFIG_MAX_TEXTURES"
+	"GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS"
+	"GRAPHICS_CONFIG_MAX_SHADERS"
+	"GRAPHICS_CONFIG_SORT_KEY_NUM_BITS_PROGRAM"
 )
-foreach(MRENDER_CONFIG_OPTION IN LISTS MRENDER_CONFIG_OPTIONS)
-	if(NOT ${${MRENDER_CONFIG_OPTION}} STREQUAL "")
-		target_compile_definitions(mrender PUBLIC "${MRENDER_CONFIG_OPTION}=${${MRENDER_CONFIG_OPTION}}")
+foreach(GRAPHICS_CONFIG_OPTION IN LISTS GRAPHICS_CONFIG_OPTIONS)
+	if(NOT ${${GRAPHICS_CONFIG_OPTION}} STREQUAL "")
+		target_compile_definitions(graphics PUBLIC "${GRAPHICS_CONFIG_OPTION}=${${GRAPHICS_CONFIG_OPTION}}")
 	endif()
 endforeach()
 
 # Special Visual Studio Flags
 if(MSVC)
-	target_compile_definitions(mrender PUBLIC "_CRT_SECURE_NO_WARNINGS")
+	target_compile_definitions(graphics PUBLIC "_CRT_SECURE_NO_WARNINGS")
 endif()
 
 # 
 target_compile_definitions(
-	mrender
+	graphics
 	PUBLIC
-		"MAPP_CONFIG_DEBUG=$<OR:$<CONFIG:Debug>,$<BOOL:${MAPP_CONFIG_DEBUG}>>"
-		"MRENDER_CONFIG_DEBUG_ANNOTATION=$<AND:$<NOT:$<STREQUAL:${CMAKE_SYSTEM_NAME},WindowsStore>>,$<OR:$<CONFIG:Debug>,$<BOOL:${MRENDER_CONFIG_DEBUG_ANNOTATION}>>>"
-		"MRENDER_CONFIG_MULTITHREADED=$<BOOL:${MRENDER_CONFIG_MULTITHREADED}>"
+		"BASE_CONFIG_DEBUG=$<OR:$<CONFIG:Debug>,$<BOOL:${BASE_CONFIG_DEBUG}>>"
+		"GRAPHICS_CONFIG_DEBUG_ANNOTATION=$<AND:$<NOT:$<STREQUAL:${CMAKE_SYSTEM_NAME},WindowsStore>>,$<OR:$<CONFIG:Debug>,$<BOOL:${GRAPHICS_CONFIG_DEBUG_ANNOTATION}>>>"
+		"GRAPHICS_CONFIG_MULTITHREADED=$<BOOL:${GRAPHICS_CONFIG_MULTITHREADED}>"
 )
 
 # directx-headers
@@ -131,17 +131,17 @@ endif()
 
 # Includes
 target_include_directories(
-	mrender PRIVATE ${DIRECTX_HEADERS} ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/khronos 
-	PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/source/include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/mapp/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+	graphics PRIVATE ${DIRECTX_HEADERS} ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/khronos 
+	PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/source/include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/base/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 # Dependencies
-target_link_libraries(mrender PUBLIC mapp)
+target_link_libraries(graphics PUBLIC base)
 
 # Frameworks required on iOS, tvOS and macOS
 if(${CMAKE_SYSTEM_NAME} MATCHES iOS|tvOS)
 	target_link_libraries(
-		mrender
+		graphics
 		PUBLIC
 			"-framework OpenGLES -framework Metal -framework UIKit -framework CoreGraphics -framework QuartzCore -framework IOKit -framework CoreFoundation"
 	)
@@ -157,7 +157,7 @@ elseif(APPLE)
 	mark_as_advanced(IOKIT_LIBRARY)
 	mark_as_advanced(COREFOUNDATION_LIBRARY)
 	target_link_libraries(
-		mrender PUBLIC ${COCOA_LIBRARY} ${METAL_LIBRARY} ${QUARTZCORE_LIBRARY} ${IOKIT_LIBRARY} ${COREFOUNDATION_LIBRARY}
+		graphics PUBLIC ${COCOA_LIBRARY} ${METAL_LIBRARY} ${QUARTZCORE_LIBRARY} ${IOKIT_LIBRARY} ${COREFOUNDATION_LIBRARY}
 	)
 endif()
 
@@ -168,7 +168,7 @@ if(UNIX
 )
 	find_package(X11 REQUIRED)
 	find_package(OpenGL REQUIRED)
-	target_link_libraries(mrender PUBLIC ${X11_LIBRARIES} ${OPENGL_LIBRARIES})
+	target_link_libraries(graphics PUBLIC ${X11_LIBRARIES} ${OPENGL_LIBRARIES})
 endif()
 
 # Exclude mm files if not on OS X
@@ -191,11 +191,11 @@ if(XCODE)
 endif()
 
 ## FCPP
-target_include_directories(mrender PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fcpp/)
+target_include_directories(graphics PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fcpp/)
 
 # Dependencies
-add_subdirectory(mapp)
+add_subdirectory(base)
 
-# Put in a "mrender" folder in Visual Studio
-set_target_properties(mrender PROPERTIES FOLDER "mrender ")
-set_target_properties(mapp PROPERTIES FOLDER "mrender ")
+# Put in a "graphics" folder in Visual Studio
+set_target_properties(graphics PROPERTIES FOLDER "graphics ")
+set_target_properties(base PROPERTIES FOLDER "graphics ")

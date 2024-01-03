@@ -1,14 +1,14 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
-#ifndef BGFX_SHADER_H
-#define BGFX_SHADER_H
+#ifndef GRAPHICS_SHADER_H
+#define GRAPHICS_SHADER_H
 
-#include <mapp/readerwriter.h>
+#include <base/readerwriter.h>
 
-namespace bgfx
+namespace graphics
 {
 	struct DescriptorType
 	{
@@ -60,11 +60,11 @@ namespace bgfx
 	uint8_t textureDimensionToId(TextureDimension::Enum _dim);
 
 	///
-	void disassemble(bx::WriterI* _writer, bx::ReaderSeekerI* _reader, bx::Error* _err = NULL);
+	void disassemble(base::WriterI* _writer, base::ReaderSeekerI* _reader, base::Error* _err = NULL);
 
 	///
-	void disassemble(bx::WriterI* _writer, const void* _data, uint32_t _size, bx::Error* _err = NULL);
+	void disassemble(base::WriterI* _writer, const void* _data, uint32_t _size, base::Error* _err = NULL);
 
-} // namespace bgfx
+} // namespace graphics
 
-#endif // BGFX_SHADER_H
+#endif // GRAPHICS_SHADER_H

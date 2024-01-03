@@ -1,20 +1,20 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
 #include "entry_p.h"
 
-#if ENTRY_CONFIG_USE_NATIVE && BX_PLATFORM_OSX
+#if ENTRY_CONFIG_USE_NATIVE && BASE_PLATFORM_OSX
 
 #import <Cocoa/Cocoa.h>
 
-#include <bgfx/platform.h>
+#include <graphics/platform.h>
 
-#include <mapp/uint32_t.h>
-#include <mapp/thread.h>
-#include <mapp/os.h>
-#include <mapp/handlealloc.h>
+#include <base/uint32_t.h>
+#include <base/thread.h>
+#include <base/os.h>
+#include <base/handlealloc.h>
 
 @interface AppDelegate : NSObject<NSApplicationDelegate>
 {
@@ -43,7 +43,7 @@
 
 @end
 
-namespace mrender
+namespace entry
 {
 	static uint8_t s_translateKey[256];
 
@@ -52,9 +52,9 @@ namespace mrender
 		int m_argc;
 		const char* const* m_argv;
 
-		static int32_t threadFunc(bx::Thread* _thread, void* _userData)
+		static int32_t threadFunc(base::Thread* _thread, void* _userData)
 		{
-			BX_UNUSED(_thread);
+			BASE_UNUSED(_thread);
 
 			CFBundleRef mainBundle = CFBundleGetMainBundle();
 			if (mainBundle != nil)
@@ -179,8 +179,8 @@ namespace mrender
 			int32_t y = int32_t(adjustFrame.size.height) - int32_t(location.y);
 
 			// clamp within the range of the window
-			*outX = bx::clamp(x, 0, int32_t(adjustFrame.size.width) );
-			*outY = bx::clamp(y, 0, int32_t(adjustFrame.size.height) );
+			*outX = base::clamp(x, 0, int32_t(adjustFrame.size.width) );
+			*outY = base::clamp(y, 0, int32_t(adjustFrame.size.height) );
 		}
 
 		void setMousePos(NSWindow* _window, int _x, int _y)
@@ -394,7 +394,7 @@ namespace mrender
 						uint8_t pressedChar[4];
 						Key::Enum key = handleKeyEvent(event, &modifiers, &pressedChar[0]);
 
-						BX_UNUSED(pressedChar);
+						BASE_UNUSED(pressedChar);
 
 						if (key != Key::None)
 						{
@@ -499,7 +499,7 @@ namespace mrender
 			mte.m_argc = _argc;
 			mte.m_argv = _argv;
 
-			bx::Thread thread;
+			base::Thread thread;
 			thread.init(mte.threadFunc, &mte);
 
 			WindowHandle handle = { 0 };
@@ -510,7 +510,7 @@ namespace mrender
 
 			while (!(m_exit = [dg applicationHasTerminated]) )
 			{
-				bgfx::renderFrame();
+				graphics::renderFrame();
 
 				@autoreleasepool
 				{
@@ -522,7 +522,7 @@ namespace mrender
 
 			m_eventQueue.postExitEvent();
 
-			while (bgfx::RenderFrame::NoContext != bgfx::renderFrame() ) {};
+			while (graphics::RenderFrame::NoContext != graphics::renderFrame() ) {};
 			thread.shutdown();
 
 			return 0;
@@ -530,7 +530,7 @@ namespace mrender
 
 		WindowHandle findHandle(NSWindow *_window)
 		{
-			bx::MutexScope scope(m_lock);
+			base::MutexScope scope(m_lock);
 			for (uint16_t ii = 0, num = m_windowAlloc.getNumHandles(); ii < num; ++ii)
 			{
 				uint16_t idx = m_windowAlloc.getHandleAt(ii);
@@ -546,9 +546,9 @@ namespace mrender
 		}
 
 		EventQueue m_eventQueue;
-		bx::Mutex m_lock;
+		base::Mutex m_lock;
 
-		bx::HandleAllocT<ENTRY_CONFIG_MAX_WINDOWS> m_windowAlloc;
+		base::HandleAllocT<ENTRY_CONFIG_MAX_WINDOWS> m_windowAlloc;
 		NSWindow* m_window[ENTRY_CONFIG_MAX_WINDOWS];
 		NSRect m_windowFrame;
 
@@ -583,9 +583,9 @@ namespace mrender
 
 	WindowHandle createWindow(int32_t _x, int32_t _y, uint32_t _width, uint32_t _height, uint32_t _flags, const char* _title)
 	{
-		BX_UNUSED(_flags);
+		BASE_UNUSED(_flags);
 
-		bx::MutexScope scope(s_ctx.m_lock);
+		base::MutexScope scope(s_ctx.m_lock);
 		WindowHandle handle = { s_ctx.m_windowAlloc.alloc() };
 
 		if (UINT16_MAX != handle.idx)
@@ -647,7 +647,7 @@ namespace mrender
 					}
 				});
 
-			bx::MutexScope scope(s_ctx.m_lock);
+			base::MutexScope scope(s_ctx.m_lock);
 			s_ctx.m_windowAlloc.free(_handle.idx);
 		}
 	}
@@ -694,7 +694,7 @@ namespace mrender
 
 	void setWindowFlags(WindowHandle _handle, uint32_t _flags, bool _enabled)
 	{
-		BX_UNUSED(_handle, _flags, _enabled);
+		BASE_UNUSED(_handle, _flags, _enabled);
 	}
 
 	void toggleFullscreen(WindowHandle _handle)
@@ -725,7 +725,7 @@ namespace mrender
 		return NULL;
 	}
 
-} // namespace mrender
+} // namespace graphics
 
 @implementation AppDelegate
 
@@ -750,7 +750,7 @@ namespace mrender
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
 {
-	BX_UNUSED(sender);
+	BASE_UNUSED(sender);
 	self->terminated = true;
 	return NSTerminateCancel;
 }
@@ -790,39 +790,39 @@ namespace mrender
 
 - (void)windowWillClose:(NSNotification*)notification
 {
-	BX_UNUSED(notification);
+	BASE_UNUSED(notification);
 	NSWindow *window = [notification object];
 
 	[window setDelegate:nil];
 
-	destroyWindow(mrender::s_ctx.findHandle(window), false);
+	destroyWindow(graphics::s_ctx.findHandle(window), false);
 }
 
 - (BOOL)windowShouldClose:(NSWindow*)window
 {
 	assert(window);
-	BX_UNUSED(window);
+	BASE_UNUSED(window);
 	return true;
 }
 
 - (void)windowDidResize:(NSNotification*)notification
 {
 	NSWindow *window = [notification object];
-	using namespace mrender;
+	using namespace graphics;
 	s_ctx.windowDidResize(window);
 }
 
 - (void)windowDidBecomeKey:(NSNotification*)notification
 {
 	NSWindow *window = [notification object];
-	using namespace mrender;
+	using namespace graphics;
 	s_ctx.windowDidBecomeKey(window);
 }
 
 - (void)windowDidResignKey:(NSNotification*)notification
 {
 	NSWindow *window = [notification object];
-	using namespace mrender;
+	using namespace graphics;
 	s_ctx.windowDidResignKey(window);
 }
 
@@ -830,8 +830,8 @@ namespace mrender
 
 int main(int _argc, const char* const* _argv)
 {
-	using namespace mrender;
+	using namespace graphics;
 	return s_ctx.run(_argc, _argv);
 }
 
-#endif // BX_PLATFORM_OSX
+#endif // BASE_PLATFORM_OSX

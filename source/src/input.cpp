@@ -1,16 +1,16 @@
 /*
  * Copyright 2010-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
 #include <memory.h>
 
 #include "entry_p.h"
-#include "mrender/input.h"
-#include "mrender/cmd.h"
+#include "graphics/input.h"
+#include "graphics/cmd.h"
 
-#include <mapp/allocator.h>
-#include <mapp/ringbuffer.h>
+#include <base/allocator.h>
+#include <base/ringbuffer.h>
 #include <string>
 #include <unordered_map>
 
@@ -33,7 +33,7 @@ struct InputMouse
 			m_norm[2] = 0.0f;
 		}
 
-		bx::memSet(m_buttons, 0, sizeof(m_buttons) );
+		base::memSet(m_buttons, 0, sizeof(m_buttons) );
 	}
 
 	void setResolution(uint16_t _width, uint16_t _height)
@@ -52,7 +52,7 @@ struct InputMouse
 		m_norm[2] = float(_mz)/float(m_wheelDelta);
 	}
 
-	void setButtonState(mrender::MouseButton::Enum _button, uint8_t _state)
+	void setButtonState(entry::MouseButton::Enum _button, uint8_t _state)
 	{
 		m_buttons[_button] = _state;
 	}
@@ -60,7 +60,7 @@ struct InputMouse
 	int32_t m_absolute[3];
 	float m_norm[3];
 	int32_t m_wheel;
-	uint8_t m_buttons[mrender::MouseButton::Count];
+	uint8_t m_buttons[entry::MouseButton::Count];
 	uint16_t m_width;
 	uint16_t m_height;
 	uint16_t m_wheelDelta;
@@ -70,14 +70,14 @@ struct InputMouse
 struct InputKeyboard
 {
 	InputKeyboard()
-		: m_ring(BX_COUNTOF(m_char)-4)
+		: m_ring(BASE_COUNTOF(m_char)-4)
 	{
 	}
 
 	void reset()
 	{
-		bx::memSet(m_key, 0, sizeof(m_key) );
-		bx::memSet(m_once, 0xff, sizeof(m_once) );
+		base::memSet(m_key, 0, sizeof(m_key) );
+		base::memSet(m_once, 0xff, sizeof(m_once) );
 	}
 
 	static uint32_t encodeKeyState(uint8_t _modifiers, bool _down)
@@ -94,13 +94,13 @@ struct InputKeyboard
 		return 0 != ( (_state>> 8)&0xff);
 	}
 
-	void setKeyState(mrender::Key::Enum _key, uint8_t _modifiers, bool _down)
+	void setKeyState(entry::Key::Enum _key, uint8_t _modifiers, bool _down)
 	{
 		m_key[_key] = encodeKeyState(_modifiers, _down);
 		m_once[_key] = false;
 	}
 
-	bool getKeyState(mrender::Key::Enum _key, uint8_t* _modifiers)
+	bool getKeyState(entry::Key::Enum _key, uint8_t* _modifiers)
 	{
 		uint8_t modifiers;
 		_modifiers = NULL == _modifiers ? &modifiers : _modifiers;
@@ -111,7 +111,7 @@ struct InputKeyboard
 	uint8_t getModifiersState()
 	{
 		uint8_t modifiers = 0;
-		for (uint32_t ii = 0; ii < mrender::Key::Count; ++ii)
+		for (uint32_t ii = 0; ii < entry::Key::Count; ++ii)
 		{
 			modifiers |= (m_key[ii]>>16)&0xff;
 		}
@@ -128,7 +128,7 @@ struct InputKeyboard
 			popChar();
 		}
 
-		bx::memCopy(&m_char[m_ring.m_current], _char, 4);
+		base::memCopy(&m_char[m_ring.m_current], _char, 4);
 		m_ring.commit(4);
 	}
 
@@ -154,7 +154,7 @@ struct InputKeyboard
 	uint32_t m_key[256];
 	bool m_once[256];
 
-	bx::RingBufferControl m_ring;
+	base::RingBufferControl m_ring;
 	uint8_t m_char[256];
 };
 
@@ -167,20 +167,20 @@ struct Gamepad
 
 	void reset()
 	{
-		bx::memSet(m_axis, 0, sizeof(m_axis) );
+		base::memSet(m_axis, 0, sizeof(m_axis) );
 	}
 
-	void setAxis(mrender::GamepadAxis::Enum _axis, int32_t _value)
+	void setAxis(entry::GamepadAxis::Enum _axis, int32_t _value)
 	{
 		m_axis[_axis] = _value;
 	}
 
-	int32_t getAxis(mrender::GamepadAxis::Enum _axis)
+	int32_t getAxis(entry::GamepadAxis::Enum _axis)
 	{
 		return m_axis[_axis];
 	}
 
-	int32_t m_axis[mrender::GamepadAxis::Count];
+	int32_t m_axis[entry::GamepadAxis::Count];
 };
 
 struct Input
@@ -210,7 +210,7 @@ struct Input
 
 	void process(const InputBinding* _bindings)
 	{
-		for (const InputBinding* binding = _bindings; binding->m_key != mrender::Key::None; ++binding)
+		for (const InputBinding* binding = _bindings; binding->m_key != entry::Key::None; ++binding)
 		{
 			uint8_t modifiers;
 			bool down = InputKeyboard::decodeKeyState(m_keyboard.m_key[binding->m_key], modifiers);
@@ -268,7 +268,7 @@ struct Input
 	{
 		m_mouse.reset();
 		m_keyboard.reset();
-		for (uint32_t ii = 0; ii < BX_COUNTOF(m_gamepad); ++ii)
+		for (uint32_t ii = 0; ii < BASE_COUNTOF(m_gamepad); ++ii)
 		{
 			m_gamepad[ii].reset();
 		}
@@ -285,12 +285,12 @@ static Input* s_input;
 
 void inputInit()
 {
-	s_input = BX_NEW(mrender::getAllocator(), Input);
+	s_input = BASE_NEW(entry::getAllocator(), Input);
 }
 
 void inputShutdown()
 {
-	bx::deleteObject(mrender::getAllocator(), s_input);
+	base::deleteObject(entry::getAllocator(), s_input);
 }
 
 void inputAddBindings(const char* _name, const InputBinding* _bindings)
@@ -313,12 +313,12 @@ void inputSetMouseResolution(uint16_t _width, uint16_t _height)
 	s_input->m_mouse.setResolution(_width, _height);
 }
 
-void inputSetKeyState(mrender::Key::Enum _key, uint8_t _modifiers, bool _down)
+void inputSetKeyState(entry::Key::Enum _key, uint8_t _modifiers, bool _down)
 {
 	s_input->m_keyboard.setKeyState(_key, _modifiers, _down);
 }
 
-bool inputGetKeyState(mrender::Key::Enum _key, uint8_t* _modifiers)
+bool inputGetKeyState(entry::Key::Enum _key, uint8_t* _modifiers)
 {
 	return s_input->m_keyboard.getKeyState(_key, _modifiers);
 }
@@ -348,7 +348,7 @@ void inputSetMousePos(int32_t _mx, int32_t _my, int32_t _mz)
 	s_input->m_mouse.setPos(_mx, _my, _mz);
 }
 
-void inputSetMouseButtonState(mrender::MouseButton::Enum _button, uint8_t _state)
+void inputSetMouseButtonState(entry::MouseButton::Enum _button, uint8_t _state)
 {
 	s_input->m_mouse.setButtonState(_button, _state);
 }
@@ -374,7 +374,7 @@ void inputSetMouseLock(bool _lock)
 	{
 		s_input->m_mouse.m_lock = _lock;
 
-		mrender::setMouseLock(mrender::kDefaultWindowHandle, _lock);
+		entry::setMouseLock(entry::kDefaultWindowHandle, _lock);
 		if (_lock)
 		{
 			s_input->m_mouse.m_norm[0] = 0.0f;
@@ -384,12 +384,12 @@ void inputSetMouseLock(bool _lock)
 	}
 }
 
-void inputSetGamepadAxis(mrender::GamepadHandle _handle, mrender::GamepadAxis::Enum _axis, int32_t _value)
+void inputSetGamepadAxis(entry::GamepadHandle _handle, entry::GamepadAxis::Enum _axis, int32_t _value)
 {
 	s_input->m_gamepad[_handle.idx].setAxis(_axis, _value);
 }
 
-int32_t inputGetGamepadAxis(mrender::GamepadHandle _handle, mrender::GamepadAxis::Enum _axis)
+int32_t inputGetGamepadAxis(entry::GamepadHandle _handle, entry::GamepadAxis::Enum _axis)
 {
 	return s_input->m_gamepad[_handle.idx].getAxis(_axis);
 }

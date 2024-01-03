@@ -1,17 +1,17 @@
 /*
  * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
+ * License: https://github.com/bkaradzic/graphics/blob/master/LICENSE
  */
 
 #ifndef ENTRY_PRIVATE_H_HEADER_GUARD
 #define ENTRY_PRIVATE_H_HEADER_GUARD
 
-#define TINYSTL_ALLOCATOR mrender::TinyStlAllocator
+#define TINYSTL_ALLOCATOR graphics::TinyStlAllocator
 
-#include <mapp/spscqueue.h>
-#include <mapp/filepath.h>
+#include <base/spscqueue.h>
+#include <base/filepath.h>
 
-#include "mrender/entry.h"
+#include "graphics/entry.h"
 
 #ifndef ENTRY_CONFIG_USE_NOOP
 #	define ENTRY_CONFIG_USE_NOOP 0
@@ -64,7 +64,7 @@
 #define ENTRY_IMPLEMENT_EVENT(_class, _type) \
 			_class(WindowHandle _handle) : Event(_type, _handle) {}
 
-namespace mrender
+namespace entry
 {
 	struct TinyStlAllocator
 	{
@@ -180,7 +180,7 @@ namespace mrender
 	{
 		ENTRY_IMPLEMENT_EVENT(DropFileEvent, Event::DropFile);
 
-		bx::FilePath m_filePath;
+		base::FilePath m_filePath;
 	};
 
 	const Event* poll();
@@ -205,7 +205,7 @@ namespace mrender
 
 		void postAxisEvent(WindowHandle _handle, GamepadHandle _gamepad, GamepadAxis::Enum _axis, int32_t _value)
 		{
-			AxisEvent* ev = BX_NEW(getAllocator(), AxisEvent)(_handle);
+			AxisEvent* ev = BASE_NEW(getAllocator(), AxisEvent)(_handle);
 			ev->m_gamepad = _gamepad;
 			ev->m_axis    = _axis;
 			ev->m_value   = _value;
@@ -214,21 +214,21 @@ namespace mrender
 
 		void postCharEvent(WindowHandle _handle, uint8_t _len, const uint8_t _char[4])
 		{
-			CharEvent* ev = BX_NEW(getAllocator(), CharEvent)(_handle);
+			CharEvent* ev = BASE_NEW(getAllocator(), CharEvent)(_handle);
 			ev->m_len = _len;
-			bx::memCopy(ev->m_char, _char, 4);
+			base::memCopy(ev->m_char, _char, 4);
 			m_queue.push(ev);
 		}
 
 		void postExitEvent()
 		{
-			Event* ev = BX_NEW(getAllocator(), Event)(Event::Exit);
+			Event* ev = BASE_NEW(getAllocator(), Event)(Event::Exit);
 			m_queue.push(ev);
 		}
 
 		void postGamepadEvent(WindowHandle _handle, GamepadHandle _gamepad, bool _connected)
 		{
-			GamepadEvent* ev = BX_NEW(getAllocator(), GamepadEvent)(_handle);
+			GamepadEvent* ev = BASE_NEW(getAllocator(), GamepadEvent)(_handle);
 			ev->m_gamepad   = _gamepad;
 			ev->m_connected = _connected;
 			m_queue.push(ev);
@@ -236,7 +236,7 @@ namespace mrender
 
 		void postKeyEvent(WindowHandle _handle, Key::Enum _key, uint8_t _modifiers, bool _down)
 		{
-			KeyEvent* ev = BX_NEW(getAllocator(), KeyEvent)(_handle);
+			KeyEvent* ev = BASE_NEW(getAllocator(), KeyEvent)(_handle);
 			ev->m_key       = _key;
 			ev->m_modifiers = _modifiers;
 			ev->m_down      = _down;
@@ -245,7 +245,7 @@ namespace mrender
 
 		void postMouseEvent(WindowHandle _handle, int32_t _mx, int32_t _my, int32_t _mz)
 		{
-			MouseEvent* ev = BX_NEW(getAllocator(), MouseEvent)(_handle);
+			MouseEvent* ev = BASE_NEW(getAllocator(), MouseEvent)(_handle);
 			ev->m_mx     = _mx;
 			ev->m_my     = _my;
 			ev->m_mz     = _mz;
@@ -257,7 +257,7 @@ namespace mrender
 
 		void postMouseEvent(WindowHandle _handle, int32_t _mx, int32_t _my, int32_t _mz, MouseButton::Enum _button, bool _down)
 		{
-			MouseEvent* ev = BX_NEW(getAllocator(), MouseEvent)(_handle);
+			MouseEvent* ev = BASE_NEW(getAllocator(), MouseEvent)(_handle);
 			ev->m_mx     = _mx;
 			ev->m_my     = _my;
 			ev->m_mz     = _mz;
@@ -269,7 +269,7 @@ namespace mrender
 
 		void postSizeEvent(WindowHandle _handle, uint32_t _width, uint32_t _height)
 		{
-			SizeEvent* ev = BX_NEW(getAllocator(), SizeEvent)(_handle);
+			SizeEvent* ev = BASE_NEW(getAllocator(), SizeEvent)(_handle);
 			ev->m_width  = _width;
 			ev->m_height = _height;
 			m_queue.push(ev);
@@ -277,21 +277,21 @@ namespace mrender
 
 		void postWindowEvent(WindowHandle _handle, void* _nwh = NULL)
 		{
-			WindowEvent* ev = BX_NEW(getAllocator(), WindowEvent)(_handle);
+			WindowEvent* ev = BASE_NEW(getAllocator(), WindowEvent)(_handle);
 			ev->m_nwh = _nwh;
 			m_queue.push(ev);
 		}
 
 		void postSuspendEvent(WindowHandle _handle, Suspend::Enum _state)
 		{
-			SuspendEvent* ev = BX_NEW(getAllocator(), SuspendEvent)(_handle);
+			SuspendEvent* ev = BASE_NEW(getAllocator(), SuspendEvent)(_handle);
 			ev->m_state = _state;
 			m_queue.push(ev);
 		}
 
-		void postDropFileEvent(WindowHandle _handle, const bx::FilePath& _filePath)
+		void postDropFileEvent(WindowHandle _handle, const base::FilePath& _filePath)
 		{
-			DropFileEvent* ev = BX_NEW(getAllocator(), DropFileEvent)(_handle);
+			DropFileEvent* ev = BASE_NEW(getAllocator(), DropFileEvent)(_handle);
 			ev->m_filePath = _filePath;
 			m_queue.push(ev);
 		}
@@ -318,13 +318,13 @@ namespace mrender
 
 		void release(const Event* _event) const
 		{
-			bx::deleteObject(getAllocator(), const_cast<Event*>(_event) );
+			base::deleteObject(getAllocator(), const_cast<Event*>(_event) );
 		}
 
 	private:
-		bx::SpScUnboundedQueueT<Event> m_queue;
+		base::SpScUnboundedQueueT<Event> m_queue;
 	};
 
-} // namespace mrender
+} // namespace graphics
 
 #endif // ENTRY_PRIVATE_H_HEADER_GUARD
