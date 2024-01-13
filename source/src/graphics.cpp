@@ -644,15 +644,15 @@ namespace graphics
 			num = base::vsnprintf(temp, num, _format, argListCopy);
 
 			uint8_t attr = _attr;
-			MemSlot* mem = &m_mem[_y*m_width+_x];
+			MemSlot* mem = &m_mem[_y * m_width + _x];
 			for (uint32_t ii = 0, xx = _x; ii < num && xx < m_width; ++ii)
 			{
 				char ch = temp[ii];
-				if (BASE_UNLIKELY(ch == '\x1b') )
+				if (BASE_UNLIKELY(ch == '\x1b'))
 				{
-					char* ptr = &temp[ii+1];
+					char* ptr = &temp[ii + 1];
 					attr = parseAttr(ptr, _attr);
-					ii += uint32_t(ptr - &temp[ii+1]);
+					ii += uint32_t(ptr - &temp[ii + 1]);
 				}
 				else
 				{
@@ -2057,6 +2057,8 @@ namespace graphics
 		}
 
 		g_internalData.caps = getCaps();
+
+		ddInit();
 
 		return true;
 	}
@@ -4176,6 +4178,66 @@ namespace graphics
 		s_ctx->dbgTextImage(_x, _y, _width, _height, _data, _pitch);
 	}
 
+	void dbgDrawCube(const base::Vec3& _pos, const base::Vec3& _size, uint32_t _color, bool _fill)
+	{
+		GRAPHICS_CHECK_API_THREAD();
+		s_ctx->dbgDrawCube(_pos, _size, _color, _fill);
+	}
+
+	void dbgDrawArc(Axis::Enum _axis, float _x, float _y, float _z, float _radius, float _degrees, uint32_t _color, bool _fill)
+	{
+		GRAPHICS_CHECK_API_THREAD();
+		s_ctx->dbgDrawArc(_axis, _x, _y, _z, _radius, _degrees, _color, _fill);
+	}
+
+	void dbgDrawAxis(float _x, float _y, float _z, float _len, Axis::Enum _highlight, float _thickness, uint32_t _color, bool _fill)
+	{
+		GRAPHICS_CHECK_API_THREAD();
+		s_ctx->dbgDrawAxis(_x, _y, _z, _len, _highlight, _thickness, _color, _fill);
+	}
+
+	void dbgDrawCapsule(const base::Vec3& _from, const base::Vec3& _to, float _radius, uint32_t _color, bool _fill)
+	{
+		GRAPHICS_CHECK_API_THREAD();
+		s_ctx->dbgDrawCapsule(_from, _to, _radius, _color, _fill);
+	}
+
+	void dbgDrawCircle(const base::Vec3& _normal, const base::Vec3& _center, float _radius, float _weight, uint32_t _color, bool _fill)
+	{
+		GRAPHICS_CHECK_API_THREAD();
+		s_ctx->dbgDrawCircle(_normal, _center, _radius, _weight, _color, _fill);
+	}
+
+	void dbgDrawCone(const base::Vec3& _from, const base::Vec3& _to, float _radius, uint32_t _color, bool _fill)
+	{
+		GRAPHICS_CHECK_API_THREAD();
+		s_ctx->dbgDrawCone(_from, _to, _radius, _color, _fill);
+	}
+
+	void dbgDrawFrustum(const void* _viewProj, uint32_t _color, bool _fill)
+	{
+		GRAPHICS_CHECK_API_THREAD();
+		s_ctx->dbgDrawFrustum(_viewProj, _color, _fill);
+	}
+
+	void dbgDrawGrid(const base::Vec3& _normal, const base::Vec3& _center, uint32_t _size, float _step, uint32_t _color, bool _fill)
+	{
+		GRAPHICS_CHECK_API_THREAD();
+		s_ctx->dbgDrawGrid(_normal, _center, _size, _step, _color, _fill);
+	}
+
+	void dbgDrawQuad(const base::Vec3& _normal, const base::Vec3& _center, float _size, uint32_t _color, bool _fill)
+	{
+		GRAPHICS_CHECK_API_THREAD();
+		s_ctx->dbgDrawQuad(_normal, _center, _size, _color, _fill);
+	}
+
+	void dbgDrawLine(const base::Vec3& _from, const base::Vec3& _to, uint32_t _color)
+	{
+		GRAPHICS_CHECK_API_THREAD();
+		s_ctx->dbgDrawLine(_from, _to, _color);
+	}
+
 	IndexBufferHandle createIndexBuffer(const Memory* _mem, uint16_t _flags)
 	{
 		BASE_ASSERT(
@@ -5723,5 +5785,4 @@ GRAPHICS_TEXTURE_FORMAT_BIMG(Count);
 
 
 //#include "graphics.idl.inl"
-
 

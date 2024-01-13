@@ -694,6 +694,7 @@ restart:
 					{
 						const AxisEvent* axis = static_cast<const AxisEvent*>(ev);
 						inputSetGamepadAxis(axis->m_gamepad, axis->m_axis, axis->m_value);
+
 					}
 					break;
 
@@ -709,8 +710,8 @@ restart:
 
 				case Event::Gamepad:
 					{
-//						const GamepadEvent* gev = static_cast<const GamepadEvent*>(ev);
-//						DBG("gamepad %d, %d", gev->m_gamepad.idx, gev->m_connected);
+						//const GamepadEvent* gev = static_cast<const GamepadEvent*>(ev);
+						//DBG("gamepad %d, %d", gev->m_gamepad.idx, gev->m_connected);
 					}
 					break;
 

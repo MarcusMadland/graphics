@@ -12,6 +12,8 @@
 
 #include "defines.h"
 
+#include <base/math.h>
+
 ///
 #define GRAPHICS_HANDLE(_name)                                                           \
 	struct _name { uint16_t idx; };                                                  \
@@ -409,9 +411,23 @@ namespace graphics
 	{
 		enum Enum
 		{
-			Vertex   = 'v',   /// vertex
-			Fragment = 'f',   /// fragment
-			Compute  = 'c',   /// compute
+			Vertex   = 'v',   
+			Fragment = 'f',   
+			Compute  = 'c',   
+		};
+	};
+
+	/// Axis used for debug utilities.
+	/// 
+	struct Axis
+	{
+		enum Enum
+		{
+			X,
+			Y,
+			Z,
+
+			Count
 		};
 	};
 
@@ -2237,6 +2253,98 @@ namespace graphics
 		, const void* _data
 		, uint16_t _pitch
 		);
+
+	///
+	void dbgDrawCube(
+		  const base::Vec3& _pos
+		, const base::Vec3& _size
+		, uint32_t _color = 0xffffffff
+		, bool _fill = false);
+
+	///
+	void dbgDrawArc(
+		Axis::Enum _axis,
+		float _x,
+		float _y,
+		float _z,
+		float _radius,
+		float _degrees,
+		uint32_t _color = 0xffffffff,
+		bool _fill = false);
+
+	///
+	void dbgDrawAxis(
+		float _x,
+		float _y,
+		float _z,
+		float _len,
+		Axis::Enum _highlight,
+		float _thickness,
+		uint32_t _color = 0xffffffff,
+		bool _fill = false);
+
+	///
+	void dbgDrawCapsule(
+		const base::Vec3& _from,
+		const base::Vec3& _to,
+		float _radius,
+		uint32_t _color = 0xffffffff,
+		bool _fill = false);
+
+	///
+	void dbgDrawCircle(
+		const base::Vec3& _normal,
+		const base::Vec3& _center,
+		float _radius,
+		float _weight,
+		uint32_t _color = 0xffffffff,
+		bool _fill = false);
+
+	///
+	void dbgDrawCone(
+		const base::Vec3& _from,
+		const base::Vec3& _to,
+		float _radius,
+		uint32_t _color = 0xffffffff,
+		bool _fill = false);
+
+	///
+	void dbgDrawCube(
+		const base::Vec3& _from,
+		const base::Vec3& _to,
+		float _radius,
+		uint32_t _color = 0xffffffff,
+		bool _fill = false);
+
+	///
+	void dbgDrawFrustum(
+		const void* _viewProj,
+		uint32_t _color = 0xffffffff,
+		bool _fill = false);
+
+	///
+	void dbgDrawGrid(
+		const base::Vec3& _normal,
+		const base::Vec3& _center,
+		uint32_t _size,
+		float _step,
+		uint32_t _color = 0xffffffff,
+		bool _fill = false);
+
+	///
+	void dbgDrawQuad(
+		const base::Vec3& _normal,
+		const base::Vec3& _center,
+		float _size,
+		uint32_t _color = 0xffffffff,
+		bool _fill = false);
+
+	///
+	void dbgDrawLine(
+		const base::Vec3& _from
+		, const base::Vec3& _to
+		, uint32_t _color = 0xffffffff);
+
 
 	/// Create static index buffer.
 	///

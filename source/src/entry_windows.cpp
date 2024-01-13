@@ -105,7 +105,7 @@ namespace entry
 			if (NULL != m_xinputdll)
 			{
 				XInputGetState = (PFN_XINPUT_GET_STATE)base::dlsym(m_xinputdll, "XInputGetState");
-//				XInputEnable   = (PFN_XINPUT_ENABLE   )base::dlsym(m_xinputdll, "XInputEnable"  );
+				//XInputEnable   = (PFN_XINPUT_ENABLE   )base::dlsym(m_xinputdll, "XInputEnable"  );
 
 				if (NULL == XInputGetState)
 				{
@@ -234,6 +234,7 @@ namespace entry
 					if (gamepad.sThumbRX != state.Gamepad.sThumbRX)
 					{
 						int32_t value = state.Gamepad.sThumbRX;
+						
 						if (filter(GamepadAxis::RightX, gamepad.sThumbRX, &value) )
 						{
 							_eventQueue.postAxisEvent(defaultWindow, handle, GamepadAxis::RightX, value);

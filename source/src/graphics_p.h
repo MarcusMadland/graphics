@@ -220,6 +220,7 @@ namespace stl = std;
 #if BASE_PLATFORM_ANDROID
 #	include <android/native_window.h>
 #endif // BASE_PLATFORM_*
+#include "debugdraw/debugdraw.h"
 
 #define GRAPHICS_MAX_COMPUTE_BINDINGS GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS
 
@@ -3281,6 +3282,150 @@ namespace graphics
 			GRAPHICS_MUTEX_SCOPE(m_resourceApiLock);
 
 			m_submit->m_textVideoMem->image(_x, _y, _width, _height, _data, _pitch);
+		}
+
+		GRAPHICS_API_FUNC(void dbgDrawCube(const base::Vec3& _pos, const base::Vec3& _size, uint32_t _color = 0xffffffff, bool _fill = false))
+		{
+			GRAPHICS_MUTEX_SCOPE(m_resourceApiLock);
+
+			base::Vec3 minPoint = {
+				_pos.x - _size.x / 2.0f,
+				_pos.y - _size.y / 2.0f,
+				_pos.z - _size.z / 2.0f
+			};
+			base::Vec3 maxPoint = {
+				_pos.x + _size.x / 2.0f,
+				_pos.y + _size.y / 2.0f,
+				_pos.z + _size.z / 2.0f
+			};
+			base::Aabb aabb = { minPoint, maxPoint };
+
+			DebugDrawEncoder dde;
+			dde.begin(0); 
+			dde.setColor(_color); 
+			dde.setWireframe(!_fill);
+			dde.draw(aabb); 
+			dde.end();
+		}
+
+		GRAPHICS_API_FUNC(void dbgDrawArc(Axis::Enum _axis, float _x, float _y, float _z, float _radius, float _degrees, uint32_t _color = 0xffffffff, bool _fill = false))
+		{
+			GRAPHICS_MUTEX_SCOPE(m_resourceApiLock);
+
+			DebugDrawEncoder dde;
+			dde.begin(0);
+			dde.setColor(_color);
+			dde.setWireframe(!_fill);
+			dde.drawArc(_axis, _x, _y, _z, _radius, _degrees);
+			dde.end();
+		}
+
+		GRAPHICS_API_FUNC(void dbgDrawAxis(float _x, float _y, float _z, float _len, Axis::Enum _highlight, float _thickness, uint32_t _color = 0xffffffff, bool _fill = false))
+		{
+			GRAPHICS_MUTEX_SCOPE(m_resourceApiLock);
+
+			DebugDrawEncoder dde;
+			dde.begin(0);
+			dde.setColor(_color);
+			dde.setWireframe(!_fill);
+			dde.drawAxis(_x, _y, _z, _len, _highlight, _thickness);
+			dde.end();
+		}
+
+		GRAPHICS_API_FUNC(void dbgDrawCapsule(const base::Vec3& _from, const base::Vec3& _to, float _radius, uint32_t _color = 0xffffffff, bool _fill = false))
+		{
+			GRAPHICS_MUTEX_SCOPE(m_resourceApiLock);
+
+			DebugDrawEncoder dde;
+			dde.begin(0);
+			dde.setColor(_color);
+			dde.setWireframe(!_fill);
+			dde.drawCapsule(_from, _to, _radius);
+			dde.end();
+		}
+
+		GRAPHICS_API_FUNC(void dbgDrawCircle(const base::Vec3& _normal, const base::Vec3& _center, float _radius, float _weight, uint32_t _color = 0xffffffff, bool _fill = false))
+		{
+			GRAPHICS_MUTEX_SCOPE(m_resourceApiLock);
+
+			DebugDrawEncoder dde;
+			dde.begin(0);
+			dde.setColor(_color);
+			dde.setWireframe(!_fill);
+			dde.drawCircle(_normal, _center, _radius, _weight);
+			dde.end();
+		}
+
+		GRAPHICS_API_FUNC(void dbgDrawCone(const base::Vec3& _from, const base::Vec3& _to, float _radius, uint32_t _color = 0xffffffff, bool _fill = false))
+		{
+			GRAPHICS_MUTEX_SCOPE(m_resourceApiLock);
+
+			DebugDrawEncoder dde;
+			dde.begin(0);
+			dde.setColor(_color);
+			dde.setWireframe(!_fill);
+			dde.drawCone(_from, _to, _radius);
+			dde.end();
+		}
+
+		GRAPHICS_API_FUNC(void dbgDrawCube(const base::Vec3& _from, const base::Vec3& _to, float _radius, uint32_t _color = 0xffffffff, bool _fill = false))
+		{
+			GRAPHICS_MUTEX_SCOPE(m_resourceApiLock);
+
+			DebugDrawEncoder dde;
+			dde.begin(0);
+			dde.setColor(_color);
+			dde.setWireframe(!_fill);
+			dde.drawCylinder(_from, _to, _radius);
+			dde.end();
+		}
+
+		GRAPHICS_API_FUNC(void dbgDrawFrustum(const void* _viewProj, uint32_t _color = 0xffffffff, bool _fill = false))
+		{
+			GRAPHICS_MUTEX_SCOPE(m_resourceApiLock);
+
+			DebugDrawEncoder dde;
+			dde.begin(0);
+			dde.setColor(_color);
+			dde.setWireframe(!_fill);
+			dde.drawFrustum(_viewProj);
+			dde.end();
+		}
+
+		GRAPHICS_API_FUNC(void dbgDrawGrid(const base::Vec3& _normal, const base::Vec3& _center, uint32_t _size, float _step, uint32_t _color = 0xffffffff, bool _fill = false))
+		{
+			GRAPHICS_MUTEX_SCOPE(m_resourceApiLock);
+
+			DebugDrawEncoder dde;
+			dde.begin(0);
+			dde.setColor(_color);
+			dde.setWireframe(!_fill);
+			dde.drawGrid(_normal, _center, _size, _step);
+			dde.end();
+		}
+
+		GRAPHICS_API_FUNC(void dbgDrawQuad(const base::Vec3& _normal, const base::Vec3& _center, float _size, uint32_t _color = 0xffffffff, bool _fill = false))
+		{
+			GRAPHICS_MUTEX_SCOPE(m_resourceApiLock);
+
+			DebugDrawEncoder dde;
+			dde.begin(0);
+			dde.setColor(_color);
+			dde.setWireframe(!_fill);
+			dde.drawQuad(_normal, _center, _size);
+			dde.end();
+		}
+
+		GRAPHICS_API_FUNC(void dbgDrawLine(const base::Vec3& _from, const base::Vec3& _to, uint32_t _color = 0xffffffff))
+		{
+			GRAPHICS_MUTEX_SCOPE(m_resourceApiLock);
+
+			DebugDrawEncoder dde;
+			dde.begin(0);
+			dde.setColor(_color);
+			dde.moveTo(_from.x, _from.y, _from.z);
+			dde.lineTo(_to.x, _to.y, _to.z);
+			dde.end();
 		}
 
 		GRAPHICS_API_FUNC(const Stats* getPerfStats() )
