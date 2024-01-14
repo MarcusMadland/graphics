@@ -220,6 +220,7 @@ namespace stl = std;
 #if BASE_PLATFORM_ANDROID
 #	include <android/native_window.h>
 #endif // BASE_PLATFORM_*
+
 #include "debugdraw/debugdraw.h"
 
 #define GRAPHICS_MAX_COMPUTE_BINDINGS GRAPHICS_CONFIG_MAX_TEXTURE_SAMPLERS
